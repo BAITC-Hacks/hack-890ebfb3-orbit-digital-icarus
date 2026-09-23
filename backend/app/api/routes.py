@@ -17,6 +17,7 @@ from ..models import (
     MetadataResponse,
 )
 from ..normalization import normalize_match_request
+from ..recovery import suggest_alternatives
 
 
 router = APIRouter(prefix="/api")
@@ -93,6 +94,7 @@ def _empty_response(
         ),
         exclusions=exclusions,
         cards=[],
+        alternatives=suggest_alternatives(request_body, _catalog(request)),
     )
 
 
