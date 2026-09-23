@@ -33,10 +33,10 @@ class ApiTests(unittest.TestCase):
     def test_match_stub_accepts_user_friendly_aliases(self) -> None:
         payload = {
             "city": "Alma-Ata",
-            "event_date": "2026-10-10",
+            "event_date": "2026-10-11",
             "event_format": "wedding",
             "category": "MC",
-            "budget_kzt": 500000,
+            "budget_kzt": 3_000_000,
             "duration_hours": None,
             "language": "RU",
         }
@@ -44,7 +44,42 @@ class ApiTests(unittest.TestCase):
             response = client.post("/api/match", json=payload)
 
         self.assertEqual(response.status_code, 503)
-        self.assertEqual(response.json()["detail"]["code"], "matching_not_ready")
+        self.assertEqual(response.json()["detail"]["code"], "ranking_not_integrated")
+
+    def test_match_returns_category_absent_as_a_business_response(self) -> None:
+        payload = {
+            "city": "Астана",
+            "event_date": "2026-10-10",
+            "event_format": "свадьба",
+            "category": "Декоратор",
+            "budget_kzt": 3_000_000,
+        }
+        with TestClient(app) as client:
+            response = client.post("/api/match", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["status"], "category_absent")
+        self.assertEqual(body["counts"]["city_category_total"], 0)
+        self.assertEqual(body["cards"], [])
+
+    def test_match_returns_no_eligible_as_a_business_response(self) -> None:
+        payload = {
+            "city": "Астана",
+            "event_date": "2026-10-11",
+            "event_format": "свадьба",
+            "category": "Флорист",
+            "budget_kzt": 300_000,
+        }
+        with TestClient(app) as client:
+            response = client.post("/api/match", json=payload)
+
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["status"], "no_eligible_contractors")
+        self.assertEqual(body["counts"]["city_category_total"], 1)
+        self.assertEqual(body["exclusions"]["booked"], 1)
+        self.assertEqual(body["cards"], [])
 
     def test_match_rejects_outside_calendar_window(self) -> None:
         payload = {
