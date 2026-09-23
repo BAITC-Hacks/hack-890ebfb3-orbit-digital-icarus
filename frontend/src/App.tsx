@@ -343,7 +343,6 @@ export default function App() {
     <form ref={formElement} className="match-form" data-testid="match-form" aria-busy={loading} onSubmit={submit} noValidate>
       <div className="form-intro">
         <div><span className="form-step" aria-hidden="true">01</span><h2>{journey.formTitle}</h2><p>{journey.formIntro}</p></div>
-        <p className="form-promise"><span aria-hidden="true">✓</span>{journey.formPromise}</p>
       </div>
       <div className="field-grid">
         {fields.map(({ key, options }) => <label key={key}>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>

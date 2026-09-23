@@ -89,12 +89,10 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 
 /* Matching form: a calm, readable hierarchy that remains stable at every width. */
 .match-form { padding: 0; overflow: hidden; box-shadow: 0 16px 38px rgb(48 37 20 / 5%); }
-.form-intro { display: flex; align-items: end; justify-content: space-between; gap: 32px; padding: 30px 54px 27px; border-bottom: 1px solid #eee9e0; background: linear-gradient(118deg, #fffdf9 0%, #f3f6ee 100%); }
+.form-intro { padding: 30px 54px 27px; border-bottom: 1px solid #eee9e0; background: linear-gradient(118deg, #fffdf9 0%, #f3f6ee 100%); }
 .form-step { display: block; margin-bottom: 8px; color: #9a4a28; font-size: .75rem; font-weight: 850; letter-spacing: .14em; }
 .form-intro h2 { font-size: clamp(1.75rem, 3vw, 2.3rem); line-height: 1.05; }
 .form-intro p { max-width: 610px; margin: 9px 0 0; color: #716b63; line-height: 1.55; }
-.form-intro .form-promise { display: flex; flex: 0 0 260px; align-items: flex-start; gap: 9px; margin-bottom: 4px; color: #49614f; font-size: .86rem; font-weight: 700; }
-.form-promise span { display: grid; flex: 0 0 20px; height: 20px; place-items: center; border-radius: 50%; color: #fff; background: #587363; font-size: .72rem; }
 .field-grid { padding: 31px 54px 0; gap: 25px 38px; }
 .field-grid > label { min-width: 0; }
 .calendar-note { margin: 24px 54px 0; padding: 12px 14px; border-radius: 10px; color: #687064; background: #f5f3ec; }
@@ -119,7 +117,6 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 .card-grid > *, .home-hero > *, .footer-main > * { min-width: 0; }
 
 @media (max-width: 900px) {
-  .form-intro { align-items: flex-start; flex-direction: column; }.form-intro .form-promise { flex-basis: auto; }
   .footer-main { grid-template-columns: 1fr 1fr; }.footer-main nav { grid-column: 1 / -1; justify-content: flex-start; }
 }
 @media (max-width: 650px) {
@@ -130,7 +127,6 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 
 :root[data-theme="dark"] .form-intro { background: linear-gradient(118deg, #17221e 0%, #1c3027 100%); border-color: #31433b; }
 :root[data-theme="dark"] .form-intro p, :root[data-theme="dark"] .footer-main p, :root[data-theme="dark"] .footer-note { color: #aebcaf; }
-:root[data-theme="dark"] .form-intro .form-promise, :root[data-theme="dark"] .form-footer strong, :root[data-theme="dark"] .footer-main nav a { color: #a9d8b4; }
-:root[data-theme="dark"] .form-promise span { color: #0d1712; background: #a9d8b4; }
+:root[data-theme="dark"] .form-footer strong, :root[data-theme="dark"] .footer-main nav a { color: #a9d8b4; }
 :root[data-theme="dark"] .calendar-note, :root[data-theme="dark"] .form-footer { color: #bac8bd; background: #141e1a; }
 :root[data-theme="dark"] .footer-note { border-color: #31433b; }
