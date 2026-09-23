@@ -4,6 +4,8 @@ The integrated React interface searches the bundled contractor catalog through t
 
 ## Start locally
 
+**Only want to run the complete app?** Double-click `Start Orbit.cmd` in the repository root or run `python start.py`. It installs, builds and opens the real website/API together; see the [one-command guide](../README.md#run-from-a-fresh-checkout). The commands below are optional frontend development setup with hot reload.
+
 Run commands from the **repository root**, using Node `^22.12.0 || ^24.0.0 || >=26.0.0` and npm:
 
 ```bash

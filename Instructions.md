@@ -12,6 +12,8 @@ Every result offers an honest local inquiry draft, explicitly approved because t
 
 The captain also supplied a separate Demo Day rubric (25/20/15/20/20). It does not replace the task's technical rubric (25/25/25/15/10) below. Both are mapped to actual evidence in the [release review](docs/release-review.md) and [technical checklist](docs/judging-checklist.md). Neither is a guaranteed score.
 
+The approved distribution shortcut is now `python start.py` (or double-click `Start Orbit.cmd` on Windows), after installing Python and Node once. It uses locked dependencies, an ignored private `.orbit/venv`, and a production frontend build mounted after the existing API routes by `backend/app/web.py`. One loopback server serves both; filtering/ranking/contracts and the optional separate hot-reload workflow are unchanged. The organizer's additional README notice is recorded in the [submission reminder](README.md#organizer-reminder-and-submission).
+
 ## 1. Product idea and priorities
 
 Build a small event-contractor decision assistant for Kazakhstan. A customer enters an event's city, date, format, contractor category and budget, optionally duration and language. The service returns **zero to three genuinely eligible contractors**, each with a short, specific explanation grounded in their profile and the request.

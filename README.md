@@ -6,15 +6,70 @@ Find an event contractor in Kazakhstan without searching a long catalog. Enter t
 
 **The integrated application combines `bbl`, `Enjoy` and `feature/sp3ctra` for `main`:** a bilingual home page, matching form, FastAPI filtering/ranking, grounded explanations and copyable contractor inquiries. This is a local hackathon prototype, not a deployed booking or messaging service. See the [release review and Demo Day scorecard](docs/release-review.md) for current verification and remaining human actions.
 
+## Run from a fresh checkout
+
+**Windows: open the downloaded/cloned project folder and double-click [Start Orbit.cmd](<Start Orbit.cmd>).** The launcher installs dependencies, builds the website, starts the application and opens your browser. Keep its window open while using Orbit; press **Ctrl+C** there to stop.
+
+**Install once if missing:** [Python 3.11 or newer](https://www.python.org/downloads/) and [Node.js 24 LTS](https://nodejs.org/en/download) (includes npm). On Windows, enable **Add Python to PATH** if offered, then reopen the project folder after installing. These runtimes are prerequisites, not bundled installers; the launcher explains if either is missing. The first launch needs internet and may take a few minutes. Subsequent unchanged launches reuse the installation and build.
+
+Prefer a terminal? After cloning, run **one command** from the project folder:
+
+```bash
+python start.py
+```
+
+Use `python3 start.py` on macOS/Linux, or `py -3 start.py` on Windows if `python` is unavailable. Including the clone, the complete terminal path is:
+
+```bash
+git clone https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus.git
+cd hack-890ebfb3-orbit-digital-icarus
+python start.py
+```
+
+Orbit normally opens at **http://127.0.0.1:8765**. If that port is occupied, the launcher chooses another available port and prints/opens the correct address. One local server serves both the website and real API. **No API key, account, Docker, database, environment file, virtual-environment activation or second terminal is needed.** No contact messages or paid model requests are sent.
+
+Local setup lives in ignored `.orbit/` and `frontend/node_modules`; the built website is in ignored `frontend/dist`. Changed lockfiles trigger installation again; changed frontend source triggers a rebuild. Setup does not overwrite a developer's `.venv`. The launcher forces real API mode, even if a design-preview environment setting is present.
+
+### Verify it in two minutes — no coding required
+
+1. The browser opens the **home page**, not an already-submitted order. Click **Начать подбор / Start matching**.
+2. Select **Алматы / Ведущий / свадьба / 11 October 2026 / budget 3000000**; leave duration and working language blank. Submit: three cards appear from five eligible profiles. Expand supporting evidence on one card.
+3. Change only the date to **10 October 2026** and submit again. The shortlist changes. Repeat without edits: the same cards stay in the same order.
+4. Try **Алматы / Флорист / свадьба / 10 October 2026 / budget 300000**: one eligible card appears, with a clear shortfall and imputed-price notice. Open **Contact / prepare inquiry**: it creates copyable text and clearly says nothing was sent or booked.
+
+For both empty outcomes, venues, optional constraints and exact expected IDs, follow [the main scenario below](#try-the-main-scenario) and the [complete demo](docs/demo.md). Developers can reproduce the automated checks in the optional sections below. API readiness and interactive docs are at `/api/health` and `/docs` on the address printed by the launcher.
+
+### Technologies at a glance
+
+**React + TypeScript + Vite** provide the bilingual interface; **Python + FastAPI + Pydantic + Uvicorn** validate requests and serve the application. Matching uses the bundled **CSV** and reviewed **JSON evidence**, with deterministic filtering/ranking and no runtime model call. **pytest, Vitest and Playwright** cover domain logic, UI behavior and browser journeys. Detailed versions and module ownership are in [Architecture](#architecture-and-repository-map).
+
+### Troubleshooting
+
+| What you see | What to do |
+| --- | --- |
+| Python or Node is missing/unsupported | Install the versions linked above, reopen the launch window, then try again. Supported Node range: `^22.12.0 || ^24.0.0 || >=26.0.0`. |
+| First installation fails | Check internet access to Python/npm package registries; relaunch to retry. The window shows the last error lines; full setup output is in `.orbit/setup.log`. Do not publish that log without checking it for machine-specific details. |
+| Python cannot create its environment on Linux | Install your distribution's Python venv support (commonly `python3-venv` on Debian/Ubuntu), then relaunch. No administrator access is needed once Python/Node/venv support are installed. |
+| Browser does not open | Copy the `Orbit is ready!` address from the launch window into your browser. |
+| A specific port is busy | Normally Orbit picks another automatically. To choose one yourself: `python start.py --port 8790`. The launcher never stops another program. |
+| You changed frontend code | Stop with Ctrl+C and launch again; the production website is rebuilt when needed. For automatic hot reload use the developer setup below. |
+
+Optional switches: `--no-browser` skips opening a browser; `--prepare-only` installs/builds without starting. Local use is bound to `127.0.0.1`, not exposed to your network. Windows is the locally verified platform; macOS/Linux paths are supported by the launcher but are not claimed as separately verified machines.
+
 ![Orbit home page](docs/images/home-ru.png)
 
 ![Russian interface showing a real API shortlist](docs/images/interface-ru.png)
 
 [View the English interface](docs/images/interface-en.png) · [Demo walkthrough](docs/demo.md) · [Judging checklist](docs/judging-checklist.md)
 
-## Run from a fresh checkout
+## Developer setup (optional)
 
-Prerequisites: Git, **Python 3.11+**, and Node matching **`^22.12.0 || ^24.0.0 || >=26.0.0`**, with npm. The current review used Windows 11, Python **3.14.4**, Node **24.15.0** and npm **11.12.1**. Earlier reproduction also passed on Python 3.12.10. No API key, model account, database or environment file is required.
+**Skip this entire section if you only want to run or judge Orbit.** The launcher above does the application setup automatically. This alternative enables hot reload and installs the additional test tools.
+
+<details>
+<summary>Expand manual setup, separate dev servers and build preview</summary>
+
+Prerequisites: Git, Python **3.11+**, and Node **`^22.12.0 || ^24.0.0 || >=26.0.0`**, with npm. The current review used Windows 11, Python **3.14.4**, Node **24.15.0** and npm **11.12.1**. Earlier reproduction also passed on Python 3.12.10.
 
 Run all commands below from the repository root:
 
@@ -77,6 +132,8 @@ npm --prefix frontend run preview -- --host 127.0.0.1 --port 4173 --strictPort
 
 The build runs the application TypeScript check and writes `frontend/dist`. Keep the backend running on port 8000 and open **http://127.0.0.1:4173** to check the built bundle locally. Its `/api` proxy and the dense shortlist were verified. This preview is a local build check; an internet deployment still needs a hosted backend and a same-origin `/api` reverse proxy. Static files alone do not provide matching.
 
+</details>
+
 ## Try the main scenario
 
 Start on the home page, explain the problem, then click **Начать подбор**. Category cards prefill the form but never submit silently. Budget accepts whole KZT without spaces; duration accepts positive dot/comma decimals up to **12 hours inclusive**, or can be left blank. Twelve is the largest defined `max_hours` in the bundled CSV; each contractor's own lower limit still applies. Excessive values show a field error and cannot be submitted; the API also enforces the ceiling. Letters, signs, exponents and malformed pasted values are rejected rather than stripped into another number.
@@ -109,6 +166,7 @@ flowchart LR
 
 | Path | Responsibility |
 | --- | --- |
+| `start.py`, `Start Orbit.cmd`, `backend/app/web.py` | One-command setup, cached production build and one local website/API server |
 | `backend/app/catalog.py`, `models.py`, `normalization.py` | Catalog loading, typed boundaries and canonical request validation |
 | `backend/app/filtering.py` | Hard constraints and first-failure exclusion counts |
 | `backend/app/matching/` | Ranking, evidence validation and card construction |
@@ -125,7 +183,7 @@ flowchart LR
 | `.github/workflows/enjoy-checks.yml` | Locked setup, tests, build and real-browser CI workflow |
 | `Instructions.md`, `docs/` | Shared architecture, responsibilities, demo, evidence and integration notes |
 
-Backend dependencies are pinned to FastAPI **0.136.1**, Pydantic **2.13.3**, Uvicorn **0.46.0**, pytest **9.1.1** and HTTPX **0.28.1**, with resolved dependencies and platform markers in `requirements-dev.lock`. The UI uses React **19.1.1**, Vite **7.3.6** and TypeScript **5.9.2**. Root integration tools separately pin Playwright **1.63.0**, Vitest **5.0.1** and TypeScript **5.8.3**. Both npm packages have lockfiles and require their own `npm ci`.
+Backend dependencies are pinned to FastAPI **0.136.1**, Pydantic **2.13.3**, Uvicorn **0.46.0**, pytest **9.1.1** and HTTPX **0.28.1**, with resolved dependencies and platform markers in `requirements-dev.lock`. The UI uses React **19.1.1**, Vite **7.3.6** and TypeScript **5.9.2**. Root integration tools separately pin Playwright **1.63.0**, Vitest **5.0.1** and TypeScript **5.8.3**. Both npm packages have lockfiles. The app launcher installs only frontend npm dependencies; root `npm ci` is additionally required for developer verification tools.
 
 ## Matching rules
 
@@ -211,7 +269,7 @@ The TypeScript declarations are manually aligned with [the published contract](c
 
 ## Reproduce the checks
 
-After installation, these checks require no running backend:
+These commands are for developers, not prerequisites for judging the UI. Complete the optional developer setup above (including root npm and Playwright installation) and activate its `.venv`. The launcher alone does not install the root browser-test tooling. These checks require no running backend:
 
 ```bash
 python -m pytest -q
@@ -226,7 +284,7 @@ npm --prefix frontend run build
 npm run test:ui
 ```
 
-`test:ui` starts Vite with explicit mocked metadata/match responses. Its 13 flows check numeric editing, metadata retry and localization independently; they are not backend acceptance evidence. The domain acceptance tool independently loads and filters the bundled data and checks frozen ordered IDs and repeatability.
+`test:ui` starts Vite with explicit mocked metadata/match responses. Its 16 flows check numeric editing, metadata retry and localization independently; they are not backend acceptance evidence. The domain acceptance tool independently loads and filters the bundled data and checks frozen ordered IDs and repeatability.
 
 With the real backend and frontend running in the two terminals:
 
@@ -241,11 +299,19 @@ The HTTP checker compares actual responses with the independent dataset oracle. 
 
 To let Playwright start both services itself, activate `.venv` and set `RUN_APP_SERVERS=1` before `npm run test:e2e` (`$env:RUN_APP_SERVERS="1"` in PowerShell, or `RUN_APP_SERVERS=1 npm run test:e2e` on macOS/Linux). `E2E_BASE_URL` and `E2E_API_URL` select already-running services. `npm run test:e2e:list` only discovers tests; it does not execute them.
 
+To check the one-command production server instead, leave `RUN_APP_SERVERS` unset and point **both** `E2E_BASE_URL` and `E2E_API_URL` to its printed address. For example, in a second PowerShell window after developer test-tool installation:
+
+```powershell
+$env:E2E_BASE_URL="http://127.0.0.1:8765"
+$env:E2E_API_URL=$env:E2E_BASE_URL
+npm.cmd run test:e2e
+```
+
 ### Recorded local verification
 
 | Check | Result |
 | --- | --- |
-| Python suite | **117 passing tests and 265 subtests**, including duration boundaries, strict types, JSON-safe errors, verified alternatives and published OpenAPI parity |
+| Python suite | **152 passing tests and 265 subtests**, including 35 launcher/static-serving checks, duration boundaries, strict types, JSON-safe errors, verified alternatives and published OpenAPI parity |
 | Transport / locale unit tests | **95 client + 17 localization + 9 numeric tests passing** |
 | React components | **15 tests passing**, including duration limits/recovery, home and inquiry/clipboard behavior |
 | Strict transport types / full frontend build | **Passing** |
@@ -281,3 +347,7 @@ The practical value is a short, repeatable shortlist with reasons the user can i
 See the [technical judging checklist](docs/judging-checklist.md), [Demo Day scorecard and pitch](docs/release-review.md), and [earlier clean-clone verification](docs/reproducibility.md). Remaining human work is rehearsal, portal submission and cloud CI follow-up if the account still blocks jobs. User-approved one-condition alternatives are implemented. Live calendars, verified contact onboarding, confirmed quotations, feedback evaluation and larger-catalog retrieval remain future work. Rubric weights are not earned scores or a guarantee of winning.
 
 Team ownership: **Enjoy** — matching, evidence, integration and verification; **bbl** — backend models, catalog and filtering; **feature/sp3ctra** — interface design and frontend. Small increments are pushed to the owner's branch, and remote updates/contracts are checked before merging. See [Instructions.md](Instructions.md) and [team synchronization notes](docs/team-sync.md).
+
+### Organizer reminder and submission
+
+The additional organizer notice supplied on 23 September requires the README to explain **the problem, launch, technologies and verification without team assistance**; the opening sections address all four. Finishing early is an opportunity to improve and rehearse, not permission to leave: **team members must remain at the venue until 18:00, per the supplied organizer notice**. The captain still needs to verify current official instructions, submit the correct repository/demo links and confirm the submission receipt. This repository cannot verify physical attendance or guarantee a judging score.
