@@ -1,6 +1,7 @@
 import type {
   EvidenceItem,
   HealthResponse,
+  MatchAlternative,
   MatchCard,
   MatchRequest,
   MatchResponse,
@@ -15,6 +16,8 @@ export interface RequestOptions {
   baseUrl?: string;
   /** Abort the previous request when the form changes or a new search starts. */
   signal?: AbortSignal;
+  /** Deadline for both the response headers and body; defaults to 10 seconds. */
+  timeoutMs?: number;
 }
 
 export interface ValidationError {
@@ -93,7 +96,9 @@ function isPositiveNumber(value: unknown): value is number {
 }
 
 function isDateString(value: unknown): value is string {
-  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  return Number.isFinite(parsed.valueOf()) && parsed.toISOString().slice(0, 10) === value;
 }
 
 function isMatchRequest(value: unknown): value is MatchRequest {
@@ -145,6 +150,19 @@ function isMatchCard(value: unknown): value is MatchCard {
     && Array.isArray(value.evidence) && value.evidence.every(isEvidenceItem);
 }
 
+function isMatchAlternative(value: unknown, original: NormalizedMatchRequest): value is MatchAlternative {
+  if (!isRecord(value) || !isNormalizedRequest(value.request)) return false;
+  if (!isText(value.changed_field) || !["city", "event_date", "budget_kzt"].includes(value.changed_field)) return false;
+  if (!isCount(value.eligible_total) || value.eligible_total === 0) return false;
+  const request = value.request;
+  const fields: (keyof NormalizedMatchRequest)[] = [
+    "city", "event_date", "event_format", "category", "budget_kzt", "duration_hours", "language",
+  ];
+  const changed = fields.filter((field) => request[field] !== original[field]);
+  return changed.length === 1 && changed[0] === value.changed_field
+    && (value.changed_field !== "budget_kzt" || request.budget_kzt > original.budget_kzt);
+}
+
 function isMatchResponse(value: unknown): value is MatchResponse {
   if (!isRecord(value) || !isRecord(value.counts) || !isRecord(value.exclusions)) return false;
   if (value.schema_version !== "1" || !isText(value.status) || !["matches_found", "category_absent", "no_eligible_contractors"].includes(value.status)) return false;
@@ -153,14 +171,27 @@ function isMatchResponse(value: unknown): value is MatchResponse {
 
   const { city_category_total, eligible_total, returned_total } = value.counts;
   if (!isCount(city_category_total) || !isCount(eligible_total) || !isCount(returned_total)) return false;
-  if (returned_total !== value.cards.length || returned_total > eligible_total || eligible_total > city_category_total) return false;
+  if (returned_total !== value.cards.length || returned_total !== Math.min(3, eligible_total) || eligible_total > city_category_total) return false;
+  const request = value.request;
+  if (value.alternatives !== undefined) {
+    if (!Array.isArray(value.alternatives) || value.alternatives.length > 3
+      || (value.status === "matches_found" && value.alternatives.length > 0)
+      || !value.alternatives.every((alternative) => isMatchAlternative(alternative, request))) return false;
+  }
+  if (!value.cards.every((card) => card.city === request.city
+    && card.event_date === request.event_date
+    && card.category === request.category
+    && card.categories.includes(request.category)
+    && card.price_from_kzt <= request.budget_kzt)) return false;
   if (new Set(value.cards.map((card) => card.id)).size !== value.cards.length) return false;
   if (value.status === "matches_found" ? value.cards.length === 0 : value.cards.length !== 0 || eligible_total !== 0) return false;
   if (value.status === "category_absent" && city_category_total !== 0) return false;
   if (value.status === "no_eligible_contractors" && city_category_total === 0) return false;
   const exclusions = value.exclusions;
-  return ["booked", "over_budget", "unsupported_format", "unsupported_language", "duration_exceeded"]
-    .every((key) => isCount(exclusions[key]));
+  const exclusionCounts = ["booked", "over_budget", "unsupported_format", "unsupported_language", "duration_exceeded"]
+    .map((key) => exclusions[key]);
+  if (!exclusionCounts.every(isCount)) return false;
+  return exclusionCounts.reduce((total, count) => total + count, 0) === city_category_total - eligible_total;
 }
 
 function isMetadataResponse(value: unknown): value is MetadataResponse {
@@ -203,37 +234,64 @@ async function requestJson<T>(
   validate: (value: unknown) => value is T,
   request?: NormalizedMatchRequest,
 ): Promise<T> {
+  const timeoutMs = options.timeoutMs ?? 10_000;
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0 || timeoutMs > 2_147_483_647) {
+    throw new RangeError("timeoutMs must be a positive, finite timer duration.");
+  }
+  options.signal?.throwIfAborted();
+  const controller = new AbortController();
+  let rejectCancellation!: (reason: unknown) => void;
+  const cancellation = new Promise<never>((_resolve, reject) => { rejectCancellation = reject; });
+  const cancel = (reason: unknown) => {
+    rejectCancellation(reason);
+    controller.abort(reason);
+  };
+  const callerAbort = () => cancel(options.signal?.reason ?? new DOMException("The request was aborted.", "AbortError"));
+  options.signal?.addEventListener("abort", callerAbort, { once: true });
+  const timer = setTimeout(() => {
+    cancel(new DOMException(`The request timed out after ${timeoutMs} ms.`, "TimeoutError"));
+  }, timeoutMs);
+
   const baseUrl = (options.baseUrl ?? "").replace(/\/+$/, "");
-  const response = await fetch(`${baseUrl}/api/${path}`, {
-    method: request === undefined ? "GET" : "POST",
-    headers: {
-      Accept: "application/json",
-      ...(request === undefined ? {} : { "Content-Type": "application/json" }),
-    },
-    signal: options.signal,
-    ...(request === undefined ? {} : { body: JSON.stringify(request) }),
-  });
-
-  const body = await response.text();
-  let parsed: unknown;
-  let isJson = false;
   try {
-    parsed = JSON.parse(body) as unknown;
-    isJson = true;
-  } catch {
-    // Proxy HTML and plain-text errors are never shown as page content.
-  }
+    const operation = async (): Promise<T> => {
+      const response = await fetch(`${baseUrl}/api/${path}`, {
+        method: request === undefined ? "GET" : "POST",
+        headers: {
+          Accept: "application/json",
+          ...(request === undefined ? {} : { "Content-Type": "application/json" }),
+        },
+        signal: controller.signal,
+        ...(request === undefined ? {} : { body: JSON.stringify(request) }),
+      });
 
-  if (!response.ok) {
-    throw new ApiError(
-      response.status,
-      isRecord(parsed) && "detail" in parsed ? parsed.detail : undefined,
-    );
+      const body = await response.text();
+      let parsed: unknown;
+      let isJson = false;
+      try {
+        parsed = JSON.parse(body) as unknown;
+        isJson = true;
+      } catch {
+        // Proxy HTML and plain-text errors are never shown as page content.
+      }
+
+      if (!response.ok) {
+        throw new ApiError(
+          response.status,
+          isRecord(parsed) && "detail" in parsed ? parsed.detail : undefined,
+        );
+      }
+      if (!isJson || !validate(parsed)) {
+        throw new ApiResponseError(response.status);
+      }
+      return parsed;
+    };
+    // The race also settles callers when a transport ignores cancellation.
+    return await Promise.race([operation(), cancellation]);
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", callerAbort);
   }
-  if (!isJson || !validate(parsed)) {
-    throw new ApiResponseError(response.status);
-  }
-  return parsed;
 }
 
 /** Server owns normalization, filtering and card order; transport preserves it. */

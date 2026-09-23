@@ -1,7 +1,8 @@
-import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
+import { type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { ApiError, ApiResponseError, getMetadata, matchContractors } from "./api/client";
 import { metadata as previewMetadata, previewMatch } from "./api/demo";
-import type { MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
+import type { MatchAlternative, MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
+import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft } from "./formNumbers";
 import {
   availabilityLabel, calendarLabel, cardExplanation, copy, displayDate, evidenceValue,
   exclusionSummary, fieldValidationMessage, formatMoney, initialLocale, invalidFields,
@@ -16,6 +17,7 @@ const initialRequest: MatchRequest = {
   budget_kzt: 3_000_000, duration_hours: null, language: null,
 };
 type ErrorKind = "requestError" | "serviceError" | "responseError" | "validationError";
+type NumericField = "budget_kzt" | "duration_hours";
 const initials = (name: string) => name.split(" ").slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
 function storedLocale(): Locale {
@@ -66,18 +68,33 @@ function OutcomeDetails({ result, locale }: { result: MatchResponse; locale: Loc
   </>;
 }
 
-function EmptyState({ result, locale }: { result: MatchResponse; locale: Locale }) {
+function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; locale: Locale; onAlternative: (alternative: MatchAlternative) => void }) {
   return <section className="empty-state" data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date}>
     <span className="empty-icon" aria-hidden="true">⌕</span>
     <h2>{resultTitle(result, locale)}</h2>
     <OutcomeDetails result={result} locale={locale} />
-    {result.status !== "category_absent" && <p className="empty-advice">{copy[locale].emptyAdvice}</p>}
+    <p className="empty-advice">{copy[locale].emptyAdvice}</p>
+    {Boolean(result.alternatives?.length) && <div className="match-alternatives" data-testid="match-alternatives">
+      <h3>{locale === "ru" ? "Можно изменить одно условие" : "Try changing one condition"}</h3>
+      <p>{locale === "ru" ? "Эти варианты проверены по каталогу. Остальные условия сохраняются. Изменение применится только после нажатия." : "These alternatives were checked against the catalog. Every other condition stays the same. A change applies only when you choose it."}</p>
+      {result.alternatives!.map((alternative, index) => {
+        const value = alternative.changed_field === "city" ? optionLabel(alternative.request.city, locale)
+          : alternative.changed_field === "event_date" ? displayDate(alternative.request.event_date)
+          : `${formatMoney(alternative.request.budget_kzt, locale)} ₸`;
+        return <button key={index} type="button" data-testid="match-alternative" data-changed-field={alternative.changed_field} onClick={() => onAlternative(alternative)}>
+          <strong>{copy[locale][alternative.changed_field]}: {value}</strong>
+          <span>{locale === "ru" ? `Подходящих профилей: ${alternative.eligible_total} · Найти с этим условием` : `${alternative.eligible_total} eligible profiles · Search with this change`}</span>
+        </button>;
+      })}
+    </div>}
   </section>;
 }
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>(storedLocale);
   const [form, setForm] = useState<MatchRequest>(initialRequest);
+  const [numericDrafts, setNumericDrafts] = useState({ budget_kzt: String(initialRequest.budget_kzt), duration_hours: "" });
+  const rejectedEdits = useRef(new Set<NumericField>());
   const [metadata, setMetadata] = useState<MetadataResponse | null>(previewMode ? previewMetadata : null);
   const [metadataLoading, setMetadataLoading] = useState(!previewMode);
   const [metadataFailed, setMetadataFailed] = useState(false);
@@ -141,16 +158,68 @@ export default function App() {
     setForm(current => ({ ...current, [key]: value }));
   }
 
+  function rejectNumericEdit(key: NumericField) {
+    clearSearch();
+    rejectedEdits.current.add(key);
+    setInvalid([...rejectedEdits.current]);
+    setError("validationError");
+  }
+
+  function acceptsNumeric(key: NumericField, value: string) {
+    return key === "budget_kzt" ? acceptBudgetDraft(value) : acceptDurationDraft(value);
+  }
+
+  function editNumeric(key: NumericField, value: string) {
+    if (!acceptsNumeric(key, value)) { rejectNumericEdit(key); return; }
+    // A rejected 'e' must not turn subsequent typing of '4e2' into 42.
+    // Clear, delete, select/replace or paste a valid value to correct the edit.
+    if (rejectedEdits.current.has(key) && value !== "" && value.length >= numericDrafts[key].length) {
+      rejectNumericEdit(key);
+      return;
+    }
+    rejectedEdits.current.delete(key);
+    clearSearch();
+    setNumericDrafts(current => ({ ...current, [key]: value }));
+  }
+
+  function numericKeyDown(key: NumericField, event: KeyboardEvent<HTMLInputElement>) {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key === "Backspace" || event.key === "Delete") rejectedEdits.current.delete(key);
+    if (event.key.length !== 1) return;
+    const replacing = event.currentTarget.selectionStart !== event.currentTarget.selectionEnd;
+    if (!acceptsNumeric(key, event.key) || (rejectedEdits.current.has(key) && !replacing)) {
+      event.preventDefault();
+      rejectNumericEdit(key);
+    } else if (replacing) rejectedEdits.current.delete(key);
+  }
+
+  function numericPaste(key: NumericField, event: ClipboardEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const pasted = event.clipboardData.getData("text");
+    const proposed = input.value.slice(0, input.selectionStart ?? 0) + pasted + input.value.slice(input.selectionEnd ?? input.value.length);
+    if (!acceptsNumeric(key, proposed)) {
+      event.preventDefault();
+      rejectNumericEdit(key);
+    } else rejectedEdits.current.delete(key);
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!metadata || metadataLoading || loading) return;
-    const invalidInputs = invalidFields(form, metadata);
+    const budget = parseBudgetDraft(numericDrafts.budget_kzt);
+    const duration = parseDurationDraft(numericDrafts.duration_hours);
+    const request: MatchRequest = { ...form, budget_kzt: budget ?? NaN, duration_hours: duration === undefined ? NaN : duration };
+    const invalidInputs = [...new Set([...invalidFields(request, metadata), ...rejectedEdits.current])];
     setInvalid(invalidInputs);
     if (invalidInputs.length) {
       setError("validationError");
       (formElement.current?.elements.namedItem(invalidInputs[0]) as HTMLElement | null)?.focus();
       return;
     }
+    await search(request);
+  }
+
+  async function search(request: MatchRequest) {
     const generation = ++searchGeneration.current;
     controller.current?.abort();
     const active = new AbortController();
@@ -158,7 +227,6 @@ export default function App() {
     setLoading(true);
     setError(null);
     setResult(null);
-    const request = { ...form };
     try {
       const response = previewMode ? await previewMatch(request) : await matchContractors(request, { signal: active.signal });
       if (generation === searchGeneration.current) setResult(response);
@@ -172,6 +240,15 @@ export default function App() {
     } finally {
       if (generation === searchGeneration.current) setLoading(false);
     }
+  }
+
+  function chooseAlternative(alternative: MatchAlternative) {
+    const request = alternative.request;
+    clearSearch();
+    rejectedEdits.current.clear();
+    setForm(request);
+    setNumericDrafts({ budget_kzt: String(request.budget_kzt), duration_hours: request.duration_hours == null ? "" : String(request.duration_hours) });
+    void search(request);
   }
 
   const fieldError = (key: keyof MatchRequest) => invalid.includes(key)
@@ -203,8 +280,8 @@ export default function App() {
           {options.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
         </select>{fieldError(key)}</label>)}
         <label>{t.event_date}<input name="event_date" type="date" min={metadata?.calendar_start} max={metadata?.calendar_end} value={form.event_date} disabled={unavailable} {...fieldAttributes("event_date")} onChange={event => update("event_date", event.target.value)} required />{fieldError("event_date")}</label>
-        <label>{t.budget_kzt}<input name="budget_kzt" type="number" min="1" step="1" value={form.budget_kzt || ""} disabled={unavailable} {...fieldAttributes("budget_kzt")} onChange={event => update("budget_kzt", Number(event.target.value))} required />{fieldError("budget_kzt")}</label>
-        <label>{t.duration_hours} <em>{t.optional}</em><input name="duration_hours" type="number" min="0.01" step="any" placeholder={t.durationPlaceholder} value={form.duration_hours ?? ""} disabled={unavailable} {...fieldAttributes("duration_hours")} onChange={event => update("duration_hours", event.target.value ? Number(event.target.value) : null)} />{fieldError("duration_hours")}</label>
+        <label>{t.budget_kzt}<input name="budget_kzt" type="text" inputMode="numeric" value={numericDrafts.budget_kzt} disabled={unavailable} {...fieldAttributes("budget_kzt")} onKeyDown={event => numericKeyDown("budget_kzt", event)} onPaste={event => numericPaste("budget_kzt", event)} onChange={event => editNumeric("budget_kzt", event.target.value)} required />{fieldError("budget_kzt")}</label>
+        <label>{t.duration_hours} <em>{t.optional}</em><input name="duration_hours" type="text" inputMode="decimal" placeholder={t.durationPlaceholder} value={numericDrafts.duration_hours} disabled={unavailable} {...fieldAttributes("duration_hours")} onKeyDown={event => numericKeyDown("duration_hours", event)} onPaste={event => numericPaste("duration_hours", event)} onChange={event => editNumeric("duration_hours", event.target.value)} />{fieldError("duration_hours")}</label>
         <label>{t.language} <em>{t.optional}</em><select name="language" value={form.language ?? ""} disabled={unavailable} {...fieldAttributes("language")} onChange={event => update("language", event.target.value || null)}>
           <option value="">{t.noLanguage}</option>{metadata?.languages.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
         </select><small className="field-hint">{t.languageHint}</small>{fieldError("language")}</label>
@@ -215,12 +292,12 @@ export default function App() {
     {error && <div className="request-error" role="alert" data-testid="request-error">{t[error]} <button type="button" disabled={loading || unavailable} onClick={() => formElement.current?.requestSubmit()}>{t.retry}</button></div>}
     {result && <section className="results" aria-live="polite">
       <div className="result-tabs"><button type="button" onClick={clearSearch}>{t.newRequest}</button><span className={result.status === "matches_found" ? "active" : ""}>{t.foundTab}</span><span className={result.status === "no_eligible_contractors" ? "active" : ""}>{t.emptyTab}</span><span className={result.status === "category_absent" ? "active" : ""}>{t.absentTab}</span></div>
-      <div className="query-tags"><Tag>{optionLabel(result.request.category, locale)}</Tag><Tag>{optionLabel(result.request.city, locale)}</Tag><Tag>{displayDate(result.request.event_date)}</Tag><Tag>{locale === "ru" ? "до" : "up to"} {formatMoney(result.request.budget_kzt, locale)} ₸</Tag></div>
+      <div className="query-tags"><Tag>{optionLabel(result.request.category, locale)}</Tag><Tag>{optionLabel(result.request.city, locale)}</Tag><Tag>{optionLabel(result.request.event_format, locale)}</Tag><Tag>{displayDate(result.request.event_date)}</Tag><Tag>{locale === "ru" ? "до" : "up to"} {formatMoney(result.request.budget_kzt, locale)} ₸</Tag>{result.request.duration_hours != null && <Tag>{result.request.duration_hours} {locale === "ru" ? "ч" : "hours"}</Tag>}{result.request.language && <Tag>{optionLabel(result.request.language, locale)}</Tag>}</div>
       {result.status === "matches_found" ? <div data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date}>
         <h2>{resultTitle(result, locale)}</h2><OutcomeDetails result={result} locale={locale} />
         {result.cards.length < 3 && <p className="shortfall">{shortfallLabel(result, locale)}</p>}
         <div className="card-grid">{result.cards.map(item => <ContractorCard key={item.id} card={item} request={result.request} locale={locale} />)}</div>
-      </div> : <EmptyState result={result} locale={locale} />}
+      </div> : <EmptyState result={result} locale={locale} onAlternative={chooseAlternative} />}
     </section>}
   </main>;
 }

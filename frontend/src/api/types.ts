@@ -72,6 +72,12 @@ export interface ExclusionCounts {
   duration_exceeded: number;
 }
 
+export interface MatchAlternative {
+  changed_field: "city" | "event_date" | "budget_kzt";
+  request: NormalizedMatchRequest;
+  eligible_total: number;
+}
+
 export interface MatchResponse {
   schema_version: "1";
   status: MatchStatus;
@@ -83,6 +89,8 @@ export interface MatchResponse {
   exclusions: ExclusionCounts;
   /** Server ranking order; the client must not sort or pad these cards. */
   cards: MatchCard[];
+  /** Optional for compatibility with earlier v1 fixtures; never applied automatically. */
+  alternatives?: MatchAlternative[];
 }
 
 export interface MetadataResponse {
