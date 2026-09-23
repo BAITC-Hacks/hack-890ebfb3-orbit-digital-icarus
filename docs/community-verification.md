@@ -62,6 +62,14 @@ On the final working-checkout bundle, all **16 isolated browser tests** and **16
 
 ## Boundaries and human actions
 
+### Submission hotfix: stale runtime and empty directory
+
+The user's existing development frontend on port 5173 was proxying to a pre-community backend on port 8000. All three community routes returned framework 404 responses. Restarting the verified backend from the current checkout restored HTTP 200 through the actual frontend origin. Development instructions now enable backend reload; localized route-unavailable errors distinguish this situation from intentionally hidden private resources. The favicon is now an explicit public SVG asset.
+
+A fresh community database correctly contains no user listings, but the Providers page previously offered no way to browse the supplied profiles. It now defaults to a separate, paginated 66-profile source catalog backed by read-only `/api/catalog`; community listings remain a separate view. Source flags are preserved, and source profiles do not become accounts, invitation recipients or availability claims. The additive OpenAPI contract is committed; matching contracts and the CSV are unchanged.
+
+Verified after this fix: **293 Python tests / 265 subtests**, **78 component tests**, **95 client / 17 locale / 10 numeric tests**, strict client types and the production build passed. Both new runtime/browser checks passed on the user's actual 5173 origin; **all 18 real-browser flows** passed on a separate production server with an isolated community database, including signup, publication, three-provider acceptance/chat, source directory filters, locale/mobile layout and core matching. No demo accounts were inserted into the user's working database. The source directory returns all 66 profiles and displays 12 at a time before Show more.
+
 The runtime is deterministic matching plus local collaboration, not an LLM agent. Source profiles have only an honest copyable inquiry; community accounts are unverified and separate. Chat uses periodic refresh and requires current membership. Identity/contact verification, bookings, payments, notification delivery, public hosting, production-scale storage and moderation/recovery/privacy operations are not claimed. [Community documentation](community.md) specifies the retained history and access rules.
 
 GitHub Actions is manual-only because earlier organization billing restrictions prevented jobs from starting; local passes are not a green cloud CI claim. The captain must still rehearse, submit the correct repo/demo links and verify the submission receipt before the official cutoff. Team members must comply with the organizer's attendance rules. No implementation or checklist guarantees a jury score or prize.

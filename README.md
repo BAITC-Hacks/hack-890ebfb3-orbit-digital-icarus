@@ -8,6 +8,8 @@ Find an event contractor in Kazakhstan without searching a long catalog. Enter t
 
 **Providers** opens the browsable 66-profile **Supplied catalog** by default. Switch to **Community listings** for services published by registered users. These views are explicitly separate: browsing a source profile does not prove date availability or create an account/invitation; use matching to check event conditions.
 
+**Team-hosted demo:** [http://80.78.18.242](http://80.78.18.242/). Browsing and matching need no account or API key; publishing and collaboration require sign-in. The server owner must pull the final `main`, rebuild and restart to deploy new changes. This HTTP demo is not a production deployment: use disposable demonstration credentials only. The local setup below remains the reference way to run and verify the project.
+
 ## Run from a fresh checkout
 
 **Windows: open the downloaded/cloned project folder and double-click [Start Tandau.cmd](<Start Tandau.cmd>).** The launcher installs dependencies, builds the website, starts the application and opens your browser. Keep its window open while using Tandau; press **Ctrl+C** there to stop (answer **Y** if Windows asks to terminate the batch job). `Start Orbit.cmd` remains a compatibility shortcut.
