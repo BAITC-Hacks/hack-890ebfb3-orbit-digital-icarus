@@ -1,0 +1,29 @@
+{
+  "schema_version": "1",
+  "status": "no_eligible_contractors",
+  "request": {
+    "city": "Астана",
+    "event_date": "2026-10-11",
+    "event_format": "свадьба",
+    "category": "Флорист",
+    "budget_kzt": 300000,
+    "duration_hours": null,
+    "language": null
+  },
+  "dataset_version": "6a724b6b7dfb5973343e68ba18dadb60fc807d87e3d78f03ee86fb26cb089f7d",
+  "algorithm_version": "hard-filter-v1",
+  "message": "Есть 1 подрядчик в выбранной категории, но на эту дату он занят.",
+  "counts": {
+    "city_category_total": 1,
+    "eligible_total": 0,
+    "returned_total": 0
+  },
+  "exclusions": {
+    "booked": 1,
+    "over_budget": 0,
+    "unsupported_format": 0,
+    "unsupported_language": 0,
+    "duration_exceeded": 0
+  },
+  "cards": []
+}
