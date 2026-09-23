@@ -1,0 +1,18 @@
+bbl.md
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Frontend
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local environment and tooling
+.env
+.DS_Store
+tmp/
