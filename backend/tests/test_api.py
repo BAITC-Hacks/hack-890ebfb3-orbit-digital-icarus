@@ -30,7 +30,7 @@ class ApiTests(unittest.TestCase):
         self.assertIn("свадьба", body["event_formats"])
         self.assertIn("русский", body["languages"])
 
-    def test_match_stub_accepts_user_friendly_aliases(self) -> None:
+    def test_match_returns_ranked_cards_for_user_friendly_aliases(self) -> None:
         payload = {
             "city": "Alma-Ata",
             "event_date": "2026-10-11",
@@ -43,8 +43,13 @@ class ApiTests(unittest.TestCase):
         with TestClient(app) as client:
             response = client.post("/api/match", json=payload)
 
-        self.assertEqual(response.status_code, 503)
-        self.assertEqual(response.json()["detail"]["code"], "ranking_not_integrated")
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["status"], "matches_found")
+        self.assertGreater(body["counts"]["eligible_total"], 0)
+        self.assertEqual(body["counts"]["returned_total"], len(body["cards"]))
+        self.assertLessEqual(len(body["cards"]), 3)
+        self.assertTrue(all(card["evidence"] for card in body["cards"]))
 
     def test_match_returns_category_absent_as_a_business_response(self) -> None:
         payload = {

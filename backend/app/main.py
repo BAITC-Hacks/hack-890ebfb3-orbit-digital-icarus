@@ -12,7 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router
 from .catalog import CatalogValidationError, dataset_sha256, load_catalog
-from .settings import AppSettings
+from .matching import algorithm_version, load_evidence
+from .settings import DEFAULT_ALGORITHM_VERSION, AppSettings
 
 
 def create_app(settings: AppSettings | None = None) -> FastAPI:
@@ -26,14 +27,21 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
         try:
             catalog = load_catalog(resolved_settings.data_path)
-        except CatalogValidationError as error:
+            dataset_version = dataset_sha256(resolved_settings.data_path)
+            evidence = load_evidence(catalog, dataset_sha256=dataset_version)
+        except (CatalogValidationError, OSError, ValueError) as error:
             raise RuntimeError(
-                f"Catalog startup validation failed: {error}"
+                f"Catalog startup validation failed (catalog/evidence): {error}"
             ) from error
 
         app.state.catalog = catalog
-        app.state.dataset_version = dataset_sha256(resolved_settings.data_path)
-        app.state.algorithm_version = resolved_settings.algorithm_version
+        app.state.dataset_version = dataset_version
+        app.state.evidence = evidence
+        app.state.algorithm_version = (
+            algorithm_version()
+            if resolved_settings.algorithm_version == DEFAULT_ALGORITHM_VERSION
+            else resolved_settings.algorithm_version
+        )
         yield
 
     application = FastAPI(

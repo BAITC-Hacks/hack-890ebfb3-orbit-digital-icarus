@@ -3,7 +3,7 @@ import { ApiError, getMetadata, matchContractors } from "./api/client";
 import { metadata as previewMetadata, previewMatch } from "./api/demo";
 import type { MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
 
-const previewMode = import.meta.env.VITE_API_MODE !== "api";
+const previewMode = import.meta.env.VITE_API_MODE === "demo";
 
 const initialRequest: MatchRequest = {
   city: "Алматы", event_date: "2026-10-11", event_format: "свадьба", category: "Ведущий", budget_kzt: 3_000_000, duration_hours: null, language: null,
@@ -83,7 +83,7 @@ export default function App() {
     <form className="match-form" data-testid="match-form" aria-busy={loading} onSubmit={submit}>
       <div className="field-grid">
         {fields.map(({ key, label, options }) => <label key={key}>{label}<select name={key} value={form[key]} onChange={(event) => update(key, event.target.value)}>{options.map((option) => <option key={option}>{option}</option>)}</select></label>)}
-        <label>Дата мероприятия<input name="event_date" type="date" min={metadata.date_min} max={metadata.date_max} value={form.event_date} onChange={(event) => update("event_date", event.target.value)} required /></label>
+        <label>Дата мероприятия<input name="event_date" type="date" min={metadata.calendar_start} max={metadata.calendar_end} value={form.event_date} onChange={(event) => update("event_date", event.target.value)} required /></label>
         <label>Бюджет, ₸<input name="budget_kzt" type="number" min="1" step="1" value={form.budget_kzt} onChange={(event) => update("budget_kzt", Number(event.target.value))} required /></label>
         <label>Длительность, ч <em>необязательно</em><input name="duration_hours" type="number" min="0.5" step="0.5" placeholder="например, 6" value={form.duration_hours ?? ""} onChange={(event) => update("duration_hours", event.target.value ? Number(event.target.value) : null)} /></label>
         <label>Язык работы <em>необязательно</em><select name="language" value={form.language ?? ""} onChange={(event) => update("language", event.target.value || null)}><option value="">Не выбирать</option>{metadata.languages.map((option) => <option key={option}>{option}</option>)}</select></label>
