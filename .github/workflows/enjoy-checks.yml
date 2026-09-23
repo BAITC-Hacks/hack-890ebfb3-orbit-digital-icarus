@@ -1,0 +1,29 @@
+name: Enjoy matching and client checks
+
+on:
+  push:
+    branches: [Enjoy, main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  matching-and-client:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: python -m unittest discover -s backend/tests -p 'test_matching*.py' -v
+      - run: python scripts/matching_acceptance.py --repeat 20
+      - run: npm ci
+      - run: npm run test:client
+      - run: npm run typecheck:client
+      - run: npm run test:e2e:list

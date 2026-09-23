@@ -24,6 +24,8 @@ def load_evidence(
     A missing file, malformed record, or incorrect quote is a startup error.
     """
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Profile evidence root must be an object")
     if payload.get("schema_version") != "1":
         raise ValueError("Unsupported profile evidence schema")
     if dataset_sha256 is not None and payload.get("dataset_sha256") != dataset_sha256:
