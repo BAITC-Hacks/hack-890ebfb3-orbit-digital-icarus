@@ -28,6 +28,7 @@ origins; by default it allows `http://127.0.0.1:5173` and `http://localhost:5173
 Wildcard origins are rejected. Configuration can be supplied through environment
 variables. If using a copied `.env` file, load it explicitly:
 
+    Copy-Item .env.example .env
     python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --env-file .env
 
 The application does not load `.env` implicitly. `create_app(settings)` supports
