@@ -28,7 +28,7 @@ export const journeyCopy = {
     categoryHint: "Открыть подбор →", categoriesOffline: "Категории появятся после загрузки каталога. Форму можно открыть кнопкой выше.",
     trustTitle: "Честный ответ — даже если вариантов нет", trustBody: "Мы не заполняем список неподходящими профилями. Если категория отсутствует или все заняты, вы увидите причину. Проверенные альтернативы изменят только одно условие — и только с вашего согласия.",
     faqTitle: "Перед началом", faq: [
-      ["Это подтверждённая бронь?", "Нет. Свободная дата относится к предоставленному календарю за 23 сентября — 31 декабря 2026 года. Уточните актуальную доступность и итоговую цену перед договорённостью."],
+      ["Это подтверждённая бронь?", "Нет. Свободная дата определяется только по календарным данным подрядчиков за 23 сентября — 31 декабря 2026 года. Для дат вне этого периода сервис не показывает доступность. Уточните актуальную доступность и итоговую цену перед договорённостью."],
       ["Почему иногда меньше трёх вариантов?", "Показываем только тех, кто проходит все условия. Календарь, бюджет, формат, язык и длительность не ослабляются ради красивого списка."],
       ["Можно связаться с подрядчиком?", "В каждой карточке есть текст обращения для копирования. Исходный каталог обезличен и не содержит проверенных телефонов или email. Ничего не отправляется автоматически."],
       ["Что означают пометки в карточках?", "В каталоге есть синтетические профили и восстановленные значения цены или города. Мы сохраняем эти пометки: данные из примера не равны внешней проверке."],
@@ -65,7 +65,7 @@ export const journeyCopy = {
     categoryHint: "Set your requirements →", categoriesOffline: "Categories will appear when the catalog loads. You can still open the form above.",
     trustTitle: "An honest answer, even when nobody fits", trustBody: "We never pad a shortlist with unsuitable profiles. If a category is missing or everyone is booked, we explain why. Verified alternatives change just one condition, and only after you choose one.",
     faqTitle: "Before you begin", faq: [
-      ["Is this a confirmed booking?", "No. Availability comes from a supplied calendar covering 23 September–31 December 2026. Confirm current availability and the final quote before making an agreement."],
+      ["Is this a confirmed booking?", "No. Availability is based only on contractor calendar data from 23 September–31 December 2026. The service does not show availability outside that period. Confirm current availability and the final quote before making an agreement."],
       ["Why are there sometimes fewer than three options?", "Only profiles meeting every condition qualify. We do not relax calendar, budget, format, language or duration requirements to fill the list."],
       ["Can I contact a contractor?", "Each card has a copyable inquiry. The source catalog is anonymized and has no verified phone numbers or emails. Nothing is sent automatically."],
       ["What do the notes on cards mean?", "The catalog includes synthetic profiles and imputed prices or cities. We preserve these labels: supplied example data is not independent verification."],

@@ -102,6 +102,23 @@ describe("App: explicit demo fixtures, not production matching", () => {
     expect(home.getByText(/Это проверка данных/)).toBeVisible();
   });
 
+  it("discloses the supported calendar window and unavailable out-of-window dates in both home-page languages", async () => {
+    window.history.replaceState(null, "", "/");
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByText("Это подтверждённая бронь?"));
+    const russian = screen.getByText(/Для дат вне этого периода сервис не показывает доступность/);
+    expect(russian).toBeVisible();
+    expect(russian).toHaveTextContent("23 сентября — 31 декабря 2026 года");
+    expect(russian).toHaveTextContent("Уточните актуальную доступность и итоговую цену");
+    await user.click(screen.getByRole("button", { name: "English", exact: true }));
+    await user.click(screen.getByText("Is this a confirmed booking?"));
+    const english = screen.getByText(/The service does not show availability outside that period/);
+    expect(english).toBeVisible();
+    expect(english).toHaveTextContent("23 September–31 December 2026");
+    expect(english).toHaveTextContent("Confirm current availability and the final quote");
+  });
+
   it("renders every required field and all global categories after metadata is ready", async () => {
     const user = userEvent.setup();
     await renderPreview();
