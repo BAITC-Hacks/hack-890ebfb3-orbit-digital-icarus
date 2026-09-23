@@ -27,10 +27,10 @@ Current suite inventory for the final integrated run:
 | Client | 95 | Passed |
 | Interface localization | 16 | Passed |
 | Numeric validation | 8 | Passed |
-| Component behavior | 9 | Passed |
-| Isolated browser UI | 13 | Passed (Chromium) |
-| Real API/browser E2E | 11 | Passed (Chromium, servers started by Playwright) |
-| Backend | 114 tests + 253 subtests | Passed |
+| Component behavior | 18 | Passed (includes bbl's home and inquiry components) |
+| Isolated browser UI | 15 | Passed (Chromium) |
+| Real API/browser E2E | 13 | Passed (Chromium, servers started by Playwright) |
+| Backend | 115 tests + 255 subtests | Passed |
 
 The domain acceptance tool (160 timed runs), the strict client type check and the production build also passed. Runs used Windows 11, Python 3.12.10 and the locked dependencies. Cloud CI remains distinct from local evidence: GitHub cannot start Actions jobs in the organizer's organization because of a billing lock, so the workflow is manual-only (see [Automated checks](../README.md#automated-checks)).
 
