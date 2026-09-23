@@ -55,7 +55,7 @@ Per-submission observations are not a complete benchmark. Before release, perfor
 
 ## Running after integration
 
-The project must first provide a root Playwright dependency/lockfile and installed Chromium, the backend dependencies, and frontend dependencies. Dependency ownership remains with the team integrator and spectra; this test handoff adds no package changes.
+The root Playwright dependency and lockfile are now committed. Run `npm ci` and `npx playwright install chromium`, install the locked backend dependencies, and install the frontend dependencies once spectra publishes the application package. Browser execution still needs real backend endpoints and the actual UI.
 
 Start the real backend and frontend using the integrated README commands, then run from repository root:
 
@@ -66,8 +66,8 @@ npx playwright test
 Alternatively, set `RUN_APP_SERVERS=1` in the environment before running. The config then starts:
 
 ```bash
-python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
-npm --prefix frontend run dev -- --host 127.0.0.1
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
 Default frontend URL is `http://127.0.0.1:5173`; API URL is `http://127.0.0.1:8000`. For already-running services, `E2E_BASE_URL` and `E2E_API_URL` override those addresses. Auto-start commands use the fixed default ports; if overriding ports, start the services explicitly. The Vite development server must proxy `/api` to the backend, or the frontend client must use its documented API base URL with backend CORS configured.
