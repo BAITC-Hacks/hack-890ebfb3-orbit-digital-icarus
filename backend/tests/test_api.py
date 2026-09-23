@@ -1,6 +1,7 @@
 """B1 API contract tests."""
 
 from fastapi.testclient import TestClient
+from time import perf_counter
 import unittest
 
 from backend.app.main import app
@@ -109,4 +110,44 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(
             response.json()["detail"]["code"],
             "unsupported_catalog_value",
+        )
+
+    def test_match_rejects_oversized_request_values(self) -> None:
+        payload = {
+            "city": "Almaty",
+            "event_date": "2026-10-10",
+            "event_format": "wedding",
+            "category": "x" * 121,
+            "budget_kzt": 500000,
+        }
+        with TestClient(app) as client:
+            response = client.post("/api/match", json=payload)
+
+        self.assertEqual(response.status_code, 422)
+        errors = response.json()["detail"]
+        self.assertTrue(
+            any(error["loc"][-1] == "category" for error in errors),
+            errors,
+        )
+
+    def test_match_filtering_response_meets_the_ten_second_target(self) -> None:
+        """Measure the in-process API call, not browser or network latency."""
+        payload = {
+            "city": "Almaty",
+            "event_date": "2026-10-11",
+            "event_format": "wedding",
+            "category": "MC",
+            "budget_kzt": 3_000_000,
+            "language": "RU",
+        }
+        with TestClient(app) as client:
+            started_at = perf_counter()
+            response = client.post("/api/match", json=payload)
+            elapsed_seconds = perf_counter() - started_at
+
+        self.assertEqual(response.status_code, 503)
+        self.assertLess(
+            elapsed_seconds,
+            10,
+            f"Filtering response took {elapsed_seconds:.3f} seconds",
         )

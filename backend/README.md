@@ -10,8 +10,13 @@ From the repository root, with Python 3.11 or newer:
 
     python -m venv .venv
     .venv\Scripts\Activate.ps1
-    python -m pip install -e ".[dev]"
+    python -m pip install -r requirements-dev.lock
+    python -m pip install --no-build-isolation --no-deps -e .
     python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
+
+requirements-dev.lock is the exact dependency set verified on Windows with
+Python 3.14. Regenerate and review it deliberately when upgrading a direct
+dependency; do not use an unpinned install during the hackathon demo.
 
 Open http://127.0.0.1:8000/docs for the interactive API schema.
 
