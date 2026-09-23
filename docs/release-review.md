@@ -8,6 +8,10 @@ After release `3fc7421`, a user reproduced an empty duration field remaining loc
 
 ## What changed and why
 
+Duration-limit follow-up: the CSV's 57 defined attendance limits range from 2 to 12 hours, with 9 null values. At the captain's request, event duration is now bounded to `(0, 12]` hours or omitted. Per-contractor limits and null attendance semantics are unchanged. Values such as 4903 remain visible as invalid editable drafts rather than being silently clamped; no request is sent. Direct API requests above 12 return HTTP 422, including florist requests. Tests bind the frontend ceiling to published OpenAPI and the backend ceiling to the supplied snapshot maximum. Boundary tests include 12, 12.0001, 12.5, 4903, positive fractions and null. Latest checks: 117 backend tests / 265 subtests, 9 numeric / 17 locale / 15 React tests, 16 isolated browser tests and production build passed; live HTTP probes confirmed 12 → 200, 12.01/4903 → 422, blank/null → 200. An end-to-end run was interrupted when the local frontend server stopped; it was restarted for verification.
+
+After restarting the frontend, all 13 real-application end-to-end tests passed again. The 95 transport tests and strict client TypeScript check also passed.
+
 - Integrated BBL `f3c8529`, Enjoy `9e7d5d0`, spectra `fc3a958`, and main's PR #4 merge `e691a58`, preserving their history. Product work follows in `032561f`; synchronization with the concurrent main update is `a1930af`.
 - Preserved strict BBL JSON/date validation, including non-finite catalog-hour rejection, alongside Enjoy's working ranking, evidence, recovery alternatives and malformed-number error handling. No matching stub remains.
 - Reconciled two numeric implementations. Invalid characters are rejected atomically: `4e2` never silently becomes `42`. Budget must be a positive safe integer; optional duration accepts any positive decimal, including a comma separator. The brief imposes no half-hour step, so we did not add one.

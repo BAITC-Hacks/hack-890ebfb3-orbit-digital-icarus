@@ -153,7 +153,7 @@ describe("App: explicit demo fixtures, not production matching", () => {
     expect(await screen.findByTestId("result-summary")).toBeVisible();
   });
 
-  it("accepts any positive fractional duration without inventing a half-hour constraint", async () => {
+  it("accepts fractional durations below the ceiling without inventing a half-hour constraint", async () => {
     const user = userEvent.setup();
     await renderPreview();
 
@@ -162,6 +162,23 @@ describe("App: explicit demo fixtures, not production matching", () => {
 
     expect(await screen.findByTestId("result-summary")).toBeVisible();
     expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("flags a duration over 12 immediately and accepts a corrected boundary value", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const duration = screen.getByLabelText("Длительность, ч", { exact: true });
+    await user.type(duration, "4903");
+    expect(duration).toHaveValue("4903"); // Show what was entered; never silently truncate it to 4.
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText(/Введите длительность больше 0 и не более 12/)).toBeVisible();
+    await submit(user);
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+    await user.clear(duration);
+    await user.type(duration, "12");
+    expect(duration).toHaveAttribute("aria-invalid", "false");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
   });
 
   it("rejects an empty or out-of-range event date before calling the API", async () => {

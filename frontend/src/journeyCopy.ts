@@ -1,4 +1,5 @@
 import type { Locale } from "./i18n";
+import { MAX_DURATION_HOURS } from "./formNumbers";
 
 // Keep journey copy together so home, navigation and contact stay bilingual.
 export const journeyCopy = {
@@ -31,7 +32,7 @@ export const journeyCopy = {
     footer: "Orbit Digital | Icarus · HackAlem 2026 · Обезличенный демонстрационный каталог",
     contact: "Связаться / подготовить запрос", contactNotice: "В обезличенном каталоге нет проверенных телефонов и email. Это черновик: скопируйте его и отправьте самостоятельно, когда получите подтверждённый контакт. Приложение ничего не отправляет и не бронирует.",
     draft: "Текст обращения", copy: "Скопировать запрос", copied: "Скопировано. Сообщение не отправлено.", manual: "Не удалось скопировать автоматически. Текст выделен — скопируйте его вручную.",
-    budgetHint: "Целая сумма без пробелов, например 3000000. Бюджет на одного подрядчика.", durationHint: "Положительное число, например 6 или 6,5. Буквы и экспоненты не принимаются.",
+    budgetHint: "Целая сумма без пробелов, например 3000000. Бюджет на одного подрядчика.", durationHint: `Больше 0 и до ${MAX_DURATION_HOURS} часов включительно, например 6 или 6,5. Буквы и экспоненты не принимаются.`,
   },
   en: {
     home: "Home", match: "Find a match", skip: "Skip to content",
@@ -62,6 +63,6 @@ export const journeyCopy = {
     footer: "Orbit Digital | Icarus · HackAlem 2026 · Anonymized demonstration catalog",
     contact: "Contact / prepare inquiry", contactNotice: "This anonymized catalog contains no verified phone numbers or emails. This is a draft: copy it and send it yourself once you obtain a verified contact. The app does not send messages or make bookings.",
     draft: "Inquiry draft", copy: "Copy inquiry", copied: "Copied. No message was sent.", manual: "Automatic copying failed. The text is selected; please copy it manually.",
-    budgetHint: "Whole KZT without spaces, for example 3000000. Budget per contractor.", durationHint: "A positive number such as 6 or 6.5. Letters and exponents are not accepted.",
+    budgetHint: "Whole KZT without spaces, for example 3000000. Budget per contractor.", durationHint: `Greater than 0 and up to ${MAX_DURATION_HOURS} hours inclusive, such as 6 or 6.5. Letters and exponents are not accepted.`,
   },
 } satisfies Record<Locale, object>;
