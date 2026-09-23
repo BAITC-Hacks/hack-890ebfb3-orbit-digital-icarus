@@ -1,13 +1,16 @@
 """Shared domain and API contracts.
 
-This is the initial contract scaffold. Filtering, catalog loading, ranking,
-and explanation logic should remain in separate modules.
+Filtering, catalog loading, ranking, and explanation logic remain in separate
+modules. These models define the stable boundary between those components.
 """
 
 from datetime import date
+from math import isfinite
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from .constants import CALENDAR_END, CALENDAR_START
 
 
 OutcomeStatus = Literal[
@@ -24,6 +27,26 @@ RejectionReason = Literal[
     "duration_exceeded",
 ]
 
+EvidenceCode = Literal[
+    "availability",
+    "budget",
+    "format",
+    "language",
+    "duration",
+    "description",
+]
+
+SourceKind = Literal["provided", "team_added"]
+
+
+def _clean_required_text(value: object) -> str:
+    if not isinstance(value, str):
+        raise ValueError("must be a string")
+    normalized = " ".join(value.strip().split())
+    if not normalized:
+        raise ValueError("must not be blank")
+    return normalized
+
 
 class MatchRequest(BaseModel):
     """Normalized request accepted by the matching domain."""
@@ -35,6 +58,42 @@ class MatchRequest(BaseModel):
     budget_kzt: int = Field(gt=0)
     duration_hours: float | None = Field(default=None, gt=0)
     language: str | None = None
+
+    @field_validator("city", "event_format", "category", mode="before")
+    @classmethod
+    def clean_required_strings(cls, value: object) -> str:
+        return _clean_required_text(value)
+
+    @field_validator("language", mode="before")
+    @classmethod
+    def clean_optional_language(cls, value: object) -> str | None:
+        if value is None:
+            return None
+        return _clean_required_text(value)
+
+    @field_validator("budget_kzt", mode="before")
+    @classmethod
+    def reject_boolean_budget(cls, value: object) -> object:
+        if isinstance(value, bool):
+            raise ValueError("must be a positive integer")
+        return value
+
+    @field_validator("duration_hours")
+    @classmethod
+    def require_finite_duration(cls, value: float | None) -> float | None:
+        if value is not None and not isfinite(value):
+            raise ValueError("must be finite")
+        return value
+
+    @field_validator("event_date")
+    @classmethod
+    def require_supported_event_date(cls, value: date) -> date:
+        if not CALENDAR_START <= value <= CALENDAR_END:
+            raise ValueError(
+                f"must be within {CALENDAR_START.isoformat()} and "
+                f"{CALENDAR_END.isoformat()}"
+            )
+        return value
 
 
 class Contractor(BaseModel):
@@ -53,7 +112,7 @@ class Contractor(BaseModel):
     max_hours: float | None = Field(default=None, gt=0)
     busy_dates: set[date]
     description: str
-    source_kind: Literal["provided", "team_added"] = "provided"
+    source_kind: SourceKind = "provided"
 
 
 class ExclusionCounts(BaseModel):
@@ -80,6 +139,34 @@ class CountSummary(BaseModel):
     returned_total: int = Field(ge=0)
 
 
+class EvidenceItem(BaseModel):
+    """One fact supporting an explanation card."""
+
+    code: EvidenceCode
+    field: str
+    value: str | int | float | list[str]
+    source_quote: str | None = None
+
+
+class MatchCard(BaseModel):
+    """One ranked contractor returned to the customer."""
+
+    id: str
+    anon_name: str
+    category: str
+    categories: list[str]
+    city: str
+    price_from_kzt: int = Field(gt=0)
+    event_date: date
+    availability: Literal["free_in_dataset"] = "free_in_dataset"
+    synthetic: bool
+    source_kind: SourceKind
+    city_imputed: bool
+    price_imputed: bool
+    explanation: str
+    evidence: list[EvidenceItem] = Field(default_factory=list)
+
+
 class MatchResponse(BaseModel):
     """Stable response envelope for the match endpoint."""
 
@@ -91,4 +178,20 @@ class MatchResponse(BaseModel):
     message: str
     counts: CountSummary
     exclusions: ExclusionCounts
-    cards: list[dict] = Field(default_factory=list, max_length=3)
+    cards: list[MatchCard] = Field(default_factory=list, max_length=3)
+
+
+class HealthResponse(BaseModel):
+    status: Literal["ready"]
+    profile_count: int = Field(ge=0)
+    dataset_version: str
+    algorithm_version: str
+
+
+class MetadataResponse(BaseModel):
+    cities: list[str]
+    categories: list[str]
+    event_formats: list[str]
+    languages: list[str]
+    calendar_start: date
+    calendar_end: date
