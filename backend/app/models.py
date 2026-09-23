@@ -51,13 +51,13 @@ def _clean_required_text(value: object) -> str:
 class MatchRequest(BaseModel):
     """Normalized request accepted by the matching domain."""
 
-    city: str
+    city: str = Field(max_length=80)
     event_date: date
-    event_format: str
-    category: str
+    event_format: str = Field(max_length=80)
+    category: str = Field(max_length=120)
     budget_kzt: int = Field(gt=0)
     duration_hours: float | None = Field(default=None, gt=0)
-    language: str | None = None
+    language: str | None = Field(default=None, max_length=80)
 
     @field_validator("city", "event_format", "category", mode="before")
     @classmethod

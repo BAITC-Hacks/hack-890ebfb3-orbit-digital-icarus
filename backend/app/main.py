@@ -6,40 +6,53 @@ Run the service from the repository root with:
 """
 
 from contextlib import asynccontextmanager
-from os import getenv
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router
 from .catalog import CatalogValidationError, dataset_sha256, load_catalog
+from .settings import AppSettings
 
 
-DEFAULT_ALGORITHM_VERSION = "hard-filter-v1"
+def create_app(settings: AppSettings | None = None) -> FastAPI:
+    """Create the API with explicit, testable startup configuration."""
 
+    resolved_settings = settings or AppSettings.from_environment()
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Load the entire catalog before accepting API traffic."""
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Load the entire catalog before accepting API traffic."""
 
-    try:
-        catalog = load_catalog()
-    except CatalogValidationError as error:
-        raise RuntimeError(f"Catalog startup validation failed: {error}") from error
+        try:
+            catalog = load_catalog(resolved_settings.data_path)
+        except CatalogValidationError as error:
+            raise RuntimeError(
+                f"Catalog startup validation failed: {error}"
+            ) from error
 
-    app.state.catalog = catalog
-    app.state.dataset_version = dataset_sha256()
-    app.state.algorithm_version = getenv(
-        "ALGORITHM_VERSION",
-        DEFAULT_ALGORITHM_VERSION,
+        app.state.catalog = catalog
+        app.state.dataset_version = dataset_sha256(resolved_settings.data_path)
+        app.state.algorithm_version = resolved_settings.algorithm_version
+        yield
+
+    application = FastAPI(
+        title="Orbit Digital Contractor Matching",
+        version="0.1.0",
+        description="Explainable event-contractor recommendations.",
+        lifespan=lifespan,
     )
-    yield
+    application.state.settings = resolved_settings
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(resolved_settings.cors_origins),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
+        max_age=600,
+    )
+    application.include_router(router)
+    return application
 
 
-app = FastAPI(
-    title="Orbit Digital Contractor Matching",
-    version="0.1.0",
-    description="Explainable event-contractor recommendations.",
-    lifespan=lifespan,
-)
-
-app.include_router(router)
+app = create_app()
