@@ -55,6 +55,7 @@ These are rubric weights, not scores already earned. Documentation receives as m
 - Starting price equal to budget passes. Show `от … ₸` and state that final price needs confirmation; do not claim a fixed quote or guaranteed savings.
 - Only dates from **2026-09-23 through 2026-12-31 inclusive** are supported by this snapshot. Reject dates outside it with a clear validation message; absence from the calendar outside the window does not prove availability.
 - `max_hours = null` means duration is not tied to on-site presence. It passes the duration check and must not be described as unlimited attendance.
+- Captain-approved input ceiling: duration must be greater than zero and at most 12 hours, or omitted. Twelve is the largest defined `max_hours` in the supplied CSV, not a minimum or a claim that all contractors support twelve hours. The UI and API both reject larger event durations; null attendance limits do not bypass this input rule.
 - Structured fields govern filtering. A description mentioning travel to another city does not expand the selected city's catalog; contradictions are documented rather than silently changing facts.
 - Keep all 66 supplied profiles. No extra synthetic contractors are needed for the MVP.
 

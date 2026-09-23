@@ -2,7 +2,7 @@ import { type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode
 import { ApiError, ApiResponseError, getMetadata, matchContractors } from "./api/client";
 import { metadata as previewMetadata, previewMatch } from "./api/demo";
 import type { MatchAlternative, MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
-import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft } from "./formNumbers";
+import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft, MAX_DURATION_HOURS } from "./formNumbers";
 import { HomePage } from "./components/HomePage";
 import { ContactPanel } from "./components/ContactPanel";
 import { journeyCopy } from "./journeyCopy";
@@ -198,6 +198,11 @@ export default function App() {
     rejectedEdits.current.delete(key);
     clearSearch();
     setNumericDrafts(current => ({ ...current, [key]: value }));
+    // Keep an over-limit draft editable, but flag it immediately; never silently clamp its meaning.
+    if (key === "duration_hours" && Number(value.replace(",", ".")) > MAX_DURATION_HOURS) {
+      setInvalid([key]);
+      setError("validationError");
+    }
   }
 
   function numericKeyDown(key: NumericField, event: KeyboardEvent<HTMLInputElement>) {

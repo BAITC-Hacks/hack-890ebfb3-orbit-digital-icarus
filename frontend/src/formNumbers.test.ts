@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
+import openapi from "../../contracts/openapi.json";
 import {
-  acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft,
+  acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft, MAX_DURATION_HOURS,
 } from "./formNumbers";
 
 describe("budget drafts", () => {
@@ -38,6 +39,16 @@ describe("budget drafts", () => {
 });
 
 describe("duration drafts", () => {
+  it("uses the same maximum as the published API contract", () => {
+    const schema = openapi.components.schemas.MatchRequest.properties.duration_hours.anyOf.find(item => item.type === "number");
+    expect(schema?.maximum).toBe(MAX_DURATION_HOURS);
+  });
+
+  it("accepts the 12-hour boundary but rejects larger durations without clamping", () => {
+    for (const draft of ["12", "12.0", "12,0", "11.999"]) expect(parseDurationDraft(draft)).toBe(Number(draft.replace(",", ".")));
+    for (const draft of ["12.0001", "12,5", "13", "4903", "99999"]) expect(parseDurationDraft(draft)).toBeUndefined();
+  });
+
   it("keeps intermediate empty and decimal-separator drafts editable", () => {
     for (const draft of ["", ".", ",", "4.", "4,", "0", "0.", ".5", ",5", "4.5", "4,5"]) {
       expect(acceptDurationDraft(draft), draft).toBe(true);

@@ -181,6 +181,27 @@ test("budget rejects empty, zero and unsafe integer values without sending a req
   expect(requests[0].budget_kzt).toBe(300000);
 });
 
+test("duration caps at 12 hours and invalid values remain editable without sending requests", async ({ page }) => {
+  const { duration, requests, submit } = await setup(page);
+  for (const value of ["4903", "13", "12.01", "12,5"]) {
+    await duration.fill(value);
+    await expect(duration).toHaveValue(value);
+    await expect(duration).toHaveAttribute("aria-invalid", "true");
+    await expect(page.locator("#error-duration_hours")).toContainText("не более 12 часов");
+    await submit.click();
+    expect(requests).toHaveLength(0);
+  }
+  await page.getByRole("button", { name: "English", exact: true }).click();
+  await expect(page.locator("#error-duration_hours")).toContainText("no more than 12 hours");
+  for (const value of ["12", "12,0", "6.5", ""]) {
+    await duration.fill(value);
+    await expect(duration).toHaveAttribute("aria-invalid", "false");
+    await submit.click();
+    await expect(page.getByTestId("contractor-card")).toHaveCount(1);
+    expect(requests.at(-1)?.duration_hours).toBe(value === "" ? null : Number(value.replace(",", ".")));
+  }
+});
+
 test("a rejected character cannot silently concatenate a different numeric request", async ({ page }) => {
   const { budget, duration, requests, submit } = await setup(page);
   for (const text of ["4.5", "4,5", "4e2", "4E2", "4+5", "4-5"]) {

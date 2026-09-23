@@ -11,7 +11,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from .constants import CALENDAR_END, CALENDAR_START
+from .constants import CALENDAR_END, CALENDAR_START, MAX_DURATION_HOURS
 
 
 OutcomeStatus = Literal[
@@ -57,7 +57,7 @@ class MatchRequest(BaseModel):
     event_format: str = Field(max_length=80)
     category: str = Field(max_length=120)
     budget_kzt: int = Field(gt=0)
-    duration_hours: float | None = Field(default=None, gt=0)
+    duration_hours: float | None = Field(default=None, gt=0, le=MAX_DURATION_HOURS)
     language: str | None = Field(default=None, max_length=80)
 
     @field_validator("city", "event_format", "category", mode="before")

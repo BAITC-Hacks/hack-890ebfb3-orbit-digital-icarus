@@ -92,7 +92,7 @@ The build runs the application TypeScript check and writes `frontend/dist`. Keep
 
 ## Try the main scenario
 
-Start on the home page, explain the problem, then click **Начать подбор**. Category cards prefill the form but never submit silently. Budget accepts whole KZT written plainly or with correctly grouped thousands such as `4 000 000`; duration accepts positive dot/comma decimals. Letters, signs, exponents, badly grouped numbers and malformed pasted values are rejected rather than stripped into another number.
+Start on the home page, explain the problem, then click **Начать подбор**. Category cards prefill the form but never submit silently. Budget accepts whole KZT written plainly or with correctly grouped thousands such as `4 000 000`; duration accepts positive dot/comma decimals up to **12 hours inclusive**, or can be left blank. Twelve is the largest defined `max_hours` in the bundled CSV; each contractor's own lower limit still applies. Excessive values show a field error and cannot be submitted; the API also enforces the ceiling. Letters, signs, exponents, badly grouped numbers and malformed pasted values are rejected rather than stripped into another number.
 
 1. Use **Алматы / Ведущий / свадьба / 2026-10-11 / 3,000,000 ₸**, leaving duration and contractor language blank. Five profiles qualify; the first three are `HK-42352 → HK-44923 → HK-27222`.
 2. Expand a card's evidence, then switch to English. Interface text and reviewed quote translations change; the IDs, ordering and contractor-language filter stay the same. The original Russian quote remains inspectable.
@@ -263,11 +263,11 @@ To let Playwright start both services itself, activate `.venv` and set `RUN_APP_
 
 | Check | Result |
 | --- | --- |
-| Python suite | **115 passing tests and 255 subtests**, including strict types, JSON-safe errors, verified alternatives and published OpenAPI parity |
-| Transport, locale and numeric unit tests | **95 client + 16 localization + 8 numeric tests passing**, including grouped budgets such as `4 000 000` |
-| React components | **18 tests passing**, including grouped and malformed budgets, empty-field numeric recovery, home and inquiry/clipboard behavior |
+| Python suite | **117 passing tests and 265 subtests**, including duration boundaries, strict types, JSON-safe errors, verified alternatives and published OpenAPI parity |
+| Transport, locale and numeric unit tests | **95 client + 17 localization + 10 numeric tests passing**, including grouped budgets such as `4 000 000` |
+| React components | **19 tests passing**, including grouped and malformed budgets, duration limits/recovery, home and inquiry/clipboard behavior |
 | Strict transport types / full frontend build | **Passing** |
-| Isolated mocked browser UI | **15 Chromium tests passing**, including number entry after rejecting letters/pastes |
+| Isolated mocked browser UI | **16 Chromium tests passing**, including duration limits and number entry after rejecting letters/pastes |
 | Application browser acceptance | **13 Chromium tests passing**: matching, alternatives, home/navigation and inquiry journeys |
 | Domain and real HTTP scenarios | **8 scenarios × 20 repeats = 160 runs** in each check |
 | Built-bundle preview | All **13 application E2E tests passed again** through the local port 4173 production preview |

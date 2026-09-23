@@ -6,10 +6,36 @@ import unittest
 
 from backend.app.main import app
 from backend.app.matching import algorithm_version
+from backend.app.catalog import load_catalog
+from backend.app.constants import MAX_DURATION_HOURS
 from scripts.matching_acceptance import demo_requests
 
 
 class ApiTests(unittest.TestCase):
+    def test_duration_ceiling_matches_the_supplied_catalog(self) -> None:
+        """Changing the snapshot requires reviewing the product's request ceiling."""
+        hours = [profile.max_hours for profile in load_catalog() if profile.max_hours is not None]
+        self.assertEqual(MAX_DURATION_HOURS, 12)
+        self.assertEqual(max(hours), MAX_DURATION_HOURS)
+
+    def test_duration_limit_rejects_unrealistic_requests_even_for_null_hour_profiles(self) -> None:
+        # Florists' null attendance limits do not bypass the event-input ceiling.
+        payload = demo_requests()["rare_florist"]
+        with TestClient(app) as client:
+            for hours in (12.0001, 12.5, 13, 4903, 1e300):
+                with self.subTest(hours=hours):
+                    response = client.post("/api/match", json=payload | {"duration_hours": hours})
+                    self.assertEqual(response.status_code, 422)
+                    error = next(item for item in response.json()["detail"] if item["loc"][-1] == "duration_hours")
+                    self.assertEqual(error["type"], "less_than_equal")
+                    self.assertEqual(error["ctx"]["le"], MAX_DURATION_HOURS)
+            for hours in (None, 0.5, 6.5, 11.999, 12):
+                with self.subTest(hours=hours):
+                    response = client.post("/api/match", json=payload | {"duration_hours": hours})
+                    self.assertEqual(response.status_code, 200)
+                    self.assertEqual(response.json()["request"]["duration_hours"], hours)
+                    self.assertEqual(response.json()["cards"][0]["id"], "HK-39372")
+
     def test_health_reports_ready_catalog(self) -> None:
         with TestClient(app) as client:
             response = client.get("/api/health")
