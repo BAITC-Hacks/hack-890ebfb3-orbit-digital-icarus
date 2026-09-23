@@ -60,21 +60,30 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 @media (max-width: 1050px) and (min-width: 761px) { .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.contractor-card { padding: 24px; }.form-footer { align-items: flex-start; flex-wrap: wrap; } }
 @media (max-width: 760px) { .locale-switcher { justify-content: flex-start; margin-top: -12px; }.locale-switcher > span { font-size: .8rem; }.form-footer button { white-space: normal; padding: 12px 20px; }.empty-state p { font-size: 1rem; } }
 
-/* Temporary dark visual direction: preserve the existing information hierarchy and accent colors. */
-:root { color-scheme: dark; color: #edf4ed; background: #101815; }
-body { background: radial-gradient(circle at 82% -10%, #264238 0, transparent 34rem), #101815; }
-h1, h2 { color: #f4f7ee; }
-.eyebrow, .preview-note, .availability, .card-evidence summary { color: #9fd1af; }
-.lede, .result-message, .empty-state p, .card-explanation, .exclusion-details, .calendar-note, .catalog-status { color: #bac8bd; }
-.locale-switcher { color: #c9d5ca; }.locale-switcher button, .query-tag { color: #e8f0e7; background: #17221e; border-color: #40564a; }.locale-switcher button[aria-pressed="true"] { color: #08110d; background: #a9d8b4; border-color: #a9d8b4; }
-.match-form, .contractor-card, .empty-state { background: #17221e; border-color: #34483e; box-shadow: 0 14px 34px rgb(0 0 0 / 20%); }
-label { color: #e5ede5; } label em, .field-hint, .price-caveat, .source-quote-label, .exclusion-details small, .form-footer p { color: #9cac9f; }
-input, select { color: #eff6ef; background: #101815; border-color: #465d50; } select option { color: #eff6ef; background: #101815; }
-input:disabled, select:disabled { color: #788b7e; background: #16201c; } input:focus, select:focus { border-color: #ff8d63; box-shadow: 0 0 0 3px rgb(255 141 99 / 23%); }
-.form-footer { border-color: #31433b; }.form-footer button { color: #1a100c; background: #ff8d63; box-shadow: 0 8px 18px rgb(0 0 0 / 24%); }.form-footer button:hover:not(:disabled) { background: #ffb08f; }
-.result-tabs { color: #91a297; }.result-tabs button { color: #c7d3c8; }.result-tabs .active, .price, .empty-icon { color: #ff9a70; }
-.shortfall { color: #eadac1; background: #30291e; border-color: #66543a; }.query-tag, .availability, .card-evidence, .match-alternatives { border-color: #34483e; }
-.avatar { color: #0d1712; background: #9fd1af; }.card-person p { color: #aab9ad; }.notes { color: #e9bd76; }
-.request-error { color: #ffd0c0; background: #3c211d; border-color: #925440; }.field-error { color: #ffad92; }
-.match-alternatives button { color: #d4edda; background: #193025; border-color: #527460; }.match-alternatives button:hover { border-color: #9fd1af; background: #20382b; }
-button:focus-visible, summary:focus-visible { outline-color: #ff9a70; }
+/* Theme toggle remains compact beside language selection and works with a keyboard. */
+.top-controls { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin: -28px 0 32px; }
+.top-controls .locale-switcher { margin: 0; }
+.theme-toggle { position: relative; display: flex; align-items: center; justify-content: space-between; width: 66px; height: 35px; padding: 4px 7px; border: 1px solid #d8d1c5; border-radius: 999px; color: #896039; background: #fffdf8; font-size: .95rem; line-height: 1; transition: background .2s ease, border-color .2s ease; }
+.theme-toggle::before { content: ""; position: absolute; width: 25px; height: 25px; border-radius: 50%; background: #f4b76b; box-shadow: 0 2px 5px rgb(48 37 20 / 20%); transform: translateX(0); transition: transform .2s ease, background .2s ease; }
+.theme-toggle span { position: relative; z-index: 1; }.theme-toggle span:last-child { color: #77867a; }.theme-toggle:focus-visible { outline: 3px solid #c75c2b; outline-offset: 4px; }
+@media (max-width: 760px) { .top-controls { justify-content: flex-start; margin-top: -12px; }.top-controls .locale-switcher > span { font-size: .8rem; } }
+
+/* Dark theme preserves the product's sage and clay accents with accessible contrast. */
+:root[data-theme="dark"] { color-scheme: dark; color: #edf4ed; background: #101815; }
+:root[data-theme="dark"] body { background: radial-gradient(circle at 82% -10%, #264238 0, transparent 34rem), #101815; }
+:root[data-theme="dark"] h1, :root[data-theme="dark"] h2 { color: #f4f7ee; }
+:root[data-theme="dark"] .eyebrow, :root[data-theme="dark"] .preview-note, :root[data-theme="dark"] .availability, :root[data-theme="dark"] .card-evidence summary { color: #9fd1af; }
+:root[data-theme="dark"] .lede, :root[data-theme="dark"] .result-message, :root[data-theme="dark"] .empty-state p, :root[data-theme="dark"] .card-explanation, :root[data-theme="dark"] .exclusion-details, :root[data-theme="dark"] .calendar-note, :root[data-theme="dark"] .catalog-status { color: #bac8bd; }
+:root[data-theme="dark"] .locale-switcher { color: #c9d5ca; }:root[data-theme="dark"] .locale-switcher button, :root[data-theme="dark"] .query-tag { color: #e8f0e7; background: #17221e; border-color: #40564a; }:root[data-theme="dark"] .locale-switcher button[aria-pressed="true"] { color: #08110d; background: #a9d8b4; border-color: #a9d8b4; }
+:root[data-theme="dark"] .match-form, :root[data-theme="dark"] .contractor-card, :root[data-theme="dark"] .empty-state { background: #17221e; border-color: #34483e; box-shadow: 0 14px 34px rgb(0 0 0 / 20%); }
+:root[data-theme="dark"] label { color: #e5ede5; }:root[data-theme="dark"] label em, :root[data-theme="dark"] .field-hint, :root[data-theme="dark"] .price-caveat, :root[data-theme="dark"] .source-quote-label, :root[data-theme="dark"] .exclusion-details small, :root[data-theme="dark"] .form-footer p { color: #9cac9f; }
+:root[data-theme="dark"] input, :root[data-theme="dark"] select { color: #eff6ef; background: #101815; border-color: #465d50; }:root[data-theme="dark"] select option { color: #eff6ef; background: #101815; }
+:root[data-theme="dark"] input:disabled, :root[data-theme="dark"] select:disabled { color: #788b7e; background: #16201c; }:root[data-theme="dark"] input:focus, :root[data-theme="dark"] select:focus { border-color: #ff8d63; box-shadow: 0 0 0 3px rgb(255 141 99 / 23%); }
+:root[data-theme="dark"] .form-footer { border-color: #31433b; }:root[data-theme="dark"] .form-footer button { color: #1a100c; background: #ff8d63; box-shadow: 0 8px 18px rgb(0 0 0 / 24%); }:root[data-theme="dark"] .form-footer button:hover:not(:disabled) { background: #ffb08f; }
+:root[data-theme="dark"] .result-tabs { color: #91a297; }:root[data-theme="dark"] .result-tabs button { color: #c7d3c8; }:root[data-theme="dark"] .result-tabs .active, :root[data-theme="dark"] .price, :root[data-theme="dark"] .empty-icon { color: #ff9a70; }
+:root[data-theme="dark"] .shortfall { color: #eadac1; background: #30291e; border-color: #66543a; }:root[data-theme="dark"] .query-tag, :root[data-theme="dark"] .availability, :root[data-theme="dark"] .card-evidence, :root[data-theme="dark"] .match-alternatives { border-color: #34483e; }
+:root[data-theme="dark"] .avatar { color: #0d1712; background: #9fd1af; }:root[data-theme="dark"] .card-person p { color: #aab9ad; }:root[data-theme="dark"] .notes { color: #e9bd76; }
+:root[data-theme="dark"] .request-error { color: #ffd0c0; background: #3c211d; border-color: #925440; }:root[data-theme="dark"] .field-error { color: #ffad92; }
+:root[data-theme="dark"] .match-alternatives button { color: #d4edda; background: #193025; border-color: #527460; }:root[data-theme="dark"] .match-alternatives button:hover { border-color: #9fd1af; background: #20382b; }
+:root[data-theme="dark"] .theme-toggle { color: #eaf5ec; background: #20342a; border-color: #628a70; }:root[data-theme="dark"] .theme-toggle::before { background: #a9d8b4; transform: translateX(29px); }:root[data-theme="dark"] .theme-toggle span:first-child { color: #789684; }:root[data-theme="dark"] .theme-toggle span:last-child { color: #e9f5eb; }
+:root[data-theme="dark"] button:focus-visible, :root[data-theme="dark"] summary:focus-visible { outline-color: #ff9a70; }

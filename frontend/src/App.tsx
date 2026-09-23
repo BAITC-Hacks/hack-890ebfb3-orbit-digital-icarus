@@ -18,10 +18,20 @@ const initialRequest: MatchRequest = {
 };
 type ErrorKind = "requestError" | "serviceError" | "responseError" | "validationError";
 type NumericField = "budget_kzt" | "duration_hours";
+type Theme = "light" | "dark";
+const THEME_STORAGE_KEY = "contractor-match-theme";
 const initials = (name: string) => name.split(" ").slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
 function storedLocale(): Locale {
   try { return initialLocale(window.localStorage); } catch { return "ru"; }
+}
+
+function storedTheme(): Theme {
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch { return "dark"; }
 }
 
 function Tag({ children }: { children: ReactNode }) {
@@ -92,6 +102,7 @@ function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; 
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>(storedLocale);
+  const [theme, setTheme] = useState<Theme>(storedTheme);
   const [form, setForm] = useState<MatchRequest>(initialRequest);
   const [numericDrafts, setNumericDrafts] = useState({ budget_kzt: String(initialRequest.budget_kzt), duration_hours: "" });
   const rejectedEdits = useRef(new Set<NumericField>());
@@ -113,6 +124,12 @@ export default function App() {
     document.documentElement.lang = locale;
     try { window.localStorage.setItem(LOCALE_STORAGE_KEY, locale); } catch { /* Locale still works for this page. */ }
   }, [locale]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#101815" : "#faf8f2");
+    try { window.localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* The visual preference still works for this page. */ }
+  }, [theme]);
 
   async function loadCatalog() {
     const generation = ++metadataGeneration.current;
@@ -265,10 +282,16 @@ export default function App() {
   const unavailable = !metadata || metadataLoading;
 
   return <main className="page-shell">
-    <div className="locale-switcher" data-testid="locale-switcher" role="group" aria-label={t.interfaceLanguage}>
-      <span>{t.interfaceLanguage}</span>
-      <button type="button" lang="ru" aria-pressed={locale === "ru"} onClick={() => setLocale("ru")}>Русский</button>
-      <button type="button" lang="en" aria-pressed={locale === "en"} onClick={() => setLocale("en")}>English</button>
+    <div className="top-controls">
+      <div className="locale-switcher" data-testid="locale-switcher" role="group" aria-label={t.interfaceLanguage}>
+        <span>{t.interfaceLanguage}</span>
+        <button type="button" lang="ru" aria-pressed={locale === "ru"} onClick={() => setLocale("ru")}>Русский</button>
+        <button type="button" lang="en" aria-pressed={locale === "en"} onClick={() => setLocale("en")}>English</button>
+      </div>
+      <button className="theme-toggle" data-theme={theme} type="button" aria-pressed={theme === "dark"}
+        aria-label={theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"} onClick={() => setTheme(current => current === "dark" ? "light" : "dark")}>
+        <span aria-hidden="true">☼</span><span aria-hidden="true">☾</span>
+      </button>
     </div>
     <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
     {previewMode && <p className="preview-note" role="note">{t.preview}</p>}
