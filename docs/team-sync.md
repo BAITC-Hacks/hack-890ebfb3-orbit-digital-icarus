@@ -1,6 +1,25 @@
 # Integration observations
 
-## Latest inspected teammate updates, 23 September 2026
+## Integrated handoff, 23 September 2026
+
+Enjoy now contains the working React/FastAPI application, deterministic matching, bilingual evidence and the documented acceptance tooling. Latest inspected remote checkpoints:
+
+| Branch | Inspected commit | Integration status |
+| --- | --- | --- |
+| `bbl` | `83cf4e3` | B1/B2 loader, normalization, filtering and routes integrated; B3 runtime factory/settings/CORS merged at `a4e7141` |
+| `feature/sp3ctra` | `8ded1f1` | Actual frontend from `5d1df99` already integrated at `a08eee0`; later commit only restores a boilerplate frontend README |
+| `main` | `57b7a32` | Contains spectra's frontend merge; synchronize its history into Enjoy while retaining the tested, current frontend setup documentation |
+| `Enjoy` | `a4e7141` | Complete source integration checkpoint; documentation and full clean-clone verification follow in small commits |
+
+B2's success placeholder is replaced with normalization, real hard filters, evidence-aware ranking and typed cards. Startup validates the 66-profile catalog against the evidence digest. B3 keeps configurable data paths and explicit CORS origins, while the algorithm version comes from the actual code/evidence and cannot be overridden by an environment label. Regenerated OpenAPI includes request length limits and nullable evidence values.
+
+The Russian interface is retained with a separate English switch. Canonical request values, contractor language filters and result order do not change when switching the interface. English explanations use structured facts and reviewed quote translations, with original Russian evidence still available.
+
+After B3: 88 Python tests and 218 subtests pass. The integration checkpoint also has 49 client and 16 locale tests, six isolated UI browser checks, eight real API browser flows, strict client types and a production frontend build. Exact commands, timing scope and final reproduction status are in the root README. Provider keys are outside Git; optional offline inference is capped, and the app/CI need no key.
+
+Git only exposes pushed work. Remote refs are checked during the active task and at integration milestones; this file is not a background monitor between sessions.
+
+## Historical checkpoints before the complete application
 
 - `main` at `8cae379`: bbl's shared backend scaffold and models, incorporated into Enjoy at `0d07a0b`. Matching placeholders were resolved in favor of Enjoy's tested implementation after inspecting each conflict. Backend model objects match the structural matching interfaces. Production catalog loading, filtering and API routes are still placeholders at this source revision.
 - `main` then advanced to `a895444` through spectra's PR #2, adding only `design.pdf`. Enjoy incorporated it at `7ab1818`; no API or frontend implementation arrived in that merge.
@@ -8,7 +27,7 @@
 - `feature/sp3ctra` at `e3eb854`: five-screen `design.pdf`. All five pages were visually reviewed. No React package or implementation was present at this revision.
 - Enjoy has pushed the matching core, source evidence, typed client, test harness and documentation in separate commits. Consult the current Git history for subsequent updates; these observations are a timestamped handoff, not a live status feed.
 
-The documented setup was reproduced in a separate clean clone of Enjoy `fff79d9`: 34 Python tests / 192 subtests, 32 client tests, strict TypeScript, eight browser test discoveries, 160 domain acceptance runs and the exact CSV hash all passed. No complete browser execution is claimed while production API/UI work is pending.
+The earlier setup was reproduced in a separate clean clone of Enjoy `fff79d9`: 34 Python tests / 192 subtests, 32 client tests, strict TypeScript, eight browser test discoveries, 160 domain acceptance runs and the exact CSV hash all passed. This historical checkpoint predates production API/UI integration and is not a full-app reproduction claim.
 
 ## B1 compatibility fixes on Enjoy
 
@@ -35,4 +54,4 @@ See [browser contract](browser-contract.md) for test hooks and [matching integra
 
 ## Cloud check availability
 
-GitHub Actions for Enjoy commit `5530d44` failed before any test step ran. The check annotation states: `The job was not started because your account is locked due to a billing issue.` This is an account-level execution blocker. Local test results are documented separately; no successful GitHub run is claimed. The account owner must resolve the billing lock before cloud checks can execute.
+GitHub Actions for Enjoy commit `5530d44` failed before any test step ran. The [later inspected run for `d6933a1`](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798) has the same result and an empty job-step list. The check annotation states: `The job was not started because your account is locked due to a billing issue.` This is an account-level execution blocker; each push starts another attempt and can send another failure email. Local test results are documented separately; no successful GitHub run is claimed. The account owner must resolve the billing lock before cloud checks can execute. The workflow remains enabled.
