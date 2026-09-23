@@ -10,3 +10,6 @@ dist/
 test-results/
 playwright-report/
 artifacts/
+venv/
+.DS_Store
+bbl.md
