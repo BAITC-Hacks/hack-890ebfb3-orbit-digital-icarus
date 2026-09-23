@@ -8,13 +8,13 @@ Enjoy owns `tests/e2e/matching.spec.ts` and the root `playwright.config.ts`. The
 
 ## Minimal UI contract for spectra
 
-Use labeled native form controls with these names or test IDs. Russian labels are preferred; the tests recognize English equivalents as a fallback. Select option labels must contain the canonical values received from metadata.
+Use labeled native form controls with these names or test IDs. Russian labels are preferred; the tests recognize English equivalents as a fallback. Select option values must use the canonical values received from metadata; visible labels may be capitalized.
 
 | Name / optional control test ID | Visible label | Control |
 | --- | --- | --- |
 | `city` | Город | select |
 | `event_date` | Дата мероприятия | date input |
-| `event_format` | Формат мероприятия | select |
+| `event_format` | Формат мероприятия / Тип мероприятия | select |
 | `category` | Категория | select |
 | `budget_kzt` | Бюджет | number input |
 | `duration_hours` | Длительность / Продолжительность | optional number input; empty means null |

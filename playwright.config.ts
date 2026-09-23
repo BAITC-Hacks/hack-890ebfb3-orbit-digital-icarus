@@ -23,13 +23,13 @@ export default defineConfig({
   webServer: process.env.RUN_APP_SERVERS === "1"
     ? [
         {
-          command: "python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000",
+          command: "python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000",
           url: `${apiURL}/api/health`,
           reuseExistingServer: !process.env.CI,
           timeout: 60_000,
         },
         {
-          command: "npm --prefix frontend run dev -- --host 127.0.0.1",
+          command: "npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173 --strictPort",
           url: baseURL,
           reuseExistingServer: !process.env.CI,
           timeout: 60_000,
