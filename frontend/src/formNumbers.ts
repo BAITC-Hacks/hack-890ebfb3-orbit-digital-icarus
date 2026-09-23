@@ -8,9 +8,9 @@
  * previous optional draft was empty. Only an intentionally empty duration is null.
  */
 
-/** Empty is an editable draft, but is not a valid submitted budget. */
+/** Digits and grouping spaces remain editable; submission validates grouping. */
 export function acceptBudgetDraft(draft: string): boolean {
-  return !/[^0-9]/.test(draft);
+  return !/[^0-9 \u00a0\u202f]/.test(draft);
 }
 
 /** A single decimal separator is allowed while typing; no exponent or sign. */
@@ -20,8 +20,9 @@ export function acceptDurationDraft(draft: string): boolean {
 
 /** Whole positive KZT within the exact integer range used by the client. */
 export function parseBudgetDraft(draft: string): number | undefined {
-  if (draft === "" || !acceptBudgetDraft(draft)) return undefined;
-  const value = Number(draft);
+  if (!acceptBudgetDraft(draft)) return undefined;
+  if (!/^(?:[0-9]+|[0-9]{1,3}(?:[ \u00a0\u202f][0-9]{3})+)$/.test(draft)) return undefined;
+  const value = Number(draft.replace(/[ \u00a0\u202f]/g, ""));
   return Number.isSafeInteger(value) && value > 0 ? value : undefined;
 }
 
