@@ -106,6 +106,16 @@ class CatalogTests(unittest.TestCase):
             with self.assertRaisesRegex(CatalogValidationError, "outside"):
                 load_catalog(path)
 
+    def test_rejects_non_finite_max_hours(self) -> None:
+        with TemporaryDirectory() as directory:
+            for value in ("NaN", "inf", "-inf"):
+                with self.subTest(value=value):
+                    path = Path(directory) / f"invalid-hours-{value}.csv"
+                    write_catalog(path, [valid_row(max_hours=value)])
+
+                    with self.assertRaisesRegex(CatalogValidationError, "finite"):
+                        load_catalog(path)
+
     def test_exposes_expected_calendar_bounds(self) -> None:
         self.assertEqual(CALENDAR_START, date(2026, 9, 23))
         self.assertEqual(CALENDAR_END, date(2026, 12, 31))
