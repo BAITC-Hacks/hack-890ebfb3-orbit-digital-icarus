@@ -8,6 +8,9 @@
  * previous optional draft was empty. Only an intentionally empty duration is null.
  */
 
+// Mirror the API's published duration ceiling; a contract test prevents drift.
+export const MAX_DURATION_HOURS = 12;
+
 /** Empty is an editable draft, but is not a valid submitted budget. */
 export function acceptBudgetDraft(draft: string): boolean {
   return !/[^0-9]/.test(draft);
@@ -33,5 +36,5 @@ export function parseDurationDraft(draft: string): number | null | undefined {
   if (draft === "") return null;
   if (!acceptDurationDraft(draft) || draft.endsWith(".") || draft.endsWith(",")) return undefined;
   const value = Number(draft.replace(",", "."));
-  return Number.isFinite(value) && value > 0 ? value : undefined;
+  return Number.isFinite(value) && value > 0 && value <= MAX_DURATION_HOURS ? value : undefined;
 }
