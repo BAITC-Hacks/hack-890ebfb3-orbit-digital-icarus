@@ -46,9 +46,9 @@
     },
     "/api/match": {
       "post": {
-        "summary": "Match Stub",
-        "description": "Validate the final request shape until B2 filtering is implemented.",
-        "operationId": "match_stub_api_match_post",
+        "summary": "Match",
+        "description": "Validate, normalize, and hard-filter a matching request.\n\nB2 returns complete business-empty states. Matching candidates require the\nranking and grounded-card implementation owned by Enjoy, so this path\nremains an explicit 503 until that handoff is integrated.",
+        "operationId": "match_api_match_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -71,7 +71,7 @@
             }
           },
           "503": {
-            "description": "Matching implementation is not ready yet."
+            "description": "Ranking and card construction are not integrated yet."
           },
           "422": {
             "description": "Validation Error",

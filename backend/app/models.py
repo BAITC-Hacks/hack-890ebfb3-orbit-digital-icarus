@@ -8,7 +8,7 @@ from datetime import date
 from math import isfinite
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from .constants import CALENDAR_END, CALENDAR_START
 
@@ -124,6 +124,17 @@ class ExclusionCounts(BaseModel):
     unsupported_language: int = Field(default=0, ge=0)
     duration_exceeded: int = Field(default=0, ge=0)
 
+    def total(self) -> int:
+        """Return the number of profiles excluded for a primary reason."""
+
+        return (
+            self.booked
+            + self.over_budget
+            + self.unsupported_format
+            + self.unsupported_language
+            + self.duration_exceeded
+        )
+
 
 class FilterResult(BaseModel):
     """Output of hard filtering before ranking."""
@@ -131,6 +142,16 @@ class FilterResult(BaseModel):
     city_category_total: int = Field(ge=0)
     eligible: list[Contractor]
     exclusions: ExclusionCounts
+
+    @model_validator(mode="after")
+    def require_reconciled_counts(self) -> "FilterResult":
+        expected_exclusions = self.city_category_total - len(self.eligible)
+        if self.exclusions.total() != expected_exclusions:
+            raise ValueError(
+                "primary exclusion counts must equal city/category pool minus "
+                "eligible candidates"
+            )
+        return self
 
 
 class CountSummary(BaseModel):
