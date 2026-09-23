@@ -8,7 +8,7 @@ Find an event contractor in Kazakhstan without searching a long catalog. Enter t
 
 ## Run from a fresh checkout
 
-**Windows: open the downloaded/cloned project folder and double-click [Start Orbit.cmd](<Start Orbit.cmd>).** The launcher installs dependencies, builds the website, starts the application and opens your browser. Keep its window open while using Orbit; press **Ctrl+C** there to stop.
+**Windows: open the downloaded/cloned project folder and double-click [Start Orbit.cmd](<Start Orbit.cmd>).** The launcher installs dependencies, builds the website, starts the application and opens your browser. Keep its window open while using Orbit; press **Ctrl+C** there to stop (answer **Y** if Windows asks to terminate the batch job).
 
 **Install once if missing:** [Python 3.11 or newer](https://www.python.org/downloads/) and [Node.js 24 LTS](https://nodejs.org/en/download) (includes npm). On Windows, enable **Add Python to PATH** if offered, then reopen the project folder after installing. These runtimes are prerequisites, not bundled installers; the launcher explains if either is missing. The first launch needs internet and may take a few minutes. Subsequent unchanged launches reuse the installation and build.
 
@@ -319,6 +319,7 @@ npm.cmd run test:e2e
 | Application browser acceptance | **13 Chromium tests passing**: matching, alternatives, home/navigation and inquiry journeys |
 | Domain and real HTTP scenarios | **8 scenarios × 20 repeats = 160 runs** in each check |
 | Built-bundle preview | All **13 application E2E tests passed again** through the local port 4173 production preview |
+| One-command fresh-clone launch | **Passed at `6ee3714`**, including the dark theme: automatic locked installation/build, 152 Python tests / 265 subtests, 160 HTTP requests and 13 real-browser flows on one server; cached relaunch and shutdown checked. See [launcher verification](docs/launcher-verification.md) |
 | Complete integrated fresh-clone reproduction | **Passed at `1292b65`** with fresh locked installs and 160 real HTTP requests; all suites/build passed again at **`190696c`** after three more teammate tests, with unchanged application/dependencies; see the [verification record](docs/reproducibility.md) |
 
 Measurements on **23 September 2026**, Windows 11, Python 3.14.4 and Chromium **153.0.8010.12**, with the CSV hash above and algorithm `explainable-v1:2553919e464d7030`:

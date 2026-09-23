@@ -69,6 +69,8 @@ Keep the venue example from `demo.md` ready for questions. Screenshots are a fal
 
 ## Verification for the integrated source
 
+The table below records the original integrated-product review. The newer [one-command launch verification](launcher-verification.md) covers the dark theme plus automatic setup: **152 Python tests / 265 subtests, 13 real-browser flows and 160 HTTP requests** passed against a fresh clone's single production server. Latest UI/unit counts are also recorded there; do not read the historical counts below as the current total.
+
 Executed with fresh locked dependency installations in the working checkout: Windows 11, Python 3.14.4, Node 24.15.0, npm 11.12.1, Chromium 153.0.8010.12. No provider credentials or paid calls required.
 
 | Check | Observed result |
@@ -96,8 +98,9 @@ Code comments describe module boundaries, invariants, non-obvious edits, request
 
 ## Final handoff
 
-- Pull `main`; follow root README from a clean environment. Keep `VITE_API_MODE` unset or `api` for the live demo.
-- Rehearse on the presentation machine, have the API and frontend running, and verify dense/rare/empty/date examples. Use the local screenshots as backup.
+- Pull `main`; double-click `Start Orbit.cmd` or run `python start.py` after installing Python and Node once. The launcher builds real API mode; no separate backend/frontend commands are required for judging.
+- Rehearse on the presentation machine and verify dense/rare/empty/date examples. Keep the launch window open; use the current local screenshots as backup.
+- Per the additional organizer notice supplied on 23 September, the README must explain purpose, launch, technologies and verification independently. Team members must remain at the venue until 18:00 even if coding finishes early; this is a human participation requirement, not something automated tests can certify.
 - Verify portal requirements, submit the project and confirm the submission receipt before the actual deadline. This code work does not submit the entry.
 - Check GitHub Actions for the final SHA. Older runs were account/billing-blocked before any test step; do not call cloud CI green based on local passes.
 - No public hosting, verified contact directory, booking, payment or live-calendar integration is claimed.
