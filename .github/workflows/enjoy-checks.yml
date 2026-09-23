@@ -29,6 +29,8 @@ jobs:
       - run: npm --prefix frontend ci
       - run: npm run test:client
       - run: npm run test:i18n
+      - run: npm run test:numeric
+      - run: npm --prefix frontend test
       - run: npm run typecheck:client
       - run: npm --prefix frontend run build
       - run: npx playwright install --with-deps chromium

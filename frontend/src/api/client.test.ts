@@ -7,6 +7,7 @@ import {
   getMetadata,
   matchContractors,
   type MatchCard,
+  type MatchAlternative,
   type EvidenceItem,
   type MatchRequest,
   type MatchResponse,
@@ -69,8 +70,21 @@ function respond(body: unknown, status = 200) {
   return fetchMock;
 }
 
+function alternative(changed_field: MatchAlternative["changed_field"] = "city"): MatchAlternative {
+  return {
+    changed_field,
+    request: {
+      ...request, duration_hours: null, language: null,
+      ...({ city: { city: "Астана" }, event_date: { event_date: "2026-10-11" }, budget_kzt: { budget_kzt: 400000 } }[changed_field]),
+    },
+    eligible_total: 1,
+  };
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe("matchContractors", () => {
@@ -82,7 +96,7 @@ describe("matchContractors", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/match", {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
-      signal: undefined,
+      signal: expect.any(AbortSignal),
       body: JSON.stringify({ ...request, duration_hours: null, language: null }),
     });
     expect(request).toEqual(snapshot);
@@ -182,6 +196,17 @@ describe("matchContractors", () => {
     ["invalid provenance", result([{ ...card("HK-1"), source_kind: "verified" } as unknown as MatchCard])],
     ["invalid evidence", result([{ ...card("HK-1"), evidence: [{}] } as unknown as MatchCard])],
     ["zero starting price", result([{ ...card("HK-1"), price_from_kzt: 0 }])],
+    ["card in another city", result([{ ...card("HK-1"), city: "Астана" }])],
+    ["card for another date", result([{ ...card("HK-1"), event_date: "2026-10-11" }])],
+    ["card with another selected category", result([{ ...card("HK-1"), category: "Ведущий" }])],
+    ["card missing the selected category", result([{ ...card("HK-1"), categories: ["Ведущий"] }])],
+    ["card exceeding the budget", result([{ ...card("HK-1"), price_from_kzt: 300001 }])],
+    ["unreconciled exclusions", { ...result([card("HK-1")]), exclusions: { ...result().exclusions, booked: 1 } }],
+    ["fewer cards than eligible profiles below the cap", {
+      ...result([card("HK-1")]),
+      counts: { city_category_total: 3, eligible_total: 2, returned_total: 1 },
+      exclusions: { ...result().exclusions, booked: 1 },
+    }],
   ])("rejects malformed HTTP 200 match response: %s", async (_label, response) => {
     respond(response);
     await expect(matchContractors(request)).rejects.toBeInstanceOf(ApiResponseError);
@@ -194,6 +219,23 @@ describe("matchContractors", () => {
     };
     respond(expected);
     await expect(matchContractors(request)).resolves.toEqual(expected);
+  });
+
+  it("accepts a full three-card shortlist when more profiles are eligible", async () => {
+    const expected = {
+      ...result([card("HK-1"), card("HK-2"), card("HK-3")]),
+      counts: { city_category_total: 6, eligible_total: 4, returned_total: 3 },
+      exclusions: { ...result().exclusions, booked: 2 },
+    };
+    respond(expected);
+    await expect(matchContractors(request)).resolves.toEqual(expected);
+  });
+
+  it("checks the normalized response without rejecting legal input aliases", async () => {
+    const expected = result([card("HK-1")]);
+    respond(expected);
+    await expect(matchContractors({ ...request, city: " алматы ", category: "флорист" }))
+      .resolves.toEqual(expected);
   });
 
   it.each(["русский", 200000, 2.5, ["русский", "казахский"], null].map(value => ({ value })))(
@@ -223,7 +265,7 @@ describe("matchContractors", () => {
     await expect(matchContractors(request)).rejects.toBe(failure);
   });
 
-  it("passes AbortSignal through and preserves AbortError", async () => {
+  it("forwards caller cancellation and preserves its AbortError", async () => {
     const controller = new AbortController();
     const failure = new DOMException("The operation was aborted", "AbortError");
     const fetchMock = vi.fn<typeof fetch>().mockImplementation((_input, init) => {
@@ -233,9 +275,11 @@ describe("matchContractors", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     const pending = matchContractors(request, { signal: controller.signal });
-    controller.abort();
+    controller.abort(failure);
     await expect(pending).rejects.toBe(failure);
-    expect(fetchMock.mock.calls[0][1]?.signal).toBe(controller.signal);
+    const transportSignal = fetchMock.mock.calls[0][1]?.signal;
+    expect(transportSignal?.aborted).toBe(true);
+    expect(transportSignal?.reason).toBe(failure);
   });
 });
 
@@ -257,7 +301,7 @@ describe("GET endpoints", () => {
     const controller = new AbortController();
     await expect(getMetadata({ baseUrl: "http://localhost:8000", signal: controller.signal })).resolves.toEqual(metadata);
     expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/metadata", {
-      method: "GET", headers: { Accept: "application/json" }, signal: controller.signal,
+      method: "GET", headers: { Accept: "application/json" }, signal: expect.any(AbortSignal),
     });
   });
 
@@ -266,7 +310,7 @@ describe("GET endpoints", () => {
     const fetchMock = respond(health);
     await expect(getHealth()).resolves.toEqual(health);
     expect(fetchMock).toHaveBeenCalledWith("/api/health", {
-      method: "GET", headers: { Accept: "application/json" }, signal: undefined,
+      method: "GET", headers: { Accept: "application/json" }, signal: expect.any(AbortSignal),
     });
   });
 
@@ -281,6 +325,163 @@ describe("GET endpoints", () => {
   it("rejects the superseded provisional health status", async () => {
     respond({ status: "ok", profile_count: 66, dataset_version: "hash", algorithm_version: "v1" });
     await expect(getHealth()).rejects.toBeInstanceOf(ApiResponseError);
+  });
+});
+
+describe("verified empty-result alternatives", () => {
+  it.each(["category_absent", "no_eligible_contractors"] as const)("preserves up to three one-field alternatives for %s", async (status) => {
+    const expected = {
+      ...result(), status,
+      alternatives: [alternative("city"), alternative("event_date"), alternative("budget_kzt")],
+    };
+    if (status === "category_absent") {
+      expected.counts.city_category_total = 0;
+      expected.exclusions.booked = 0;
+    }
+    respond(expected);
+    await expect(matchContractors(request)).resolves.toEqual(expected);
+  });
+
+  it("accepts the backend's empty alternatives list on a successful result", async () => {
+    const expected = { ...result([card("HK-1")]), alternatives: [] };
+    respond(expected);
+    await expect(matchContractors(request)).resolves.toEqual(expected);
+  });
+
+  it.each([
+    ["null list", null],
+    ["object instead of list", {}],
+    ["more than three suggestions", [alternative(), alternative(), alternative(), alternative()]],
+    ["invalid suggestion", [null]],
+    ["unsupported changed field", [{ ...alternative(), changed_field: "language" }]],
+    ["non-string changed field", [{ ...alternative(), changed_field: ["city"] }]],
+    ["field does not describe the change", [{ ...alternative(), changed_field: "event_date" }]],
+    ["no changed constraint", [{ ...alternative(), request: result().request }]],
+    ["two changed constraints", [{ ...alternative(), request: { ...alternative().request, event_date: "2026-10-11" } }]],
+    ["changed optional language", [{ ...alternative(), request: { ...alternative().request, language: "казахский" } }]],
+    ["changed optional duration", [{ ...alternative(), request: { ...alternative().request, duration_hours: 4 } }]],
+    ["missing normalized optional", [{ ...alternative(), request: { ...alternative().request, duration_hours: undefined } }]],
+    ["missing required field", [{ ...alternative(), request: { ...alternative().request, category: undefined } }]],
+    ["impossible alternative date", [{ ...alternative("event_date"), request: { ...result().request, event_date: "2026-02-30" } }]],
+    ["lower budget", [{ ...alternative("budget_kzt"), request: { ...result().request, budget_kzt: 200000 } }]],
+    ["zero eligible count", [{ ...alternative(), eligible_total: 0 }]],
+    ["fractional eligible count", [{ ...alternative(), eligible_total: 1.5 }]],
+    ["string eligible count", [{ ...alternative(), eligible_total: "1" }]],
+  ])("rejects %s", async (_name, alternatives) => {
+    respond({ ...result(), alternatives });
+    await expect(matchContractors(request)).rejects.toBeInstanceOf(ApiResponseError);
+  });
+
+  it("rejects suggestions attached to a successful shortlist", async () => {
+    respond({ ...result([card("HK-1")]), alternatives: [alternative()] });
+    await expect(matchContractors(request)).rejects.toBeInstanceOf(ApiResponseError);
+  });
+});
+
+describe("request deadlines and cancellation cleanup", () => {
+  it.each([
+    ["GET metadata", () => getMetadata({ timeoutMs: 20 })],
+    ["POST matching", () => matchContractors(request, { timeoutMs: 20 })],
+  ] as const)("bounds a hanging %s fetch even when it ignores abort", async (_name, endpoint) => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(() => new Promise(() => {}));
+    vi.stubGlobal("fetch", fetchMock);
+    const pending = endpoint().catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(20);
+    const failure = await pending;
+    expect(failure).toMatchObject({ name: "TimeoutError", message: "The request timed out after 20 ms." });
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true);
+    expect(fetchMock.mock.calls[0][1]?.signal?.reason).toBe(failure);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("uses a ten-second default deadline", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(() => new Promise(() => {}));
+    vi.stubGlobal("fetch", fetchMock);
+    const pending = getMetadata().catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(9_999);
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(await pending).toMatchObject({ name: "TimeoutError", message: "The request timed out after 10000 ms." });
+  });
+
+  it("keeps one deadline across headers and a hanging response body", async () => {
+    vi.useFakeTimers();
+    const response = new Response("unused", { status: 200 });
+    vi.spyOn(response, "text").mockImplementation(() => new Promise(() => {}));
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(() => new Promise((resolve) => {
+      setTimeout(() => resolve(response), 6);
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    const pending = getMetadata({ timeoutMs: 10 }).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(6);
+    expect(response.text).toHaveBeenCalledOnce();
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(false);
+    await vi.advanceTimersByTimeAsync(4);
+    expect(await pending).toMatchObject({ name: "TimeoutError" });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("settles caller cancellation even when a hanging transport ignores it", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockImplementation(() => new Promise(() => {})));
+    const controller = new AbortController();
+    const removed = vi.spyOn(controller.signal, "removeEventListener");
+    const pending = getMetadata({ signal: controller.signal }).catch((error: unknown) => error);
+    controller.abort();
+    expect(await pending).toBe(controller.signal.reason);
+    expect(await pending).toMatchObject({ name: "AbortError" });
+    expect(removed).toHaveBeenCalledWith("abort", expect.any(Function));
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("preserves caller abort while waiting for a response body", async () => {
+    vi.useFakeTimers();
+    const response = new Response("unused", { status: 200 });
+    vi.spyOn(response, "text").mockImplementation(() => new Promise(() => {}));
+    vi.stubGlobal("fetch", vi.fn<typeof fetch>().mockResolvedValue(response));
+    const controller = new AbortController();
+    const pending = getMetadata({ signal: controller.signal }).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(response.text).toHaveBeenCalledOnce();
+    controller.abort();
+    expect(await pending).toBe(controller.signal.reason);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("does not send a request when the caller signal is already aborted", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", fetchMock);
+    const controller = new AbortController();
+    controller.abort();
+    await expect(getMetadata({ signal: controller.signal })).rejects.toBe(controller.signal.reason);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(["success", "HTTP error", "network error"] as const)("cleans up its timer and caller listener after %s", async (outcome) => {
+    vi.useFakeTimers();
+    const fetchMock = outcome === "success" ? respond(result())
+      : outcome === "HTTP error" ? respond({ detail: "unavailable" }, 503)
+        : vi.fn<typeof fetch>().mockRejectedValue(new TypeError("offline"));
+    vi.stubGlobal("fetch", fetchMock);
+    const controller = new AbortController();
+    const removed = vi.spyOn(controller.signal, "removeEventListener");
+    await matchContractors(request, { signal: controller.signal }).catch(() => {});
+    expect(removed).toHaveBeenCalledWith("abort", expect.any(Function));
+    expect(vi.getTimerCount()).toBe(0);
+    controller.abort();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(false);
+  });
+
+  it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY, 2_147_483_648])("rejects an invalid deadline %s", async (timeoutMs) => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(getMetadata({ timeoutMs })).rejects.toBeInstanceOf(RangeError);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

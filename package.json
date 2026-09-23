@@ -6,6 +6,7 @@
   "scripts": {
     "test:client": "vitest run frontend/src/api/client.test.ts --environment node --exclude=artifacts/**",
     "test:i18n": "vitest run frontend/src/i18n/index.test.ts --environment node --exclude=artifacts/**",
+    "test:numeric": "vitest run frontend/src/formNumbers.test.ts --environment node --exclude=artifacts/**",
     "test:ui": "playwright test --config playwright.ui.config.ts",
     "measure:browser": "node scripts/measure_browser.mjs",
     "typecheck:client": "tsc --noEmit --strict --target ES2022 --lib ES2022,DOM --module ESNext --moduleResolution Bundler frontend/src/api/client.ts frontend/src/api/types.ts",
