@@ -14,3 +14,9 @@ venv/
 .DS_Store
 bbl.md
 *.egg-info/
+# Credentials belong outside the repository; local proposals/usage live in artifacts/.
+*_API_KEY*
+*_api_key*
+secrets/
+.vitest/
+*.tsbuildinfo

@@ -26,6 +26,13 @@ jobs:
       - run: python -m pytest -q
       - run: python scripts/matching_acceptance.py --repeat 20
       - run: npm ci
+      - run: npm --prefix frontend ci
       - run: npm run test:client
+      - run: npm run test:i18n
       - run: npm run typecheck:client
-      - run: npm run test:e2e:list
+      - run: npm --prefix frontend run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:ui
+      - run: npm run test:e2e
+        env:
+          RUN_APP_SERVERS: '1'
