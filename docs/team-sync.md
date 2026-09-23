@@ -4,11 +4,19 @@
 
 - `main` at `8cae379`: bbl's shared backend scaffold and models, incorporated into Enjoy at `0d07a0b`. Matching placeholders were resolved in favor of Enjoy's tested implementation after inspecting each conflict. Backend model objects match the structural matching interfaces. Production catalog loading, filtering and API routes are still placeholders at this source revision.
 - `main` then advanced to `a895444` through spectra's PR #2, adding only `design.pdf`. Enjoy incorporated it at `7ab1818`; no API or frontend implementation arrived in that merge.
-- `bbl` at `f7f02af`: no subsequent code on that remote branch yet. The scaffold reached `main` instead.
+- `bbl` advanced to `ebdac88` (validated loader, health/metadata, request normalization, OpenAPI and three fixtures), then `ae934f0` (additional Almaty aliases). Both updates are now merged into Enjoy. Filtering is still a placeholder and valid match requests deliberately return `503 matching_not_ready`.
 - `feature/sp3ctra` at `e3eb854`: five-screen `design.pdf`. All five pages were visually reviewed. No React package or implementation was present at this revision.
 - Enjoy has pushed the matching core, source evidence, typed client, test harness and documentation in separate commits. Consult the current Git history for subsequent updates; these observations are a timestamped handoff, not a live status feed.
 
 The documented setup was reproduced in a separate clean clone of Enjoy `fff79d9`: 34 Python tests / 192 subtests, 32 client tests, strict TypeScript, eight browser test discoveries, 160 domain acceptance runs and the exact CSV hash all passed. No complete browser execution is claimed while production API/UI work is pending.
+
+## B1 compatibility fixes on Enjoy
+
+- Updated frontend metadata fields to `calendar_start` / `calendar_end` and health to `status: "ready"`; the provisional alternatives now fail client validation.
+- Allowed null `EvidenceItem.value` in the backend schema and regenerated OpenAPI. The real null-duration florist scenario reproduced the validation failure before this fix and passes afterward. Null means duration does not apply; it must not become an invented numeric limit.
+- Added client checks against all three published backend fixtures and restricted evidence values to strings, numbers, string arrays or null.
+- Verified 49 B1/core Python tests with 192 subtests and 49 current client tests. The test command excludes ignored local clone artifacts to avoid counting a stale copied suite.
+- Started Uvicorn and consumed real health/metadata with the typed client: 66 profiles, 17 categories and the correct date bounds. Full match HTTP checks await B2. The current health algorithm label is still B1's `hard-filter-v1`; B2 orchestration must report `backend.app.matching.algorithm_version()` from the evidence actually loaded.
 
 ## Design-to-data adjustments for spectra
 

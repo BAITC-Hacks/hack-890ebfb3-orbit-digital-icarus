@@ -112,7 +112,7 @@ function isNormalizedRequest(value: unknown): value is NormalizedMatchRequest {
 }
 
 function isEvidenceScalar(value: unknown): boolean {
-  return value === null || typeof value === "string" || typeof value === "boolean"
+  return value === null || typeof value === "string"
     || (typeof value === "number" && Number.isFinite(value));
 }
 
@@ -121,7 +121,9 @@ function isEvidenceItem(value: unknown): value is EvidenceItem {
   return isText(value.code)
     && ["availability", "budget", "format", "language", "duration", "description"].includes(value.code)
     && isText(value.field)
-    && (Array.isArray(value.value) ? value.value.every(isEvidenceScalar) : isEvidenceScalar(value.value))
+    && (Array.isArray(value.value)
+      ? value.value.every((item) => typeof item === "string")
+      : isEvidenceScalar(value.value))
     && (value.source_quote === null || typeof value.source_quote === "string");
 }
 
@@ -132,7 +134,7 @@ function isMatchCard(value: unknown): value is MatchCard {
     && isText(value.category)
     && isStringList(value.categories)
     && isText(value.city)
-    && isCount(value.price_from_kzt)
+    && isCount(value.price_from_kzt) && value.price_from_kzt > 0
     && isDateString(value.event_date)
     && value.availability === "free_in_dataset"
     && typeof value.synthetic === "boolean"
@@ -164,14 +166,11 @@ function isMatchResponse(value: unknown): value is MatchResponse {
 function isMetadataResponse(value: unknown): value is MetadataResponse {
   if (!isRecord(value)) return false;
   if (!isStringList(value.cities) || !isStringList(value.categories) || !isStringList(value.event_formats) || !isStringList(value.languages)) return false;
-  if (!isDateString(value.date_min) || !isDateString(value.date_max)) return false;
-  return value.demo_presets === undefined || (Array.isArray(value.demo_presets) && value.demo_presets.every(
-    (preset: unknown) => isRecord(preset) && isText(preset.id) && isText(preset.label) && isMatchRequest(preset.request),
-  ));
+  return isDateString(value.calendar_start) && isDateString(value.calendar_end);
 }
 
 function isHealthResponse(value: unknown): value is HealthResponse {
-  return isRecord(value) && value.status === "ok" && isCount(value.profile_count)
+  return isRecord(value) && value.status === "ready" && isCount(value.profile_count)
     && isText(value.dataset_version) && isText(value.algorithm_version);
 }
 
