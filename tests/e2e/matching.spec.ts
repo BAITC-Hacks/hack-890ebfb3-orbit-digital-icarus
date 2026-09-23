@@ -23,7 +23,7 @@ const VENUE: MatchRequest = {
 const labels: Record<string, RegExp> = {
   city: /^(город|city)/i,
   event_date: /^(дата|event date)/i,
-  event_format: /^(формат|event format)/i,
+  event_format: /^(формат|тип мероприятия|event format)/i,
   category: /^(категория|category)/i,
   budget_kzt: /^(бюджет|budget)/i,
   duration_hours: /^(длительность|продолжительность|duration)/i,
@@ -51,7 +51,7 @@ async function fillRequest(page: Page, payload: MatchRequest) {
   for (const key of ["city", "event_format", "category"] as const) {
     const control = await field(page, key);
     await expect(control).toBeVisible();
-    await control.selectOption({ label: payload[key] });
+    await control.selectOption(payload[key]);
   }
   await (await field(page, "event_date")).fill(payload.event_date);
   await (await field(page, "budget_kzt")).fill(String(payload.budget_kzt));
@@ -59,7 +59,7 @@ async function fillRequest(page: Page, payload: MatchRequest) {
     payload.duration_hours == null ? "" : String(payload.duration_hours),
   );
   const language = await field(page, "language");
-  if (payload.language) await language.selectOption({ label: payload.language });
+  if (payload.language) await language.selectOption(payload.language);
   else await language.selectOption("");
 }
 

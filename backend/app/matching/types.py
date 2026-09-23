@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Literal, Mapping, Protocol, Sequence, TypedDict
+from typing import Collection, Literal, Mapping, Protocol, Sequence, TypedDict
 
 
 class MatchRequestLike(Protocol):
@@ -24,7 +24,7 @@ class ContractorLike(Protocol):
     event_formats: Sequence[str]
     languages: Sequence[str]
     max_hours: float | None
-    busy_dates: Sequence[date | str]
+    busy_dates: Collection[date | str]
     description: str
     synthetic: bool
     city_imputed: bool

@@ -35,10 +35,10 @@ Enjoy supplies the framework-independent transport module under `frontend/src/ap
 From the repository root, Python 3.11 or later:
 
 ```bash
-python -m unittest discover -s backend/tests -p 'test_matching*.py' -v
+python -m unittest backend.tests.test_matching_unit backend.tests.test_matching_dataset backend.tests.test_evidence_proposal -v
 ```
 
-The unittest checks are also pytest-compatible. No application server or API key is required for these unit checks.
+The unittest checks are also pytest-compatible. No application server or API key is required for these core checks. After installing `requirements-dev.lock` and the editable package as documented in README, `python -m pytest -q` also exercises bbl's real Pydantic models, date sets, null hours and serialized response envelopes.
 
 To run the eight dataset acceptance scenarios, check repeatability with reversed source order and measure domain-only response time:
 

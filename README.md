@@ -14,7 +14,15 @@ Prerequisites: Git, Python **3.11+**, and Node matching **`^22.12.0 || ^24.0.0 |
 git clone https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus.git
 cd hack-890ebfb3-orbit-digital-icarus
 git switch Enjoy
-python -m unittest discover -s backend/tests -p "test*.py" -v
+python -m venv .venv
+```
+
+Activate the environment with `.venv\Scripts\Activate.ps1` in Windows PowerShell, or `source .venv/bin/activate` on macOS/Linux. Then run:
+
+```bash
+python -m pip install -r requirements-dev.lock
+python -m pip install -e ".[dev]" --no-deps
+python -m pytest -q
 python scripts/matching_acceptance.py --repeat 20
 python scripts/validate_evidence_proposal.py --input backend/app/matching/profile_evidence.json
 ```
@@ -31,6 +39,8 @@ npm run test:e2e:list
 ```
 
 The root package pins Vitest **5.0.1**, Playwright **1.63.0**, and TypeScript **5.8.3**. Commit and use `package-lock.json`; prefer `npm ci` for reproduction. These are integration tools, not the still-pending React application's runtime dependencies.
+
+The backend installation pins FastAPI **0.136.1**, Pydantic **2.13.3**, Uvicorn **0.46.0**, pytest **9.1.1**, and HTTPX **0.28.1**, with resolved dependencies in `requirements-dev.lock` and explicit Windows/Linux markers. Editable package discovery includes only `backend`; evidence JSON is included as package data. Run `python -m pip check` after installation. The core-only checks can still run without third-party packages: `python -m unittest backend.tests.test_matching_unit backend.tests.test_matching_dataset backend.tests.test_evidence_proposal -v`.
 
 ## Repository map
 
@@ -144,7 +154,7 @@ python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 npm --prefix frontend run dev -- --host 127.0.0.1
 ```
 
-They run in separate terminals. The incoming root `pyproject.toml` lists FastAPI, Pydantic and Uvicorn, with pytest/httpx as development extras; its dependencies are not yet pinned. bbl must finalize reproducible backend installation and configuration, and spectra must supply frontend installation/build commands. The frontend will need a `/api` proxy or an explicit API base URL plus backend CORS. Production build/static serving, environment examples, screenshots and full-app launch verification remain integration deliverables; there is no deployable production build claimed here. Reconcile Playwright's provisional auto-start command with the finalized entrypoint during this integration.
+They run in separate terminals. The root `pyproject.toml` and dependency lock now install successfully in an isolated environment, and matching has been tested with bbl's actual Pydantic models. bbl must still implement the endpoints, loader and filter, and spectra must supply frontend installation/build commands. The frontend will need a `/api` proxy or an explicit API base URL plus backend CORS. Production build/static serving, screenshots and full-app launch verification remain integration deliverables; there is no deployable production build claimed here. Playwright uses the same backend entrypoint and a strict frontend port of 5173.
 
 Once the real services are available:
 
@@ -160,7 +170,7 @@ The HTTP checker verifies actual outcomes, counts, exclusions, ordered IDs and e
 
 | Check | Current evidence |
 | --- | --- |
-| Python matching / dataset / proposal tests | 28 passing; deterministic order, eligibility guardrails, boundaries, grounding, fallback behavior and eight proposal-validation checks |
+| Python matching / dataset / proposal / actual-model tests | 34 passing, including 192 parameterized subtests; deterministic order, eligibility, boundaries, grounding, proposal validation and real Pydantic serialization |
 | Frontend transport tests | 32 passing; requests, abort signals, validation/server/network failures and malformed response handling |
 | Transport TypeScript check | Passing strict type check |
 | Domain acceptance | 8 scenarios × 20 repeats = 160 timed runs; source order reversed and outputs unchanged |
@@ -188,3 +198,5 @@ Remaining release work: integrate bbl's API and loader, connect spectra's UI to 
 Future extensions could add real calendar freshness, confirmed quotations, customer-approved constraint changes, quality evaluation using feedback, and retrieval for a larger catalog. They are proposals, not implemented features. Sparse original descriptions still limit explanation richness; the application does not verify claims, negotiate, book, charge customers or guarantee contractor quality.
 
 Development branches: `Enjoy` owns matching/integration, `bbl` owns the API/data/filtering, and `feature/sp3ctra` owns the UI. Small increments are pushed to the owner's branch; shared contracts and fresh remote updates must be checked before integration into `main`. See [team workflow](Instructions.md#11-branch-coordination-and-incremental-pushes).
+
+The latest inspected backend scaffold and spectra's five-screen design are discussed in [team integration notes](docs/team-sync.md), including single-language inputs and actual city-level category counts.

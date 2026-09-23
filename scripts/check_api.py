@@ -10,6 +10,7 @@ import urllib.error
 import urllib.request
 
 from matching_acceptance import DATASET, demo_requests, evaluate, load_reference_catalog, load_evidence
+from backend.app.matching import algorithm_version
 
 
 def post(base_url, payload):
@@ -40,6 +41,12 @@ def main():
             actual = post(args.base_url, payload)
             elapsed_ms = (time.perf_counter() - started) * 1000
             timings.append(elapsed_ms)
+            if actual.get("schema_version") != "1" or actual.get("dataset_version") != dataset_version:
+                raise AssertionError(f"{name}: API schema or source dataset version differs")
+            if actual.get("algorithm_version") != algorithm_version():
+                raise AssertionError(f"{name}: API is not running this evidence/ranking version")
+            if actual.get("request") != payload:
+                raise AssertionError(f"{name}: API changed canonical request parameters")
             for field in ("status", "counts", "exclusions"):
                 if actual.get(field) != expected[field]:
                     raise AssertionError(f"{name}: {field} differs from dataset oracle")
