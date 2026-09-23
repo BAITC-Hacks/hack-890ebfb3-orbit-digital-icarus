@@ -59,3 +59,22 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 .match-alternatives button span { font-size: .85rem; line-height: 1.5; }
 @media (max-width: 1050px) and (min-width: 761px) { .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.contractor-card { padding: 24px; }.form-footer { align-items: flex-start; flex-wrap: wrap; } }
 @media (max-width: 760px) { .locale-switcher { justify-content: flex-start; margin-top: -12px; }.locale-switcher > span { font-size: .8rem; }.form-footer button { white-space: normal; padding: 12px 20px; }.empty-state p { font-size: 1rem; } }
+
+/* Temporary dark visual direction: preserve the existing information hierarchy and accent colors. */
+:root { color-scheme: dark; color: #edf4ed; background: #101815; }
+body { background: radial-gradient(circle at 82% -10%, #264238 0, transparent 34rem), #101815; }
+h1, h2 { color: #f4f7ee; }
+.eyebrow, .preview-note, .availability, .card-evidence summary { color: #9fd1af; }
+.lede, .result-message, .empty-state p, .card-explanation, .exclusion-details, .calendar-note, .catalog-status { color: #bac8bd; }
+.locale-switcher { color: #c9d5ca; }.locale-switcher button, .query-tag { color: #e8f0e7; background: #17221e; border-color: #40564a; }.locale-switcher button[aria-pressed="true"] { color: #08110d; background: #a9d8b4; border-color: #a9d8b4; }
+.match-form, .contractor-card, .empty-state { background: #17221e; border-color: #34483e; box-shadow: 0 14px 34px rgb(0 0 0 / 20%); }
+label { color: #e5ede5; } label em, .field-hint, .price-caveat, .source-quote-label, .exclusion-details small, .form-footer p { color: #9cac9f; }
+input, select { color: #eff6ef; background: #101815; border-color: #465d50; } select option { color: #eff6ef; background: #101815; }
+input:disabled, select:disabled { color: #788b7e; background: #16201c; } input:focus, select:focus { border-color: #ff8d63; box-shadow: 0 0 0 3px rgb(255 141 99 / 23%); }
+.form-footer { border-color: #31433b; }.form-footer button { color: #1a100c; background: #ff8d63; box-shadow: 0 8px 18px rgb(0 0 0 / 24%); }.form-footer button:hover:not(:disabled) { background: #ffb08f; }
+.result-tabs { color: #91a297; }.result-tabs button { color: #c7d3c8; }.result-tabs .active, .price, .empty-icon { color: #ff9a70; }
+.shortfall { color: #eadac1; background: #30291e; border-color: #66543a; }.query-tag, .availability, .card-evidence, .match-alternatives { border-color: #34483e; }
+.avatar { color: #0d1712; background: #9fd1af; }.card-person p { color: #aab9ad; }.notes { color: #e9bd76; }
+.request-error { color: #ffd0c0; background: #3c211d; border-color: #925440; }.field-error { color: #ffad92; }
+.match-alternatives button { color: #d4edda; background: #193025; border-color: #527460; }.match-alternatives button:hover { border-color: #9fd1af; background: #20382b; }
+button:focus-visible, summary:focus-visible { outline-color: #ff9a70; }
