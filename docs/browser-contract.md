@@ -4,7 +4,7 @@ Current release: **13 real-application E2E tests and 13 isolated UI tests**; see
 
 Enjoy owns `tests/e2e/matching.spec.ts` and root `playwright.config.ts`, plus isolated `tests/ui/locale.spec.ts` and `playwright.ui.config.ts`. Both suites passed locally: **eight real-application tests and six isolated interface tests**. They have different scopes and do not replace backend or transport/localization unit tests.
 
-The production API, catalog filters, ranking/evidence modules and React interface are integrated on `Enjoy`. Actual browser execution, the frontend build and the local built-bundle preview are verified. [Complete integrated fresh-clone reproduction passed at `1292b65`](reproducibility.md); a deployment or green cloud CI run is not implied.
+The production API, catalog filters, ranking/evidence modules and React interface are integrated on `main`. Actual browser execution, the frontend build and the local built-bundle preview are verified. [Complete integrated fresh-clone reproduction passed at `1292b65`](reproducibility.md); a deployment or green cloud CI run is not implied.
 
 `npm run test:e2e:list` discovers eight Chromium tests without executing them. Use `npm run test:e2e` for the actual application suite and `npm run test:ui` for isolated UI behavior.
 
