@@ -8,7 +8,7 @@ import { ContactPanel } from "./components/ContactPanel";
 import { journeyCopy } from "./journeyCopy";
 import { usePage } from "./usePage";
 import {
-  availabilityLabel, calendarLabel, cardExplanation, copy, displayDate, evidenceValue,
+  availabilityLabel, cardExplanation, copy, displayDate, evidenceValue,
   exclusionSummary, fieldValidationMessage, formatMoney, initialLocale, invalidFields,
   LOCALE_STORAGE_KEY, optionLabel, resultSummary, resultTitle, shortfallLabel, translatedQuote,
   type Locale,
@@ -306,11 +306,10 @@ export default function App() {
     "aria-invalid": invalid.includes(key),
     "aria-describedby": [invalid.includes(key) ? `error-${key}` : "", key === "budget_kzt" || key === "duration_hours" ? `hint-${key}` : ""].filter(Boolean).join(" ") || undefined,
   });
-  const fields: Array<{ key: "city" | "event_format" | "category"; options: string[] }> = [
-    { key: "city", options: metadata?.cities ?? [] },
-    { key: "event_format", options: metadata?.event_formats ?? [] },
-    { key: "category", options: metadata?.categories ?? [] },
-  ];
+  const selectField = (key: "city" | "event_format" | "category", options: string[]) => <label>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>
+    {options.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
+  </select>{fieldError(key)}</label>;
+  const languageOptions = [...(metadata?.languages ?? [])].sort((left, right) => ["русский", "казахский", "английский"].indexOf(left) - ["русский", "казахский", "английский"].indexOf(right));
   const unavailable = !metadata || metadataLoading;
 
   return <div className="page-shell">
@@ -341,22 +340,22 @@ export default function App() {
     {page === "home" ? <HomePage locale={locale} metadata={metadata} onCategory={chooseCategory} /> : <>
     <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}{" "}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
     <form ref={formElement} className="match-form" data-testid="match-form" aria-busy={loading} onSubmit={submit} noValidate>
-      <div className="form-intro">
-        <div><span className="form-step" aria-hidden="true">01</span><h2>{journey.formTitle}</h2><p>{journey.formIntro}</p></div>
-      </div>
       <div className="field-grid">
-        {fields.map(({ key, options }) => <label key={key}>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>
-          {options.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
-        </select>{fieldError(key)}</label>)}
+        {selectField("city", metadata?.cities ?? [])}
         <label>{t.event_date}<input name="event_date" type="date" min={metadata?.calendar_start} max={metadata?.calendar_end} value={form.event_date} disabled={unavailable} {...fieldAttributes("event_date")} onChange={event => update("event_date", event.target.value)} required />{fieldError("event_date")}</label>
+        {selectField("event_format", metadata?.event_formats ?? [])}
+        {selectField("category", metadata?.categories ?? [])}
+      </div>
+      <div className="form-details">
+        <div className="field-grid">
         <label>{t.budget_kzt}<input name="budget_kzt" aria-label={t.budget_kzt} type="text" inputMode="numeric" autoComplete="off" value={numericDrafts.budget_kzt} disabled={unavailable} {...fieldAttributes("budget_kzt")} onKeyDown={event => numericKeyDown("budget_kzt", event)} onPaste={event => numericPaste("budget_kzt", event)} onChange={event => editNumeric("budget_kzt", event.target.value)} required /><small className="field-hint" id="hint-budget_kzt">{journey.budgetHint}</small>{fieldError("budget_kzt")}</label>
         <label>{t.duration_hours} <em>{t.optional}</em><input name="duration_hours" aria-label={t.duration_hours} type="text" inputMode="decimal" autoComplete="off" placeholder={t.durationPlaceholder} value={numericDrafts.duration_hours} disabled={unavailable} {...fieldAttributes("duration_hours")} onKeyDown={event => numericKeyDown("duration_hours", event)} onPaste={event => numericPaste("duration_hours", event)} onChange={event => editNumeric("duration_hours", event.target.value)} /><small className="field-hint" id="hint-duration_hours">{journey.durationHint}</small>{fieldError("duration_hours")}</label>
-        <label>{t.language} <em>{t.optional}</em><select name="language" value={form.language ?? ""} disabled={unavailable} {...fieldAttributes("language")} onChange={event => update("language", event.target.value || null)}>
-          <option value="">{t.noLanguage}</option>{metadata?.languages.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
-        </select><small className="field-hint">{t.languageHint}</small>{fieldError("language")}</label>
+        <fieldset className="language-field"><legend>{t.language} <em>{t.optional}</em></legend><div className="language-options">
+          {languageOptions.map(option => <label className="language-option" key={option}><input type="checkbox" checked={form.language === option} disabled={unavailable} onChange={event => update("language", event.target.checked ? option : null)} /><span>{optionLabel(option, locale)}</span></label>)}
+        </div>{fieldError("language")}</fieldset>
+        </div>
       </div>
-      {metadata && <p className="calendar-note">{calendarLabel(metadata, locale)}</p>}
-      <div className="form-footer"><div><strong>{journey.formFooterTitle}</strong><p>{t.footer}</p></div><button type="submit" disabled={loading || unavailable}>{loading ? t.loading : t.submit}<span aria-hidden="true">→</span></button></div>
+      <div className="form-footer"><p>{t.footer}</p><button type="submit" disabled={loading || unavailable}>{loading ? t.loading : t.submit}</button></div>
     </form>
     {error && <div className="request-error" role="alert" data-testid="request-error">{t[error]} <button type="button" disabled={loading || unavailable} onClick={() => formElement.current?.requestSubmit()}>{t.retry}</button></div>}
     {result && <section className="results" aria-live="polite">
