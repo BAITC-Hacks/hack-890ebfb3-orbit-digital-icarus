@@ -190,6 +190,36 @@ class FilteringTests(unittest.TestCase):
         self.assertEqual(result.exclusions.over_budget, 1)
         self.assertEqual(result.exclusions.duration_exceeded, 1)
 
+    def test_zero_to_more_than_three_eligible_profiles_are_preserved(self) -> None:
+        """Filtering retains every eligible profile for the ranking layer.
+
+        The API may ultimately return at most three ranked cards, but the
+        eligibility layer must not truncate the candidates it hands to ranking.
+        """
+        query = request()
+        booked_profile = contractor(
+            "booked-only",
+            busy_dates={date(2026, 10, 10)},
+        )
+
+        zero_result = filter_candidates(query, [booked_profile])
+        self.assertEqual(len(zero_result.eligible), 0)
+        self.assertEqual(zero_result.exclusions.booked, 1)
+
+        for expected_total in (1, 2, 3, 4):
+            profiles = [
+                contractor(f"eligible-{index}")
+                for index in range(1, expected_total + 1)
+            ]
+            result = filter_candidates(query, profiles)
+
+            self.assertEqual(len(result.eligible), expected_total)
+            self.assertEqual(
+                [item.id for item in result.eligible],
+                [item.id for item in profiles],
+            )
+            self.assertEqual(result.exclusions.total(), 0)
+
     def test_language_is_ignored_when_omitted(self) -> None:
         result = filter_candidates(
             request(language=None),
