@@ -61,6 +61,6 @@ export interface MetadataResponse {
   categories: string[];
   event_formats: string[];
   languages: string[];
-  date_min: string;
-  date_max: string;
+  calendar_start: string;
+  calendar_end: string;
 }

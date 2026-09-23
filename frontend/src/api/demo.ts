@@ -10,8 +10,8 @@ export const metadata: MetadataResponse = {
   ],
   event_formats: ["свадьба", "корпоратив", "юбилей", "той", "конференция", "день рождения"],
   languages: ["русский", "казахский", "английский"],
-  date_min: "2026-09-23",
-  date_max: "2026-12-31",
+  calendar_start: "2026-09-23",
+  calendar_end: "2026-12-31",
 };
 
 const card = (id: string, anon_name: string, price: number, explanation: string, request: MatchRequest, flags: Partial<MatchCard> = {}): MatchCard => ({

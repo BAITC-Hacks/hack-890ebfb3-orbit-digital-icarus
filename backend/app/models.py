@@ -165,7 +165,7 @@ class EvidenceItem(BaseModel):
 
     code: EvidenceCode
     field: str
-    value: str | int | float | list[str]
+    value: str | int | float | list[str] | None
     source_quote: str | None = None
 
 

@@ -36,6 +36,7 @@ class ProfileEvidence:
     id: str
     quote: str
     event_formats: tuple[str, ...]
+    use_in_explanation: bool = True
 
 
 EvidenceIndex = Mapping[str, tuple[ProfileEvidence, ...]]
