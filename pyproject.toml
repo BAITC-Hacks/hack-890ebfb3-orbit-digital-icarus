@@ -1,0 +1,19 @@
+[project]
+name = "orbit-digital-icarus-backend"
+version = "0.1.0"
+description = "Explainable event contractor matching service"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "pydantic",
+    "uvicorn[standard]",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "httpx",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["backend/tests"]
