@@ -100,4 +100,63 @@ describe("App: explicit demo fixtures, not production matching", () => {
     await user.click(screen.getByRole("button", { name: "English", exact: true }));
     expect(screen.getByTestId("price-imputed-note")).toHaveTextContent("Starting price was imputed in the supplied data");
   });
+
+  it("rejects invalid budget edits without silently changing their meaning", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    const budget = screen.getByLabelText("Бюджет, ₸");
+    await user.clear(budget);
+    await user.type(budget, "4 000 000");
+    await user.tab();
+
+    expect(budget).toHaveValue("4");
+    await submit(user);
+    expect(budget).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+    await user.clear(budget);
+    await user.type(budget, "4000000");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("blocks duration letters and accepts a corrected comma decimal", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    const duration = screen.getByLabelText(/Длительность, ч/i);
+    await user.type(duration, "6abc,5");
+
+    expect(duration).toHaveValue("6");
+    await submit(user);
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    await user.clear(duration);
+    await user.type(duration, "6,5");
+    expect(duration).toHaveValue("6,5");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("accepts any positive fractional duration without inventing a half-hour constraint", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    await user.type(screen.getByLabelText(/Длительность, ч/i), "1.25");
+    await submit(user);
+
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+    expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("rejects an empty or out-of-range event date before calling the API", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    await user.clear(screen.getByLabelText("Дата мероприятия"));
+    await submit(user);
+
+    expect(await screen.findByTestId("request-error")).toBeVisible();
+    expect(screen.getByLabelText(/Дата мероприятия/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+  });
 });
