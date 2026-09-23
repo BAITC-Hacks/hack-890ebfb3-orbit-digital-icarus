@@ -72,3 +72,31 @@ main:focus { outline: none; }
 /* Stack content and preserve comfortable tap targets on small devices. */
 @media (max-width: 900px) { .home-hero { gap: 30px; }.category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.steps-grid { gap: 22px; } }
 @media (max-width: 650px) { .site-header { gap: 15px; margin-bottom: 30px; }.site-nav { order: 3; width: 100%; }.home-hero { grid-template-columns: 1fr; padding-top: 10px; gap: 25px; }.principle-card { border-radius: 45px 15px 15px 15px; padding: 26px; }.home-hero h1 { font-size: clamp(2.8rem, 11vw, 4rem); }.steps-grid, .category-grid { grid-template-columns: 1fr; }.home-section { padding-top: 40px; }.trust-panel { padding: 25px; gap: 14px; }.trust-panel > span { display: none; }.home-bottom { display: grid; }.home-actions { gap: 20px; }.home-hero .lede { font-size: 1rem; } }
+
+/* Temporary dark visual direction: preserve the existing information hierarchy and accent colors. */
+:root { color-scheme: dark; color: #edf4ed; background: #101815; }
+body { background: radial-gradient(circle at 82% -10%, #264238 0, transparent 34rem), #101815; }
+h1, h2 { color: #f4f7ee; }
+.eyebrow, .preview-note, .availability, .card-evidence summary { color: #9fd1af; }
+.lede, .result-message, .empty-state p, .card-explanation, .exclusion-details, .calendar-note, .catalog-status, .section-intro, .steps-grid p, .faq p, .home-bottom p, .site-footer, .home-small { color: #bac8bd; }
+.site-header, .snapshot-strip, .site-footer, .contact-panel { border-color: #31433b; }
+.brand { color: #e7f2e8; }.brand span { border-color: #93c7a5; }
+.site-nav a, .locale-switcher { color: #c9d5ca; }.site-nav a[aria-current="page"] { color: #ff9a70; }
+.locale-switcher button, .query-tag, .category-grid button { color: #e8f0e7; background: #17221e; border-color: #40564a; }
+.locale-switcher button[aria-pressed="true"] { color: #08110d; background: #a9d8b4; border-color: #a9d8b4; }
+.match-form, .contractor-card, .empty-state { background: #17221e; border-color: #34483e; box-shadow: 0 14px 34px rgb(0 0 0 / 20%); }
+label { color: #e5ede5; } label em, .field-hint, .price-caveat, .source-quote-label, .exclusion-details small, .form-footer p { color: #9cac9f; }
+input, select, textarea, .contact-panel textarea { color: #eff6ef; background: #101815; border-color: #465d50; }
+select option { color: #eff6ef; background: #101815; }
+input:disabled, select:disabled { color: #788b7e; background: #16201c; }
+input:focus, select:focus, textarea:focus-visible { border-color: #ff8d63; box-shadow: 0 0 0 3px rgb(255 141 99 / 23%); }
+.form-footer { border-color: #31433b; }.form-footer button, .primary-link { color: #1a100c; background: #ff8d63; box-shadow: 0 8px 18px rgb(0 0 0 / 24%); }.form-footer button:hover:not(:disabled), .primary-link:hover { background: #ffb08f; }
+.result-tabs { color: #91a297; }.result-tabs button { color: #c7d3c8; }.result-tabs .active, .price, .empty-icon { color: #ff9a70; }
+.shortfall { color: #eadac1; background: #30291e; border-color: #66543a; }.query-tag, .availability, .card-evidence, .match-alternatives { border-color: #34483e; }
+.avatar { color: #0d1712; background: #9fd1af; }.card-person p { color: #aab9ad; }.notes { color: #e9bd76; }
+.request-error { color: #ffd0c0; background: #3c211d; border-color: #925440; }.field-error { color: #ffad92; }
+.match-alternatives button { color: #d4edda; background: #193025; border-color: #527460; }.match-alternatives button:hover, .category-grid button:hover { border-color: #9fd1af; background: #20382b; }
+.principle-card { color: #dcecdf; background: #1a3027; border-color: #476855; }.principle-card small, .principle-card > p { color: #b8d2bc; }.principle-card > p { border-color: #456653; }.principle-card li span, .home-hero h1 em, .text-link { color: #a9d8b4; }.orbit-mark span { color: #b9e0c1; }.orbit-mark::after { border-color: #a9d8b4; }.orbit-mark i { background: #ff8d63; }
+.steps-grid article, .faq details { border-color: #40564a; }.step-number, .contact-panel summary { color: #ff9a70; }
+.trust-panel { background: #0d1914; border: 1px solid #385344; }.trust-panel, .trust-panel h2 { color: #eff7ed; }.trust-panel > span { color: #f1c48b; }.copy-inquiry { color: #07100b; background: #9fd1af; }.contact-panel [role="status"] { color: #a9d8b4; }
+.skip-link { color: #0d1712; background: #eff7ed; } button:focus-visible, summary:focus-visible, a:focus-visible { outline-color: #ff9a70; }
