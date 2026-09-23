@@ -349,6 +349,7 @@
         "properties": {
           "city": {
             "type": "string",
+            "maxLength": 80,
             "title": "City"
           },
           "event_date": {
@@ -358,10 +359,12 @@
           },
           "event_format": {
             "type": "string",
+            "maxLength": 80,
             "title": "Event Format"
           },
           "category": {
             "type": "string",
+            "maxLength": 120,
             "title": "Category"
           },
           "budget_kzt": {
@@ -384,7 +387,8 @@
           "language": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 80
               },
               {
                 "type": "null"
