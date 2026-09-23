@@ -3,6 +3,7 @@
 import csv
 import hashlib
 from datetime import date
+from math import isfinite
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -108,9 +109,9 @@ def _parse_max_hours(value: str | None, *, row_number: int) -> float | None:
         raise CatalogValidationError(
             f"Row {row_number}: max_hours must be numeric, got {value!r}"
         ) from error
-    if parsed <= 0:
+    if not isfinite(parsed) or parsed <= 0:
         raise CatalogValidationError(
-            f"Row {row_number}: max_hours must be positive, got {value!r}"
+            f"Row {row_number}: max_hours must be positive and finite, got {value!r}"
         )
     return parsed
 
