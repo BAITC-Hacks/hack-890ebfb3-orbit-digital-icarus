@@ -1,6 +1,6 @@
 # Judging evidence and release gates
 
-This maps the organizer's requirements and 100-point rubric to the implemented local application on `Enjoy`. It records evidence and limitations; the jury awards the score. Follow the [README](../README.md) for installation and the [live demo](demo.md) for exact inputs.
+This maps the organizer's technical requirements and 100-point rubric to the integrated application. It records evidence and limitations; the jury awards the score. Follow the [README](../README.md) for setup and the [current release review](release-review.md) for newer verification (115 Python tests, 255 subtests, 13 real E2E flows) and the separate Demo Day rubric. Older numeric results below are explicitly historical measurements of the named revisions, not the latest run.
 
 ## Five judging criteria
 
@@ -50,7 +50,7 @@ Recorded runtime: Windows 11, Python 3.12.10, Node 26.7.0, npm 11.19.0, Chromium
 - [x] Source data and locked dependencies bundled; provider keys remain outside Git.
 - [x] Final integrated clean-clone installation and regression [completed and recorded](reproducibility.md) at `1292b65`.
 - [ ] Cloud workflow green after the repository owner's GitHub billing lock is resolved. The [inspected run](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798) ran zero test steps.
-- [ ] The team merges the tested `Enjoy` revision into `main` and reruns the release checks there.
+- [x] BBL, Enjoy, spectra and the concurrent main update are combined; the current release review records integrated regression checks.
 - [ ] Rehearse the live demo and submit the repository/demo links through the tournament portal before its actual deadline.
 
 A hosted deployment is optional future work for this local deliverable. No public deployment, confirmed booking, independently verified contractor claims or guaranteed judging score is claimed.

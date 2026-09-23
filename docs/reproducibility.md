@@ -1,5 +1,7 @@
 # Integrated clean-clone verification
 
+> Historical record: the named clone runs below apply to those commits. The later three-branch/home/contact integration has its own [verification record](release-review.md); older fresh-clone counts do not cover the new product features.
+
 Verified on **23 September 2026** from a new GitHub clone at **`1292b65394f05e7622bf63a21142ecbf6bb1b79c`** on Enjoy's history. This revision includes the integrated backend, frontend, Russian/English interface, tests and setup documentation. A later teammate merge added three backend tests; the full regression passed again at **`190696cb9da6b43207a08ae43c9548ada869c83d`** using this isolated environment. Application code, data and dependency locks are identical between these two revisions. Subsequent handoff edits only update documentation.
 
 ## Isolation and environment

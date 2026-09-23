@@ -4,7 +4,9 @@ Orbit Digital | Icarus · hackathon task **#79-lite**
 
 Find an event contractor in Kazakhstan without searching a long catalog. Enter the city, date, event format, category and budget to receive **up to three eligible profiles**, each with a short explanation and inspectable evidence. A date change can change the shortlist; a rare category can return one card; an empty result explains what prevented a match.
 
-**The integrated local application works on the `Enjoy` branch:** React interface, FastAPI service, production filtering, deterministic ranking and grounded explanations. Russian is the default interface; a separate English switch preserves Russian source quotes and canonical request values. This is a local hackathon demonstration; it has not yet been released to `main` or deployed as a booking service.
+**The integrated application combines `bbl`, `Enjoy` and `feature/sp3ctra` for `main`:** a bilingual home page, matching form, FastAPI filtering/ranking, grounded explanations and copyable contractor inquiries. This is a local hackathon prototype, not a deployed booking or messaging service. See the [release review and Demo Day scorecard](docs/release-review.md) for current verification and remaining human actions.
+
+![Orbit home page](docs/images/home-ru.png)
 
 ![Russian interface showing a real API shortlist](docs/images/interface-ru.png)
 
@@ -12,14 +14,14 @@ Find an event contractor in Kazakhstan without searching a long catalog. Enter t
 
 ## Run from a fresh checkout
 
-Prerequisites: Git, **Python 3.11+**, and Node matching **`^22.12.0 || ^24.0.0 || >=26.0.0`**, with npm. Local verification used Windows 11, Python **3.12.10**, Node **26.7.0** and npm **11.19.0**. No API key, model account, database or environment file is required.
+Prerequisites: Git, **Python 3.11+**, and Node matching **`^22.12.0 || ^24.0.0 || >=26.0.0`**, with npm. The current review used Windows 11, Python **3.14.4**, Node **24.15.0** and npm **11.12.1**. Earlier reproduction also passed on Python 3.12.10. No API key, model account, database or environment file is required.
 
 Run all commands below from the repository root:
 
 ```bash
 git clone https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus.git
 cd hack-890ebfb3-orbit-digital-icarus
-git switch Enjoy
+git switch main
 python -m venv .venv
 ```
 
@@ -60,7 +62,9 @@ python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Open **http://127.0.0.1:5173**. The frontend proxies `/api` to port 8000. API documentation is at **http://127.0.0.1:8000/docs**, and `/api/health` reports readiness after the catalog and evidence validate successfully. Keep both terminals running for the HTTP and real-browser checks below. If a port is occupied, stop the conflicting service; `--strictPort` prevents silently opening a different frontend port.
+Open **http://127.0.0.1:5173** for the home page; choose **Начать подбор / Start matching** or a category. The form also has a direct link at **http://127.0.0.1:5173/#/match**. The frontend proxies `/api` to port 8000. API docs: **http://127.0.0.1:8000/docs**; `/api/health` reports readiness after catalog/evidence validation. Keep both terminals running for HTTP/browser checks. Identify an occupied port's service before stopping it; `--strictPort` prevents silently opening another frontend port.
+
+If PowerShell blocks npm scripts, use `npm.cmd` / `npx.cmd`. You can skip activation and use `.venv\Scripts\python.exe` instead of `python`; no execution-policy change is needed.
 
 The catalog is bundled as `data/contractors.csv`. Setup and matching do not read a developer's Downloads folder or contact an AI provider. `VITE_API_MODE=demo` is an explicit, visibly labeled design-preview option; leave it unset for the real application. API errors never switch to preview data.
 
@@ -75,13 +79,17 @@ The build runs the application TypeScript check and writes `frontend/dist`. Keep
 
 ## Try the main scenario
 
+Start on the home page, explain the problem, then click **Начать подбор**. Category cards prefill the form but never submit silently. Budget accepts whole KZT without spaces; duration accepts positive dot/comma decimals. Letters, signs, exponents and malformed pasted values are rejected rather than stripped into another number.
+
 1. Use **Алматы / Ведущий / свадьба / 2026-10-11 / 3,000,000 ₸**, leaving duration and contractor language blank. Five profiles qualify; the first three are `HK-42352 → HK-44923 → HK-27222`.
 2. Expand a card's evidence, then switch to English. Interface text and reviewed quote translations change; the IDs, ordering and contractor-language filter stay the same. The original Russian quote remains inspectable.
 3. Change only the date to **2026-10-10**. The shortlist becomes `HK-27222 → HK-77838 → HK-72938` because availability and the eligible pool change.
 4. Try **Алматы / Флорист / свадьба / 2026-10-10 / 300,000 ₸**. One card, `HK-39372`, is returned. The other florist is booked; the 200,000 ₸ starting price is explicitly marked as imputed.
 5. Compare **Астана / Декоратор** with **Астана / Флорист / 2026-10-11 / 300,000 ₸**. The first category is absent in the city; the second exists but has no eligible profile.
 
-All dates are in 2026 and prices are per contractor's service. See the [complete demo](docs/demo.md) for the venue date pair, December scarcity, exclusion counts and explanation audit.
+All dates are in 2026 and prices are per contractor's service. See the [complete demo](docs/demo.md) for venues, December scarcity and the explanation audit.
+
+Each card has **Связаться / подготовить запрос — Contact / prepare inquiry**. It prepares a copyable draft using the returned request and contractor ID. The anonymized dataset has no verified phone/email directory: no invented links, notifications or bookings. Clipboard failure leaves the text selected for manual copying. Home/back navigation preserves the form and shortlist within the tab.
 
 ## Architecture and repository map
 
@@ -211,12 +219,14 @@ python scripts/matching_acceptance.py --repeat 20
 python scripts/validate_evidence_proposal.py --input backend/app/matching/profile_evidence.json
 npm run test:client
 npm run test:i18n
+npm run test:numeric
+npm --prefix frontend test
 npm run typecheck:client
 npm --prefix frontend run build
 npm run test:ui
 ```
 
-`test:ui` starts Vite and uses explicit mocked metadata/match responses. Its six flows check the interface independently; they are not evidence that backend matching works. The domain acceptance tool independently loads and filters the bundled data, checks frozen ordered IDs and repeatability, and can print full cards with `--json`.
+`test:ui` starts Vite with explicit mocked metadata/match responses. Its 13 flows check numeric editing, metadata retry and localization independently; they are not backend acceptance evidence. The domain acceptance tool independently loads and filters the bundled data and checks frozen ordered IDs and repeatability.
 
 With the real backend and frontend running in the two terminals:
 
@@ -224,6 +234,7 @@ With the real backend and frontend running in the two terminals:
 python scripts/check_api.py --base-url http://127.0.0.1:8000 --repeat 20
 npm run test:e2e
 npm run measure:browser
+node scripts/capture_release.mjs
 ```
 
 The HTTP checker compares actual responses with the independent dataset oracle. The real-browser suite drives the application, checks cards and outcomes, and exercises controlled failure/retry and delayed-response boundaries. The measurement script makes real matching requests with no fixture interception and saves a local report under ignored `artifacts/`.
@@ -234,21 +245,22 @@ To let Playwright start both services itself, activate `.venv` and set `RUN_APP_
 
 | Check | Result |
 | --- | --- |
-| Python suite | **91 passing tests and 218 subtests**, including API/filter integration, startup/CORS configuration, source validation, deterministic matching and mocked offline-provider checks |
-| Transport / locale unit tests | **49 client + 16 localization tests passing** |
+| Python suite | **115 passing tests and 255 subtests**, including strict types, JSON-safe errors, verified alternatives and published OpenAPI parity |
+| Transport / locale unit tests | **95 client + 16 localization + 7 numeric tests passing** |
+| React components | **13 tests passing**, including home and inquiry/clipboard behavior |
 | Strict transport types / full frontend build | **Passing** |
-| Isolated mocked browser UI | **6 Chromium tests passing** |
-| Application browser acceptance | **8 Chromium tests passing** against the integrated app |
+| Isolated mocked browser UI | **13 Chromium tests passing** |
+| Application browser acceptance | **13 Chromium tests passing**: matching, alternatives, home/navigation and inquiry journeys |
 | Domain and real HTTP scenarios | **8 scenarios × 20 repeats = 160 runs** in each check |
-| Built-bundle preview | Dense shortlist returned by the real backend through the local port 4173 preview |
+| Built-bundle preview | All **13 application E2E tests passed again** through the local port 4173 production preview |
 | Complete integrated fresh-clone reproduction | **Passed at `1292b65`** with fresh locked installs and 160 real HTTP requests; all suites/build passed again at **`190696c`** after three more teammate tests, with unchanged application/dependencies; see the [verification record](docs/reproducibility.md) |
 
-Measurements on **23 September 2026**, Windows 11, Python 3.12.10 and Chromium **153.0.8010.12**, with the CSV hash above and algorithm `explainable-v1:2553919e464d7030`:
+Measurements on **23 September 2026**, Windows 11, Python 3.14.4 and Chromium **153.0.8010.12**, with the CSV hash above and algorithm `explainable-v1:2553919e464d7030`:
 
 | Scope | Runs | p95 | Maximum |
 | --- | ---: | ---: | ---: |
-| Real local HTTP requests across eight scenarios | 160 | **21.521 ms** | **53.115 ms** |
-| Real browser submit-to-visible result across five scenarios | 20 | **65.88 ms** | **90.76 ms** |
+| Real local HTTP requests across eight scenarios | 160 | **23.327 ms** | **45.550 ms** |
+| Real browser submit-to-visible result across five scenarios | 20 | **74.730 ms** | **113.900 ms** |
 
 Browser timing includes automation click/wait overhead. These local measurements exclude installation and server startup; they do not predict internet hosting latency or production throughput. The measured local flows are below the task's ten-second target. Rerun the commands to measure the current machine and versions.
 
@@ -266,6 +278,6 @@ The practical value is a short, repeatable shortlist with reasons the user can i
 | Value and applicability | 15 | Inspectable reasons, price/calendar caveats, responsive Russian/English interface and actionable exclusions |
 | Development potential and originality | 10 | Versioned extractive evidence, guarded offline proposals, reviewable translations and reproducible matching |
 
-See the [judging checklist](docs/judging-checklist.md) for the detailed demonstration mapping and the [complete clean-clone verification](docs/reproducibility.md). Remaining release work is CI rerun when the account permits it, agreed integration into `main`, and the team's live rehearsal/submission. Potential product extensions include live calendar freshness, confirmed quotations, customer-approved changes to constraints, feedback-based evaluation and retrieval for a larger catalog; these are future work.
+See the [technical judging checklist](docs/judging-checklist.md), [Demo Day scorecard and pitch](docs/release-review.md), and [earlier clean-clone verification](docs/reproducibility.md). Remaining human work is rehearsal, portal submission and cloud CI follow-up if the account still blocks jobs. User-approved one-condition alternatives are implemented. Live calendars, verified contact onboarding, confirmed quotations, feedback evaluation and larger-catalog retrieval remain future work. Rubric weights are not earned scores or a guarantee of winning.
 
 Team ownership: **Enjoy** — matching, evidence, integration and verification; **bbl** — backend models, catalog and filtering; **feature/sp3ctra** — interface design and frontend. Small increments are pushed to the owner's branch, and remote updates/contracts are checked before merging. See [Instructions.md](Instructions.md) and [team synchronization notes](docs/team-sync.md).
