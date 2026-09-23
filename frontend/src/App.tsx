@@ -222,7 +222,7 @@ export default function App() {
     const input = event.currentTarget;
     const pasted = event.clipboardData.getData("text");
     const proposed = input.value.slice(0, input.selectionStart ?? 0) + pasted + input.value.slice(input.selectionEnd ?? input.value.length);
-    if (!acceptsNumeric(key, proposed)) {
+    if (!acceptsNumeric(key, proposed) || (key === "budget_kzt" && /[ \u00a0\u202f]/.test(proposed) && parseBudgetDraft(proposed) === undefined)) {
       event.preventDefault();
       rejectNumericEdit(key);
     } else rejectedEdits.current.delete(key);

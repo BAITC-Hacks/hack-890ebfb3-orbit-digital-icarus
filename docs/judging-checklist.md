@@ -49,7 +49,7 @@ Recorded runtime: Windows 11, Python 3.12.10, Node 26.7.0, npm 11.19.0, Chromium
 - [x] Local automated suites, production build, built-preview/API proxy and measured response target checked.
 - [x] Source data and locked dependencies bundled; provider keys remain outside Git.
 - [x] Final integrated clean-clone installation and regression [completed and recorded](reproducibility.md) at `1292b65`.
-- [ ] Cloud workflow green after the repository owner's GitHub billing lock is resolved. The [inspected run](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798) ran zero test steps.
+- [ ] Cloud workflow green after the organizer's GitHub billing lock is resolved. The [inspected run](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798) ran zero test steps, so the workflow is manual-only until then.
 - [x] BBL, Enjoy, spectra and the concurrent main update are combined; the current release review records integrated regression checks.
 - [ ] Rehearse the live demo and submit the repository/demo links through the tournament portal before its actual deadline.
 
