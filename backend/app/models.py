@@ -4,8 +4,9 @@ Filtering, catalog loading, ranking, and explanation logic remain in separate
 modules. These models define the stable boundary between those components.
 """
 
-from datetime import date
+from datetime import date, datetime
 from math import isfinite
+import re
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -71,11 +72,37 @@ class MatchRequest(BaseModel):
             return None
         return _clean_required_text(value)
 
+    @field_validator("event_date", mode="before")
+    @classmethod
+    def require_date_only(cls, value: object) -> object:
+        """Accept a date object or a JSON date-only string, never a datetime."""
+
+        if isinstance(value, datetime):
+            raise ValueError("must be a date without a time component")
+        if isinstance(value, date):
+            return value
+        if isinstance(value, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+            return value
+        raise ValueError("must be an ISO date in YYYY-MM-DD form")
+
     @field_validator("budget_kzt", mode="before")
     @classmethod
-    def reject_boolean_budget(cls, value: object) -> object:
-        if isinstance(value, bool):
-            raise ValueError("must be a positive integer")
+    def require_integer_budget(cls, value: object) -> int:
+        """Avoid silently coercing strings, booleans, and decimal JSON values."""
+
+        if type(value) is not int:
+            raise ValueError("must be a positive integer JSON number")
+        return value
+
+    @field_validator("duration_hours", mode="before")
+    @classmethod
+    def require_numeric_duration(cls, value: object) -> object:
+        """Accept a numeric JSON value or null, never a coerced boolean/string."""
+
+        if value is None:
+            return None
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError("must be a positive numeric value or null")
         return value
 
     @field_validator("duration_hours")

@@ -22,11 +22,17 @@ Open http://127.0.0.1:8000/docs for the interactive API schema.
 
 The development API allows browser requests from Vite's default origins:
 http://127.0.0.1:5173 and http://localhost:5173. Override configuration using
-environment variables or a copied .env file:
+environment variables. The equivalent .env file contents are:
 
     DATA_PATH=data/contractors.csv
     ALGORITHM_VERSION=hard-filter-v1
     CORS_ORIGINS=http://127.0.0.1:5173,http://localhost:5173
+
+To load a copied .env.example file rather than setting process environment
+variables, use Uvicorn's explicit environment-file option:
+
+    Copy-Item .env.example .env
+    python -m uvicorn backend.app.main:app --env-file .env --host 127.0.0.1 --port 8000 --reload
 
 The server refuses to start when its catalog cannot be validated. The matching
 endpoint currently returns real business-empty states; eligible candidates need
