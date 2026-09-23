@@ -1,6 +1,6 @@
 # BBL backend handoff
 
-**Historical branch handoff:** the notes below describe bbl's standalone `d07eed5` checkpoint. The integrated application now includes ranking, cards, bilingual UI and recovery options. Follow the [current README](../README.md) and [bug-hunt report](bug-hunt.md) for the actual combined setup, dependency versions and verification status.
+> Historical branch-only handoff at d07eed5/f3c8529. The current integrated product replaces the eligible-candidate stub with real ranking/cards and includes strict BBL validation. Follow [the current release review](release-review.md) and root README; the original status below is preserved to explain the handoff history.
 
 Status: merge-ready backend foundation, not a complete product.
 

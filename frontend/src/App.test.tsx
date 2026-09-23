@@ -18,6 +18,7 @@ async function submit(user: ReturnType<typeof userEvent.setup>) {
 
 describe("App: explicit demo fixtures, not production matching", () => {
   beforeEach(() => {
+    window.history.replaceState(null, "", "/#/match"); // These legacy fixtures exercise the matching route.
     fetch.mockClear();
     vi.stubGlobal("fetch", fetch);
   });
@@ -162,5 +163,80 @@ describe("App: explicit demo fixtures, not production matching", () => {
     await submit(user);
     expect(await screen.findByTestId("result-summary")).toHaveAttribute("data-request-date", "2026-10-31");
     expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("rejects invalid budget edits without silently changing their meaning", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    const budget = screen.getByLabelText("Бюджет, ₸");
+    await user.clear(budget);
+    // Malformed thousands grouping is kept visible and blocked, never repaired into 400000 or 4.
+    await user.type(budget, "4 00 000");
+    await user.tab();
+
+    expect(budget).toHaveValue("4 00 000");
+    await submit(user);
+    expect(budget).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+    await user.clear(budget);
+    await user.type(budget, "4000000");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("blocks duration letters and accepts a corrected comma decimal", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    const duration = screen.getByLabelText(/Длительность, ч/i);
+    await user.type(duration, "6abc,5");
+
+    expect(duration).toHaveValue("6");
+    await submit(user);
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    await user.clear(duration);
+    await user.type(duration, "6,5");
+    expect(duration).toHaveValue("6,5");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("accepts digits immediately after rejecting a letter in an empty duration", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const duration = screen.getByLabelText("Длительность, ч", { exact: true });
+    await user.type(duration, "e");
+    expect(duration).toHaveValue("");
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    // No clearing, refocusing or reload should be necessary to enter a fresh number.
+    await user.type(duration, "6,5");
+    expect(duration).toHaveValue("6,5");
+    expect(duration).toHaveAttribute("aria-invalid", "false");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("accepts any positive fractional duration without inventing a half-hour constraint", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    await user.type(screen.getByLabelText(/Длительность, ч/i), "1.25");
+    await submit(user);
+
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+    expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("rejects an empty or out-of-range event date before calling the API", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    await user.clear(screen.getByLabelText("Дата мероприятия"));
+    await submit(user);
+
+    expect(await screen.findByTestId("request-error")).toBeVisible();
+    expect(screen.getByLabelText(/Дата мероприятия/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
   });
 });

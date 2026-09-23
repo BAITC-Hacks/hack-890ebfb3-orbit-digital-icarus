@@ -19,7 +19,7 @@ async function setup(page: Page) {
     requests.push(request);
     await route.fulfill({ json: { ...rare, request } });
   });
-  await page.goto("/");
+  await page.goto("/#/match");
   const submit = page.getByTestId("match-form").locator('button[type="submit"]');
   await expect(submit).toBeEnabled();
   await page.locator('select[name="category"]').selectOption("Флорист");
@@ -95,6 +95,46 @@ test("duration keeps editable dot or comma drafts and submits either decimal as 
     await submit.click();
     await expect(page.getByTestId("contractor-card")).toHaveCount(1);
     expect(requests.at(-1)?.duration_hours).toBe(4.5);
+  }
+  expect(requests).toHaveLength(2);
+});
+
+test("empty numeric fields accept numbers immediately after rejected letters", async ({ page }) => {
+  const { budget, duration, requests, submit } = await setup(page);
+  await budget.fill("");
+  for (const [input, corrected] of [[budget, "300000"], [duration, "6,5"]] as const) {
+    await input.pressSequentially("e");
+    await expect(input).toHaveValue("");
+    await expect(input).toHaveAttribute("aria-invalid", "true");
+    // The exact user report: simply type a number next, without special recovery keys.
+    await input.pressSequentially(corrected);
+    await expect(input).toHaveValue(corrected);
+    await expect(input).toHaveAttribute("aria-invalid", "false");
+  }
+  await submit.click();
+  await expect(page.getByTestId("contractor-card")).toHaveCount(1);
+  expect(requests).toHaveLength(1);
+  expect(requests[0].budget_kzt).toBe(300000);
+  expect(requests[0].duration_hours).toBe(6.5);
+});
+
+test("empty duration recovers after rejected paste and mobile-style insertion without keydown", async ({ page }) => {
+  const { duration, requests, submit } = await setup(page);
+  await page.setViewportSize({ width: 375, height: 812 });
+  for (const rejection of ["paste", "insert"]) {
+    await duration.fill("");
+    if (rejection === "paste") await pasteText(page, duration, "4e2");
+    else { await duration.focus(); await page.keyboard.insertText("e"); }
+    await expect(duration).toHaveValue("");
+    await submit.click();
+    expect(requests).toHaveLength(rejection === "paste" ? 0 : 1);
+    await duration.focus();
+    await page.keyboard.insertText("6.5");
+    await expect(duration).toHaveValue("6.5");
+    await expect(duration).toHaveAttribute("aria-invalid", "false");
+    await submit.click();
+    await expect(page.getByTestId("contractor-card")).toHaveCount(1);
+    expect(requests.at(-1)?.duration_hours).toBe(6.5);
   }
   expect(requests).toHaveLength(2);
 });

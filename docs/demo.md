@@ -1,6 +1,8 @@
 # Reproducible demo and explanation audit
 
-These scenarios are verified against the bundled 66-profile CSV, the integrated production API and the React interface on `main`. The local application is ready to demonstrate: the real-browser suite passed 11 tests, and a separate 13-test mocked suite checked interface behavior. Follow the [root setup](../README.md#run-from-a-fresh-checkout) and keep the backend and frontend running. Leave `VITE_API_MODE` unset so the interface uses the real API.
+Open the root URL for the home page, then click **Начать подбор / Start matching** or a category. The form's direct link is `/#/match`. Categories only prefill; search is explicit. Each returned card has an honest inquiry draft that can be copied but is never sent. The dataset has no verified contact directory. See the [three-minute pitch and Q&A](release-review.md) for the separate Demo Day rubric. The inputs below remain authoritative; historical timing/count records identify older revisions.
+
+These scenarios are verified against the bundled 66-profile CSV, the integrated production API and the React interface. The current suite has 13 real-application browser tests and 13 isolated UI tests. Follow the [root setup](../README.md#run-from-a-fresh-checkout) and keep both services running. Leave `VITE_API_MODE` unset so the interface uses the real API.
 
 From the repository root:
 

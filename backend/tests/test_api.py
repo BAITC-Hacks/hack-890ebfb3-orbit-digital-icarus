@@ -172,7 +172,11 @@ class ApiTests(unittest.TestCase):
             "string_budget": {"budget_kzt": "3000000"},
             "whole_number_float_budget": {"budget_kzt": 3_000_000.0},
             "boolean_duration": {"duration_hours": True},
-            "datetime_instead_of_date": {"event_date": "2026-10-11T00:00:00"},
+            "string_duration": {"duration_hours": "6"},
+            "exponent_duration": {"duration_hours": "4e2"},
+            "datetime_instead_of_date": {
+                "event_date": "2026-10-11T00:00:00"
+            },
             "impossible_date": {"event_date": "2026-02-30"},
         }
 

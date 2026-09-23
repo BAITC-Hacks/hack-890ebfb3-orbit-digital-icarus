@@ -22,7 +22,7 @@ test("a stalled catalog request times out and a retry restores the form", async 
     matchRequests += 1;
     await route.abort();
   });
-  await page.goto("/");
+  await page.goto("/#/match");
   const form = page.getByTestId("match-form");
   const submit = form.locator('button[type="submit"]');
   const city = form.locator('select[name="city"]');

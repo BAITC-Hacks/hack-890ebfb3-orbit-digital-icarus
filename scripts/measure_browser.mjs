@@ -16,7 +16,7 @@ const cases = [
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage();
-  await page.goto(baseURL);
+  await page.goto(new URL("/#/match", baseURL).href); // Measure submit-to-result, not home navigation.
   const measurements = [];
   for (let repeat = 0; repeat < 4; repeat += 1) {
     for (const [scenario, payload, ids] of cases) {
