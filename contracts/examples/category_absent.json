@@ -1,0 +1,29 @@
+{
+  "schema_version": "1",
+  "status": "category_absent",
+  "request": {
+    "city": "Астана",
+    "event_date": "2026-10-10",
+    "event_format": "свадьба",
+    "category": "Декоратор",
+    "budget_kzt": 3000000,
+    "duration_hours": null,
+    "language": null
+  },
+  "dataset_version": "6a724b6b7dfb5973343e68ba18dadb60fc807d87e3d78f03ee86fb26cb089f7d",
+  "algorithm_version": "hard-filter-v1",
+  "message": "В предоставленном каталоге нет подрядчиков категории «Декоратор» в городе Астана.",
+  "counts": {
+    "city_category_total": 0,
+    "eligible_total": 0,
+    "returned_total": 0
+  },
+  "exclusions": {
+    "booked": 0,
+    "over_budget": 0,
+    "unsupported_format": 0,
+    "unsupported_language": 0,
+    "duration_exceeded": 0
+  },
+  "cards": []
+}
