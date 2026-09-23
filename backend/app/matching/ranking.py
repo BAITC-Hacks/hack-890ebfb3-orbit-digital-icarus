@@ -45,4 +45,3 @@ def rank_candidates(
         score = 1000 * min(2, len(relevant)) + headroom
         ranked.append(RankedCandidate(contractor, score, tuple(item.id for item in relevant[:2])))
     return sorted(ranked, key=lambda item: (-item.score, item.contractor.price_from_kzt, item.contractor.id))
-

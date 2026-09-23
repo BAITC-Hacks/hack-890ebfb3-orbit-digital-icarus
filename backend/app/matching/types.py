@@ -36,6 +36,7 @@ class ProfileEvidence:
     id: str
     quote: str
     event_formats: tuple[str, ...]
+    use_in_explanation: bool = True
 
 
 EvidenceIndex = Mapping[str, tuple[ProfileEvidence, ...]]
@@ -74,4 +75,3 @@ class MatchCard(TypedDict):
 
 def iso_date(value: date | str) -> str:
     return value.isoformat() if isinstance(value, date) else value
-

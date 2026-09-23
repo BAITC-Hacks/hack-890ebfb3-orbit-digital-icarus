@@ -46,7 +46,7 @@ def build_cards(
             else:
                 fit.append(f"до {profile.max_hours:g} ч при запросе {request.duration_hours:g} ч")
             facts.append(_evidence("duration", "max_hours", profile.max_hours))
-        records = evidence.get(profile.id, ())
+        records = tuple(item for item in evidence.get(profile.id, ()) if item.use_in_explanation)
         by_id = {item.id: item for item in records}
         selected = next((by_id[item_id] for item_id in candidate.evidence_ids if item_id in by_id), None)
         if selected is None and records:
@@ -82,4 +82,3 @@ def build_cards(
             "evidence": facts,
         })
     return cards
-
