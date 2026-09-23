@@ -1,23 +1,20 @@
-"""FastAPI application entrypoint.
-
-Run the service from the repository root with:
-
-    uvicorn backend.app.main:app --reload
-"""
+"""FastAPI application and explicit, testable startup configuration."""
 
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router
-from .catalog import CatalogValidationError, dataset_sha256, load_catalog
+from .catalog import dataset_sha256, load_catalog
 from .matching import algorithm_version, load_evidence
-from .settings import DEFAULT_ALGORITHM_VERSION, AppSettings
+from .settings import AppSettings
+from .validation_errors import request_validation_exception_handler
 
 
 def create_app(settings: AppSettings | None = None) -> FastAPI:
-    """Create the API with explicit, testable startup configuration."""
+    """Build the API and validate its catalog and evidence before readiness."""
 
     resolved_settings = settings or AppSettings.from_environment()
 
@@ -29,19 +26,16 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
             catalog = load_catalog(resolved_settings.data_path)
             dataset_version = dataset_sha256(resolved_settings.data_path)
             evidence = load_evidence(catalog, dataset_sha256=dataset_version)
-        except (CatalogValidationError, OSError, ValueError) as error:
+            version = algorithm_version()
+        except (ValueError, OSError) as error:
             raise RuntimeError(
-                f"Catalog startup validation failed (catalog/evidence): {error}"
+                f"Catalog/evidence startup validation failed: {error}"
             ) from error
 
         app.state.catalog = catalog
         app.state.dataset_version = dataset_version
         app.state.evidence = evidence
-        app.state.algorithm_version = (
-            algorithm_version()
-            if resolved_settings.algorithm_version == DEFAULT_ALGORITHM_VERSION
-            else resolved_settings.algorithm_version
-        )
+        app.state.algorithm_version = version
         yield
 
     application = FastAPI(
@@ -51,6 +45,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     application.state.settings = resolved_settings
+    application.add_exception_handler(RequestValidationError, request_validation_exception_handler)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(resolved_settings.cors_origins),

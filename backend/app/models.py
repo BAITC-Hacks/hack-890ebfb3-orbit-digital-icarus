@@ -67,9 +67,18 @@ class MatchRequest(BaseModel):
     @field_validator("language", mode="before")
     @classmethod
     def clean_optional_language(cls, value: object) -> str | None:
-        if value is None:
+        if value is None or (isinstance(value, str) and not value.strip()):
             return None
         return _clean_required_text(value)
+
+    @field_validator("duration_hours", mode="before")
+    @classmethod
+    def clean_optional_duration(cls, value: object) -> object:
+        if isinstance(value, bool):
+            raise ValueError("must be a positive number")
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @field_validator("budget_kzt", mode="before")
     @classmethod
@@ -165,6 +174,7 @@ class EvidenceItem(BaseModel):
 
     code: EvidenceCode
     field: str
+    # Null max_hours means duration does not apply; preserve that source fact.
     value: str | int | float | list[str] | None
     source_quote: str | None = None
 
@@ -188,6 +198,14 @@ class MatchCard(BaseModel):
     evidence: list[EvidenceItem] = Field(default_factory=list)
 
 
+class MatchAlternative(BaseModel):
+    """An explicit, verified change for the user to choose after an empty result."""
+
+    changed_field: Literal["city", "event_date", "budget_kzt"]
+    request: MatchRequest
+    eligible_total: int = Field(gt=0)
+
+
 class MatchResponse(BaseModel):
     """Stable response envelope for the match endpoint."""
 
@@ -200,6 +218,7 @@ class MatchResponse(BaseModel):
     counts: CountSummary
     exclusions: ExclusionCounts
     cards: list[MatchCard] = Field(default_factory=list, max_length=3)
+    alternatives: list[MatchAlternative] = Field(default_factory=list, max_length=3)
 
 
 class HealthResponse(BaseModel):

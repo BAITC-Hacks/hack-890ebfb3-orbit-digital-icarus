@@ -12,8 +12,11 @@ def _evidence(code: str, field: str, value: object, quote: str | None = None) ->
     return {"code": code, "field": field, "value": value, "source_quote": quote}
 
 
-def build_cards(request: MatchRequestLike, ranked: list[RankedCandidate], evidence: EvidenceIndex) -> list[MatchCard]:
-    """Build at most three recommendation cards using verified evidence only."""
+def build_cards(
+    request: MatchRequestLike,
+    ranked: list[RankedCandidate],
+    evidence: EvidenceIndex,
+) -> list[MatchCard]:
     cards: list[MatchCard] = []
     seen_ids = set()
     for candidate in ranked[:3]:
@@ -24,13 +27,24 @@ def build_cards(request: MatchRequestLike, ranked: list[RankedCandidate], eviden
         seen_ids.add(profile.id)
         event_date = iso_date(request.event_date)
         display_date = ".".join(reversed(event_date.split("-")))
-        fit = [f"На {display_date} свободен по календарю", f"принимает формат «{request.event_format}»", f"от {_money(profile.price_from_kzt)} ₸ при бюджете {_money(request.budget_kzt)} ₸"]
-        facts = [_evidence("availability", "busy_dates", event_date), _evidence("budget", "price_from_kzt", profile.price_from_kzt), _evidence("format", "event_formats", request.event_format)]
+        fit = [
+            f"На {display_date} свободен по календарю",
+            f"принимает формат «{request.event_format}»",
+            f"от {_money(profile.price_from_kzt)} ₸ при бюджете {_money(request.budget_kzt)} ₸",
+        ]
+        facts = [
+            _evidence("availability", "busy_dates", event_date),
+            _evidence("budget", "price_from_kzt", profile.price_from_kzt),
+            _evidence("format", "event_formats", request.event_format),
+        ]
         if request.language is not None:
             fit.append(f"рабочий язык — {request.language}")
             facts.append(_evidence("language", "languages", request.language))
         if request.duration_hours is not None:
-            fit.append("длительность присутствия для этой услуги не применяется" if profile.max_hours is None else f"до {profile.max_hours:g} ч при запросе {request.duration_hours:g} ч")
+            if profile.max_hours is None:
+                fit.append("длительность присутствия для этой услуги не применяется")
+            else:
+                fit.append(f"до {profile.max_hours:g} ч при запросе {request.duration_hours:g} ч")
             facts.append(_evidence("duration", "max_hours", profile.max_hours))
         records = tuple(item for item in evidence.get(profile.id, ()) if item.use_in_explanation)
         by_id = {item.id: item for item in records}
@@ -47,6 +61,24 @@ def build_cards(request: MatchRequestLike, ranked: list[RankedCandidate], eviden
             languages = ", ".join(sorted(profile.languages))
             hours = "услуга без привязки к часам присутствия" if profile.max_hours is None else f"до {profile.max_hours:g} ч на площадке"
             detail = f"В каталоге указаны языки: {languages}; {hours}."
-            facts.extend([_evidence("language", "languages", sorted(profile.languages)), _evidence("duration", "max_hours", profile.max_hours)])
-        cards.append({"id": profile.id, "anon_name": profile.anon_name, "category": request.category, "categories": list(profile.categories), "city": profile.city, "price_from_kzt": profile.price_from_kzt, "event_date": event_date, "availability": "free_in_dataset", "synthetic": profile.synthetic, "source_kind": getattr(profile, "source_kind", "provided"), "city_imputed": profile.city_imputed, "price_imputed": profile.price_imputed, "explanation": "; ".join(fit) + ". " + detail, "evidence": facts})
+            facts.extend([
+                _evidence("language", "languages", sorted(profile.languages)),
+                _evidence("duration", "max_hours", profile.max_hours),
+            ])
+        cards.append({
+            "id": profile.id,
+            "anon_name": profile.anon_name,
+            "category": request.category,
+            "categories": list(profile.categories),
+            "city": profile.city,
+            "price_from_kzt": profile.price_from_kzt,
+            "event_date": event_date,
+            "availability": "free_in_dataset",
+            "synthetic": profile.synthetic,
+            "source_kind": getattr(profile, "source_kind", "provided"),
+            "city_imputed": profile.city_imputed,
+            "price_imputed": profile.price_imputed,
+            "explanation": "; ".join(fit) + ". " + detail,
+            "evidence": facts,
+        })
     return cards

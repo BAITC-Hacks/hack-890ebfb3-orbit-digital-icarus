@@ -1,32 +1,50 @@
 # Backend
 
-The FastAPI backend validates and loads the bundled catalog at startup,
-normalizes safe request aliases, exposes API metadata, and applies
-deterministic hard eligibility filters.
+FastAPI loads the bundled catalog and reviewed source evidence at startup. The
+matching endpoint validates and normalizes the request, applies all hard filters,
+ranks eligible profiles deterministically, and returns up to three grounded
+recommendations or one of the two distinct empty outcomes. No API key or hosted
+model is needed to run the application or its tests.
 
 ## Run locally
 
-From the repository root, with Python 3.11 or newer:
+From the repository root, with Python 3.11 or newer (tested with Python 3.12):
 
     python -m venv .venv
     .venv\Scripts\Activate.ps1
-    python -m pip install -e ".[dev]"
+    python -m pip install -r requirements-dev.lock
+    python -m pip install -e ".[dev]" --no-deps
     python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload
 
-Open http://127.0.0.1:8000/docs for the interactive API schema.
+On macOS/Linux, activate with `source .venv/bin/activate`; the remaining commands
+are the same. Open [interactive API docs](http://127.0.0.1:8000/docs) or
+[readiness](http://127.0.0.1:8000/api/health).
 
-The development API allows browser requests from Vite's default origins:
-http://127.0.0.1:5173 and http://localhost:5173. Override configuration using
-environment variables or a copied .env file:
+## Configuration and readiness
 
-    DATA_PATH=data/contractors.csv
-    ALGORITHM_VERSION=hard-filter-v1
-    CORS_ORIGINS=http://127.0.0.1:5173,http://localhost:5173
+`DATA_PATH` defaults to the bundled `data/contractors.csv`. Relative paths resolve
+against the repository root. `CORS_ORIGINS` is a comma-separated list of explicit
+origins; by default it allows `http://127.0.0.1:5173` and `http://localhost:5173`.
+Wildcard origins are rejected. Configuration can be supplied through environment
+variables. If using a copied `.env` file, load it explicitly:
 
-The server refuses to start when its catalog cannot be validated. The matching
-endpoint currently returns real business-empty states; eligible candidates need
-the ranking/card integration before they can be returned as recommendations.
+    python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --env-file .env
+
+The application does not load `.env` implicitly. `create_app(settings)` supports
+explicit configuration in tests and integrations. Startup fails clearly if the
+catalog is missing, invalid, or incompatible with the evidence index. Changing
+the dataset requires reviewing and updating its associated evidence and hash.
+
+Readiness reports the actual loaded dataset hash and the computed ranking/evidence
+version. `ALGORITHM_VERSION` cannot override that value. A successful health
+response means both catalog and evidence validation have completed.
 
 ## Run checks
 
-    python -m unittest discover -s backend/tests -v
+    python -m pytest -q
+    python scripts/check_api.py --base-url http://127.0.0.1:8000 --repeat 20
+
+The first command runs the backend, matching, and offline-tool tests without
+provider calls. The second requires the running API and checks real dataset
+outcomes against the independent acceptance oracle. See the root README for
+frontend setup, browser checks, and the full demo sequence.

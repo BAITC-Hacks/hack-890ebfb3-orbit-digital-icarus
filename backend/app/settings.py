@@ -7,7 +7,6 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATA_PATH = PROJECT_ROOT / "data" / "contractors.csv"
-DEFAULT_ALGORITHM_VERSION = "hard-filter-v1"
 DEFAULT_CORS_ORIGINS = (
     "http://127.0.0.1:5173",
     "http://localhost:5173",
@@ -38,16 +37,11 @@ class AppSettings:
     """Configuration resolved once at application creation time."""
 
     data_path: Path
-    algorithm_version: str
     cors_origins: tuple[str, ...]
 
     @classmethod
     def from_environment(cls) -> "AppSettings":
-        algorithm_version = getenv("ALGORITHM_VERSION", DEFAULT_ALGORITHM_VERSION).strip()
-        if not algorithm_version:
-            raise ValueError("ALGORITHM_VERSION must not be blank")
         return cls(
             data_path=_resolve_data_path(getenv("DATA_PATH")),
-            algorithm_version=algorithm_version,
             cors_origins=_parse_cors_origins(getenv("CORS_ORIGINS")),
         )

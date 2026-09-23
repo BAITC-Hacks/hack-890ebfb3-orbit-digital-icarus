@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools==84.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,23 +8,23 @@ version = "0.1.0"
 description = "Explainable event contractor matching service"
 requires-python = ">=3.11"
 dependencies = [
-    "fastapi",
-    "pydantic",
-    "uvicorn[standard]",
+    "fastapi==0.136.1",
+    "pydantic==2.13.3",
+    "uvicorn[standard]==0.46.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "httpx",
+    "pytest==9.1.1",
+    "httpx==0.28.1",
 ]
+
+[tool.setuptools.packages.find]
+include = ["backend", "backend.*"]
+exclude = ["backend.tests", "backend.tests.*"]
+
+[tool.setuptools.package-data]
+"backend.app.matching" = ["profile_evidence.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
-
-[tool.setuptools.packages.find]
-include = ["backend*"]
-namespaces = true
-
-[tool.setuptools.package-data]
-"backend.app.matching" = ["*.json"]

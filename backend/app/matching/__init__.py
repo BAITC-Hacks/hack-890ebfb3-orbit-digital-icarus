@@ -1,4 +1,4 @@
-"""Deterministic matching and evidence-grounded recommendation rendering."""
+"""Enjoy-owned matching functions; callers validate inputs and filter first."""
 
 from .evidence import algorithm_version, load_evidence
 from .explanations import build_cards

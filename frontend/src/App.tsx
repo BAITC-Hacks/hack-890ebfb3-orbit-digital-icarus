@@ -1,172 +1,303 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
-
-import { ApiError, getMetadata, matchContractors } from "./api/client";
+import { type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
+import { ApiError, ApiResponseError, getMetadata, matchContractors } from "./api/client";
 import { metadata as previewMetadata, previewMatch } from "./api/demo";
-import type { MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
+import type { MatchAlternative, MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
+import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft } from "./formNumbers";
+import {
+  availabilityLabel, calendarLabel, cardExplanation, copy, displayDate, evidenceValue,
+  exclusionSummary, fieldValidationMessage, formatMoney, initialLocale, invalidFields,
+  LOCALE_STORAGE_KEY, optionLabel, resultSummary, resultTitle, shortfallLabel, translatedQuote,
+  type Locale,
+} from "./i18n";
 
+// Example responses are available only when explicitly requested for design work.
 const previewMode = import.meta.env.VITE_API_MODE === "demo";
-
 const initialRequest: MatchRequest = {
-  city: "Алматы",
-  event_date: "2026-10-11",
-  event_format: "свадьба",
-  category: "Ведущий",
-  budget_kzt: 3_000_000,
-  duration_hours: null,
-  language: null,
+  city: "Алматы", event_date: "2026-10-11", event_format: "свадьба", category: "Ведущий",
+  budget_kzt: 3_000_000, duration_hours: null, language: null,
 };
+type ErrorKind = "requestError" | "serviceError" | "responseError" | "validationError";
+type NumericField = "budget_kzt" | "duration_hours";
+const initials = (name: string) => name.split(" ").slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
-const money = (value: number) => new Intl.NumberFormat("ru-RU").format(value);
-const displayDate = (iso: string) => iso.split("-").reverse().join(".");
-const initials = (name: string) => name.split(" ").slice(0, 2).map((part) => part[0]).join("").toUpperCase();
-
-function sanitizeBudget(value: string) {
-  return value.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+function storedLocale(): Locale {
+  try { return initialLocale(window.localStorage); } catch { return "ru"; }
 }
 
-function sanitizeDuration(value: string) {
-  const normalized = value.replace(",", ".").replace(/[^\d.]/g, "");
-  const [whole = "", ...fraction] = normalized.split(".");
-  return fraction.length ? `${whole}.${fraction.join("")}` : whole;
-}
-
-function formatBudgetForInput(value: string) {
-  const numericValue = Number(value);
-  return Number.isSafeInteger(numericValue) && numericValue > 0
-    ? money(numericValue).replaceAll("\u00a0", " ")
-    : value;
-}
-
-function Tag({ children }: { children: React.ReactNode }) {
+function Tag({ children }: { children: ReactNode }) {
   return <span className="query-tag">{children}</span>;
 }
 
-function ContractorCard({ card }: { card: MatchCard }) {
+function ContractorCard({ card, request, locale }: { card: MatchCard; request: MatchRequest; locale: Locale }) {
+  const t = copy[locale];
   return <article className="contractor-card" data-testid="contractor-card" data-contractor-id={card.id}>
     <div className="card-person">
-      <span className="avatar">{initials(card.anon_name)}</span>
-      <div><h3>{card.anon_name}</h3><p>{card.category} · {card.city}</p></div>
+      <span className="avatar" aria-hidden="true">{initials(card.anon_name)}</span>
+      <div><h3>{card.anon_name}</h3><p>{optionLabel(card.category, locale)} · {optionLabel(card.city, locale)}</p></div>
     </div>
-    <p className="price">от {money(card.price_from_kzt)} ₸</p>
-    <p className="availability">Свободен {displayDate(card.event_date)}</p>
-    <p className="card-explanation">{card.explanation}</p>
+    <p className="price">{t.priceFrom} {formatMoney(card.price_from_kzt, locale)} ₸</p>
+    <p className="price-caveat">{t.priceCaveat}</p>
+    <p className="availability">{availabilityLabel(card.event_date, locale)}</p>
+    <p className="card-explanation">{cardExplanation(card, request, locale)}</p>
     <div className="notes">
-      {card.synthetic && <span data-testid="synthetic-note">Синтетический профиль</span>}
-      {card.price_imputed && <span data-testid="price-imputed-note">Стартовая цена восстановлена из данных</span>}
-      {card.city_imputed && <span data-testid="city-imputed-note">Город восстановлен из данных</span>}
+      {card.synthetic && <span data-testid="synthetic-note">{t.synthetic}</span>}
+      {card.price_imputed && <span data-testid="price-imputed-note">{t.priceImputed}</span>}
+      {card.city_imputed && <span data-testid="city-imputed-note">{t.cityImputed}</span>}
     </div>
+    <details className="card-evidence">
+      <summary>{t.evidence}</summary>
+      {card.evidence.length === 0 ? <p>{t.noEvidence}</p> : <ul>{card.evidence.map((item, index) =>
+        <li key={`${item.code}-${index}`}>
+          <strong>{item.code === "language" ? t.language : t[item.code]}:</strong>{" "}
+          {item.source_quote ? <>
+            {locale === "en" && translatedQuote(item.source_quote) && <p>{translatedQuote(item.source_quote)}</p>}
+            <span className="source-quote-label">{t.originalQuote}</span>
+            <blockquote lang="ru">{item.source_quote}</blockquote>
+          </> : evidenceValue(item, locale)}
+        </li>,
+      )}</ul>}
+    </details>
   </article>;
 }
 
-function EmptyState({ result }: { result: MatchResponse }) {
-  const absent = result.status === "category_absent";
+function OutcomeDetails({ result, locale }: { result: MatchResponse; locale: Locale }) {
+  const excluded = exclusionSummary(result, locale);
+  return <>
+    <p className="result-message">{resultSummary(result, locale)}</p>
+    {excluded && <div className="exclusion-details"><p>{excluded}</p><small>{copy[locale].firstFailure}</small></div>}
+  </>;
+}
+
+function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; locale: Locale; onAlternative: (alternative: MatchAlternative) => void }) {
   return <section className="empty-state" data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date}>
     <span className="empty-icon" aria-hidden="true">⌕</span>
-    <h2>{absent ? "В этом городе такой категории нет" : "На эту дату свободных вариантов нет"}</h2>
-    <p>{result.message}</p>
-    {!absent && <p className="empty-advice">Попробуйте другую дату или скорректируйте бюджет и дополнительные условия.</p>}
+    <h2>{resultTitle(result, locale)}</h2>
+    <OutcomeDetails result={result} locale={locale} />
+    <p className="empty-advice">{copy[locale].emptyAdvice}</p>
+    {Boolean(result.alternatives?.length) && <div className="match-alternatives" data-testid="match-alternatives">
+      <h3>{locale === "ru" ? "Можно изменить одно условие" : "Try changing one condition"}</h3>
+      <p>{locale === "ru" ? "Эти варианты проверены по каталогу. Остальные условия сохраняются. Изменение применится только после нажатия." : "These alternatives were checked against the catalog. Every other condition stays the same. A change applies only when you choose it."}</p>
+      {result.alternatives!.map((alternative, index) => {
+        const value = alternative.changed_field === "city" ? optionLabel(alternative.request.city, locale)
+          : alternative.changed_field === "event_date" ? displayDate(alternative.request.event_date)
+          : `${formatMoney(alternative.request.budget_kzt, locale)} ₸`;
+        return <button key={index} type="button" data-testid="match-alternative" data-changed-field={alternative.changed_field} onClick={() => onAlternative(alternative)}>
+          <strong>{copy[locale][alternative.changed_field]}: {value}</strong>
+          <span>{locale === "ru" ? `Подходящих профилей: ${alternative.eligible_total} · Найти с этим условием` : `${alternative.eligible_total} eligible profiles · Search with this change`}</span>
+        </button>;
+      })}
+    </div>}
   </section>;
 }
 
 export default function App() {
+  const [locale, setLocale] = useState<Locale>(storedLocale);
   const [form, setForm] = useState<MatchRequest>(initialRequest);
-  const [budgetInput, setBudgetInput] = useState(String(initialRequest.budget_kzt));
-  const [durationInput, setDurationInput] = useState("");
-  const [metadata, setMetadata] = useState<MetadataResponse>(previewMetadata);
+  const [numericDrafts, setNumericDrafts] = useState({ budget_kzt: String(initialRequest.budget_kzt), duration_hours: "" });
+  const rejectedEdits = useRef(new Set<NumericField>());
+  const [metadata, setMetadata] = useState<MetadataResponse | null>(previewMode ? previewMetadata : null);
+  const [metadataLoading, setMetadataLoading] = useState(!previewMode);
+  const [metadataFailed, setMetadataFailed] = useState(false);
   const [result, setResult] = useState<MatchResponse | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ErrorKind | null>(null);
+  const [invalid, setInvalid] = useState<string[]>([]);
   const controller = useRef<AbortController | null>(null);
+  const metadataController = useRef<AbortController | null>(null);
+  const searchGeneration = useRef(0);
+  const metadataGeneration = useRef(0);
+  const formElement = useRef<HTMLFormElement>(null);
+  const t = copy[locale];
 
   useEffect(() => {
-    if (!previewMode) {
-      getMetadata().then(setMetadata).catch(() => setError("Не удалось загрузить параметры каталога."));
+    document.documentElement.lang = locale;
+    try { window.localStorage.setItem(LOCALE_STORAGE_KEY, locale); } catch { /* Locale still works for this page. */ }
+  }, [locale]);
+
+  async function loadCatalog() {
+    const generation = ++metadataGeneration.current;
+    metadataController.current?.abort();
+    const active = new AbortController();
+    metadataController.current = active;
+    setMetadataLoading(true);
+    setMetadataFailed(false);
+    try {
+      const received = previewMode ? previewMetadata : await getMetadata({ signal: active.signal });
+      if (generation === metadataGeneration.current) setMetadata(received);
+    } catch (cause) {
+      if (generation === metadataGeneration.current && !(cause instanceof Error && cause.name === "AbortError")) {
+        setMetadata(null);
+        setMetadataFailed(true);
+      }
+    } finally {
+      if (generation === metadataGeneration.current) setMetadataLoading(false);
     }
-  }, []);
-
-  const update = <K extends keyof MatchRequest>(key: K, value: MatchRequest[K]) => {
-    setForm((current) => ({ ...current, [key]: value }));
-    setError(null);
-  };
-
-  function requestFromForm(): MatchRequest | null {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.event_date) || form.event_date < metadata.calendar_start || form.event_date > metadata.calendar_end) {
-      setError(`Выберите дату с ${displayDate(metadata.calendar_start)} по ${displayDate(metadata.calendar_end)}.`);
-      return null;
-    }
-
-    const budgetKzt = Number(sanitizeBudget(budgetInput));
-    if (!Number.isSafeInteger(budgetKzt) || budgetKzt <= 0) {
-      setError("Введите бюджет целым положительным числом.");
-      return null;
-    }
-
-    const duration = durationInput === "" ? null : Number(durationInput);
-    if (duration !== null && (!Number.isFinite(duration) || duration < 0.5 || Math.round(duration * 2) !== duration * 2)) {
-      setError("Введите длительность от 0,5 часа с шагом 0,5.");
-      return null;
-    }
-
-    return { ...form, budget_kzt: budgetKzt, duration_hours: duration };
   }
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    const payload = requestFromForm();
-    if (payload === null) return;
+  useEffect(() => {
+    void loadCatalog();
+    return () => {
+      ++metadataGeneration.current;
+      ++searchGeneration.current;
+      metadataController.current?.abort();
+      controller.current?.abort();
+    };
+  }, []);
 
-    setForm(payload);
+  function clearSearch() {
+    ++searchGeneration.current;
     controller.current?.abort();
-    controller.current = new AbortController();
+    setLoading(false);
+    setResult(null);
+    setError(null);
+    setInvalid([]);
+  }
+
+  function update<K extends keyof MatchRequest>(key: K, value: MatchRequest[K]) {
+    clearSearch();
+    setForm(current => ({ ...current, [key]: value }));
+  }
+
+  function rejectNumericEdit(key: NumericField) {
+    clearSearch();
+    rejectedEdits.current.add(key);
+    setInvalid([...rejectedEdits.current]);
+    setError("validationError");
+  }
+
+  function acceptsNumeric(key: NumericField, value: string) {
+    return key === "budget_kzt" ? acceptBudgetDraft(value) : acceptDurationDraft(value);
+  }
+
+  function editNumeric(key: NumericField, value: string) {
+    if (!acceptsNumeric(key, value)) { rejectNumericEdit(key); return; }
+    // A rejected 'e' must not turn subsequent typing of '4e2' into 42.
+    // Clear, delete, select/replace or paste a valid value to correct the edit.
+    if (rejectedEdits.current.has(key) && value !== "" && value.length >= numericDrafts[key].length) {
+      rejectNumericEdit(key);
+      return;
+    }
+    rejectedEdits.current.delete(key);
+    clearSearch();
+    setNumericDrafts(current => ({ ...current, [key]: value }));
+  }
+
+  function numericKeyDown(key: NumericField, event: KeyboardEvent<HTMLInputElement>) {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.key === "Backspace" || event.key === "Delete") rejectedEdits.current.delete(key);
+    if (event.key.length !== 1) return;
+    const replacing = event.currentTarget.selectionStart !== event.currentTarget.selectionEnd;
+    if (!acceptsNumeric(key, event.key) || (rejectedEdits.current.has(key) && !replacing)) {
+      event.preventDefault();
+      rejectNumericEdit(key);
+    } else if (replacing) rejectedEdits.current.delete(key);
+  }
+
+  function numericPaste(key: NumericField, event: ClipboardEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const pasted = event.clipboardData.getData("text");
+    const proposed = input.value.slice(0, input.selectionStart ?? 0) + pasted + input.value.slice(input.selectionEnd ?? input.value.length);
+    if (!acceptsNumeric(key, proposed)) {
+      event.preventDefault();
+      rejectNumericEdit(key);
+    } else rejectedEdits.current.delete(key);
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!metadata || metadataLoading || loading) return;
+    const budget = parseBudgetDraft(numericDrafts.budget_kzt);
+    const duration = parseDurationDraft(numericDrafts.duration_hours);
+    const request: MatchRequest = { ...form, budget_kzt: budget ?? NaN, duration_hours: duration === undefined ? NaN : duration };
+    const invalidInputs = [...new Set([...invalidFields(request, metadata), ...rejectedEdits.current])];
+    setInvalid(invalidInputs);
+    if (invalidInputs.length) {
+      setError("validationError");
+      (formElement.current?.elements.namedItem(invalidInputs[0]) as HTMLElement | null)?.focus();
+      return;
+    }
+    await search(request);
+  }
+
+  async function search(request: MatchRequest) {
+    const generation = ++searchGeneration.current;
+    controller.current?.abort();
+    const active = new AbortController();
+    controller.current = active;
     setLoading(true);
     setError(null);
     setResult(null);
     try {
-      const response = previewMode ? await previewMatch(payload) : await matchContractors(payload, controller.current.signal);
-      setResult(response);
+      const response = previewMode ? await previewMatch(request) : await matchContractors(request, { signal: active.signal });
+      if (generation === searchGeneration.current) setResult(response);
     } catch (cause) {
-      if ((cause as DOMException).name !== "AbortError") {
-        setError(cause instanceof ApiError ? cause.message : "Не удалось отправить запрос. Проверьте подключение и попробуйте ещё раз.");
-      }
+      if (generation !== searchGeneration.current || (cause instanceof Error && cause.name === "AbortError")) return;
+      if (cause instanceof ApiError && cause.status === 422) {
+        setInvalid([...new Set(Object.keys(cause.fieldErrors).map(field => field.split(".")[0]))]);
+        setError("validationError");
+      } else if (cause instanceof ApiResponseError) setError("responseError");
+      else setError(cause instanceof ApiError ? "serviceError" : "requestError");
     } finally {
-      setLoading(false);
+      if (generation === searchGeneration.current) setLoading(false);
     }
   }
 
-  const fields: Array<{ key: "city" | "event_format" | "category"; label: string; options: string[] }> = [
-    { key: "city", label: "Город", options: metadata.cities },
-    { key: "event_format", label: "Тип мероприятия", options: metadata.event_formats },
-    { key: "category", label: "Категория подрядчика", options: metadata.categories },
+  function chooseAlternative(alternative: MatchAlternative) {
+    const request = alternative.request;
+    clearSearch();
+    rejectedEdits.current.clear();
+    setForm(request);
+    setNumericDrafts({ budget_kzt: String(request.budget_kzt), duration_hours: request.duration_hours == null ? "" : String(request.duration_hours) });
+    void search(request);
+  }
+
+  const fieldError = (key: keyof MatchRequest) => invalid.includes(key)
+    ? <span className="field-error" id={`error-${key}`}>{fieldValidationMessage(key, metadata, locale)}</span> : null;
+  const fieldAttributes = (key: keyof MatchRequest) => ({
+    "aria-invalid": invalid.includes(key),
+    "aria-describedby": invalid.includes(key) ? `error-${key}` : undefined,
+  });
+  const fields: Array<{ key: "city" | "event_format" | "category"; options: string[] }> = [
+    { key: "city", options: metadata?.cities ?? [] },
+    { key: "event_format", options: metadata?.event_formats ?? [] },
+    { key: "category", options: metadata?.categories ?? [] },
   ];
+  const unavailable = !metadata || metadataLoading;
 
   return <main className="page-shell">
-    <header className="hero">
-      <p className="eyebrow">КАТАЛОГ ПОДРЯДЧИКОВ · КАЗАХСТАН</p>
-      <h1>Подбор подрядчика на<br />мероприятие</h1>
-      <p className="lede">Укажите параметры мероприятия — сервис покажет до трёх доступных подрядчиков и объяснит, почему подходит каждый.</p>
-    </header>
-    {previewMode && <p className="preview-note">Предпросмотр интерфейса на fixtures: подключение к API отключено.</p>}
-    <form className="match-form" data-testid="match-form" aria-busy={loading} noValidate onSubmit={submit}>
+    <div className="locale-switcher" data-testid="locale-switcher" role="group" aria-label={t.interfaceLanguage}>
+      <span>{t.interfaceLanguage}</span>
+      <button type="button" lang="ru" aria-pressed={locale === "ru"} onClick={() => setLocale("ru")}>Русский</button>
+      <button type="button" lang="en" aria-pressed={locale === "en"} onClick={() => setLocale("en")}>English</button>
+    </div>
+    <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
+    {previewMode && <p className="preview-note" role="note">{t.preview}</p>}
+    {metadataLoading && <p className="catalog-status" role="status">{t.metadataLoading}</p>}
+    {metadataFailed && <div className="request-error" role="alert" data-testid="metadata-error">{t.metadataError} <button type="button" onClick={() => void loadCatalog()}>{t.retry}</button></div>}
+    <form ref={formElement} className="match-form" data-testid="match-form" aria-busy={loading} onSubmit={submit} noValidate>
       <div className="field-grid">
-        {fields.map(({ key, label, options }) => <label key={key}>{label}<select name={key} value={form[key]} onChange={(event) => update(key, event.target.value)}>{options.map((option) => <option key={option}>{option}</option>)}</select></label>)}
-        <label>Дата мероприятия<input name="event_date" type="date" min={metadata.calendar_start} max={metadata.calendar_end} value={form.event_date} onChange={(event) => update("event_date", event.target.value)} required /></label>
-        <label>Бюджет, ₸
-          <input name="budget_kzt" type="text" inputMode="numeric" autoComplete="off" aria-label="Бюджет, ₸" aria-describedby="budget-hint" value={budgetInput} onFocus={() => setBudgetInput(sanitizeBudget(budgetInput))} onChange={(event) => { setBudgetInput(sanitizeBudget(event.target.value)); setError(null); }} onBlur={() => setBudgetInput(formatBudgetForInput(sanitizeBudget(budgetInput)))} required />
-          <small id="budget-hint" className="field-hint">Только целая сумма в тенге. Пробелы можно вводить.</small>
-        </label>
-        <label>Длительность, ч <em>необязательно</em>
-          <input name="duration_hours" type="text" inputMode="decimal" autoComplete="off" aria-label="Длительность, ч" aria-describedby="duration-hint" placeholder="например, 6 или 6,5" value={durationInput} onChange={(event) => { setDurationInput(sanitizeDuration(event.target.value)); setError(null); }} />
-          <small id="duration-hint" className="field-hint">От 0,5 часа, шаг 0,5. Буквы не принимаются.</small>
-        </label>
-        <label>Язык работы <em>необязательно</em><select name="language" value={form.language ?? ""} onChange={(event) => update("language", event.target.value || null)}><option value="">Не выбирать</option>{metadata.languages.map((option) => <option key={option}>{option}</option>)}</select></label>
+        {fields.map(({ key, options }) => <label key={key}>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>
+          {options.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
+        </select>{fieldError(key)}</label>)}
+        <label>{t.event_date}<input name="event_date" type="date" min={metadata?.calendar_start} max={metadata?.calendar_end} value={form.event_date} disabled={unavailable} {...fieldAttributes("event_date")} onChange={event => update("event_date", event.target.value)} required />{fieldError("event_date")}</label>
+        <label>{t.budget_kzt}<input name="budget_kzt" type="text" inputMode="numeric" value={numericDrafts.budget_kzt} disabled={unavailable} {...fieldAttributes("budget_kzt")} onKeyDown={event => numericKeyDown("budget_kzt", event)} onPaste={event => numericPaste("budget_kzt", event)} onChange={event => editNumeric("budget_kzt", event.target.value)} required />{fieldError("budget_kzt")}</label>
+        <label>{t.duration_hours} <em>{t.optional}</em><input name="duration_hours" type="text" inputMode="decimal" placeholder={t.durationPlaceholder} value={numericDrafts.duration_hours} disabled={unavailable} {...fieldAttributes("duration_hours")} onKeyDown={event => numericKeyDown("duration_hours", event)} onPaste={event => numericPaste("duration_hours", event)} onChange={event => editNumeric("duration_hours", event.target.value)} />{fieldError("duration_hours")}</label>
+        <label>{t.language} <em>{t.optional}</em><select name="language" value={form.language ?? ""} disabled={unavailable} {...fieldAttributes("language")} onChange={event => update("language", event.target.value || null)}>
+          <option value="">{t.noLanguage}</option>{metadata?.languages.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
+        </select><small className="field-hint">{t.languageHint}</small>{fieldError("language")}</label>
       </div>
-      <div className="form-footer"><p>Один и тот же запрос на другую дату может дать другой результат: учитывается занятость подрядчиков.</p><button type="submit" disabled={loading}>{loading ? "Ищем варианты…" : "Подобрать подрядчика"}</button></div>
+      {metadata && <p className="calendar-note">{calendarLabel(metadata, locale)}</p>}
+      <div className="form-footer"><p>{t.footer}</p><button type="submit" disabled={loading || unavailable}>{loading ? t.loading : t.submit}</button></div>
     </form>
-    {error && <p className="request-error" role="alert" data-testid="request-error">{error} <button onClick={() => void submit({ preventDefault() {} } as FormEvent)}>Повторить</button></p>}
+    {error && <div className="request-error" role="alert" data-testid="request-error">{t[error]} <button type="button" disabled={loading || unavailable} onClick={() => formElement.current?.requestSubmit()}>{t.retry}</button></div>}
     {result && <section className="results" aria-live="polite">
-      <div className="result-tabs"><button onClick={() => setResult(null)}>← Новый запрос</button><span className={result.status === "matches_found" ? "active" : ""}>Подобрали</span><span className={result.status === "no_eligible_contractors" ? "active" : ""}>Ничего не подходит</span><span className={result.status === "category_absent" ? "active" : ""}>Категории нет в городе</span></div>
-      <div className="query-tags"><Tag>{result.request.category}</Tag><Tag>{result.request.city}</Tag><Tag>{displayDate(result.request.event_date)}</Tag><Tag>до {money(result.request.budget_kzt)} ₸</Tag></div>
-      {result.status === "matches_found" ? <div data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date} data-request-budget={result.request.budget_kzt} data-request-duration={result.request.duration_hours ?? ""}><h2>{result.cards.length === 3 ? "Нашли 3 подходящих" : `Подходит только ${result.cards.length} из ${result.counts.city_category_total}`}</h2><p className="result-message">{result.message}</p>{result.cards.length < 3 && <p className="shortfall">В категории всего {result.counts.city_category_total} профиля; показываем тех, кто проходит все выбранные условия.</p>}<div className="card-grid">{result.cards.map((item) => <ContractorCard key={item.id} card={item} />)}</div></div> : <EmptyState result={result} />}
+      <div className="result-tabs"><button type="button" onClick={clearSearch}>{t.newRequest}</button><span className={result.status === "matches_found" ? "active" : ""}>{t.foundTab}</span><span className={result.status === "no_eligible_contractors" ? "active" : ""}>{t.emptyTab}</span><span className={result.status === "category_absent" ? "active" : ""}>{t.absentTab}</span></div>
+      <div className="query-tags"><Tag>{optionLabel(result.request.category, locale)}</Tag><Tag>{optionLabel(result.request.city, locale)}</Tag><Tag>{optionLabel(result.request.event_format, locale)}</Tag><Tag>{displayDate(result.request.event_date)}</Tag><Tag>{locale === "ru" ? "до" : "up to"} {formatMoney(result.request.budget_kzt, locale)} ₸</Tag>{result.request.duration_hours != null && <Tag>{result.request.duration_hours} {locale === "ru" ? "ч" : "hours"}</Tag>}{result.request.language && <Tag>{optionLabel(result.request.language, locale)}</Tag>}</div>
+      {result.status === "matches_found" ? <div data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date}>
+        <h2>{resultTitle(result, locale)}</h2><OutcomeDetails result={result} locale={locale} />
+        {result.cards.length < 3 && <p className="shortfall">{shortfallLabel(result, locale)}</p>}
+        <div className="card-grid">{result.cards.map(item => <ContractorCard key={item.id} card={item} request={result.request} locale={locale} />)}</div>
+      </div> : <EmptyState result={result} locale={locale} onAlternative={chooseAlternative} />}
     </section>}
   </main>;
 }

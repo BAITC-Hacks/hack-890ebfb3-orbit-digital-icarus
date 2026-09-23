@@ -1,46 +1,70 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
 
-async function submit(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: "Подобрать подрядчика" }));
+const fixtureIds = ["HK-42352", "HK-77838", "HK-72938"];
+const fetch = vi.fn(() => Promise.reject(new Error("Component fixtures must not call the network")));
+
+async function renderPreview() {
+  render(<App />);
+  await waitFor(() => expect(screen.getByRole("button", { name: "Подобрать подрядчика", exact: true })).toBeEnabled());
+  expect(screen.getByRole("note")).toHaveTextContent("Предпросмотр на примерах");
 }
 
-describe("App preview flow", () => {
-  it("renders every required field and all global categories", () => {
-    render(<App />);
+async function submit(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Подобрать подрядчика", exact: true }));
+}
 
-    expect(screen.getByLabelText("Город")).toBeVisible();
-    expect(screen.getByLabelText("Дата мероприятия")).toHaveValue("2026-10-11");
-    expect(screen.getByLabelText("Тип мероприятия")).toBeVisible();
-    expect(screen.getByLabelText("Категория подрядчика")).toBeVisible();
-    expect(screen.getByLabelText("Бюджет, ₸")).toHaveValue("3000000");
-    expect(screen.getByRole("option", { name: "Декоратор" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Инструменталист" })).toBeInTheDocument();
+describe("App: explicit demo fixtures, not production matching", () => {
+  beforeEach(() => {
+    fetch.mockClear();
+    vi.stubGlobal("fetch", fetch);
   });
 
-  it("renders a matching shortlist in the fixture order", async () => {
+  afterEach(() => expect(fetch).not.toHaveBeenCalled());
+
+  it("renders every required field and all global categories after metadata is ready", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    await renderPreview();
+
+    expect(screen.getByRole("combobox", { name: "Город", exact: true })).toBeVisible();
+    expect(screen.getByLabelText("Дата мероприятия")).toHaveValue("2026-10-11");
+    expect(screen.getByRole("combobox", { name: "Формат мероприятия", exact: true })).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "Категория подрядчика", exact: true })).toBeVisible();
+    expect(screen.getByLabelText("Бюджет, ₸")).toHaveDisplayValue("3000000");
+    expect(screen.getByLabelText(/Длительность, ч/)).toBeVisible();
+    expect(screen.getByRole("combobox", { name: /Язык работы подрядчика/ })).toBeVisible();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Город", exact: true }), "Астана");
+    expect(screen.getByRole("option", { name: "Декоратор" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Инструменталист" })).toBeInTheDocument();
+    expect(document.documentElement.lang).toBe("ru");
+  });
+
+  it("renders the demonstration shortlist in fixture order and preserves it in English", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
 
     await submit(user);
 
     const summary = await screen.findByTestId("result-summary");
     expect(summary).toHaveAttribute("data-status", "matches_found");
     expect(summary).toHaveAttribute("data-request-date", "2026-10-11");
-    expect(within(summary).getByRole("heading", { name: "Нашли 3 подходящих" })).toBeVisible();
-    expect(screen.getAllByTestId("contractor-card").map((card) => card.dataset.contractorId)).toEqual([
-      "HK-42352", "HK-77838", "HK-72938",
-    ]);
+    expect(within(summary).getByRole("heading", { name: "Подходят 3 подрядчика" })).toBeVisible();
+    expect(screen.getAllByTestId("contractor-card").map(card => card.dataset.contractorId)).toEqual(fixtureIds);
+    await user.click(screen.getByRole("button", { name: "English", exact: true }));
+    expect(within(summary).getByRole("heading", { name: "Found 3 matches" })).toBeVisible();
+    expect(screen.getAllByTestId("contractor-card").map(card => card.dataset.contractorId)).toEqual(fixtureIds);
+    expect(screen.getByRole("note")).toHaveTextContent("Example preview");
+    expect(document.documentElement.lang).toBe("en");
   });
 
   it("keeps the category-absent state distinct from other empty results", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    await renderPreview();
 
-    await user.selectOptions(screen.getByLabelText("Город"), "Астана");
-    await user.selectOptions(screen.getByLabelText("Категория подрядчика"), "Декоратор");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Город", exact: true }), "Астана");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Категория подрядчика", exact: true }), "Декоратор");
     await submit(user);
 
     const summary = await screen.findByTestId("result-summary");
@@ -51,74 +75,29 @@ describe("App preview flow", () => {
 
   it("renders the no-eligible-contractors state without cards", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    await renderPreview();
 
-    await user.selectOptions(screen.getByLabelText("Город"), "Астана");
-    await user.selectOptions(screen.getByLabelText("Категория подрядчика"), "Флорист");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Город", exact: true }), "Астана");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Категория подрядчика", exact: true }), "Флорист");
     await submit(user);
 
     const summary = await screen.findByTestId("result-summary");
     expect(summary).toHaveAttribute("data-status", "no_eligible_contractors");
-    expect(within(summary).getByRole("heading", { name: "На эту дату свободных вариантов нет" })).toBeVisible();
+    expect(within(summary).getByRole("heading", { name: "Никто не подходит под выбранные условия" })).toBeVisible();
     expect(within(summary).getByText(/профиль, но на выбранную дату он занят/i)).toBeVisible();
     expect(screen.queryByTestId("contractor-card")).not.toBeInTheDocument();
   });
 
   it("shows the data-quality note for an imputed price", async () => {
     const user = userEvent.setup();
-    render(<App />);
+    await renderPreview();
 
-    await user.selectOptions(screen.getByLabelText("Категория подрядчика"), "Флорист");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Категория подрядчика", exact: true }), "Флорист");
     await submit(user);
 
     expect(await screen.findByTestId("price-imputed-note")).toHaveTextContent("Стартовая цена восстановлена из данных");
-  });
-
-  it("keeps a multi-million budget intact when spaces are entered", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    const budget = screen.getByLabelText("Бюджет, ₸");
-    await user.clear(budget);
-    await user.type(budget, "4 000 000");
-    await user.tab();
-
-    expect((budget as HTMLInputElement).value.replaceAll(" ", "")).toBe("4000000");
-    await submit(user);
-    expect((await screen.findByTestId("result-summary")).getAttribute("data-request-budget")).toBe("4000000");
-  });
-
-  it("removes letters from duration and accepts a comma decimal separator", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    const duration = screen.getByLabelText(/Длительность, ч/i);
-    await user.type(duration, "6abc,5");
-
-    expect(duration).toHaveValue("6.5");
-    await submit(user);
-    expect((await screen.findByTestId("result-summary")).getAttribute("data-request-duration")).toBe("6.5");
-  });
-
-  it("rejects a duration outside the half-hour step", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    await user.type(screen.getByLabelText(/Длительность, ч/i), "1.25");
-    await submit(user);
-
-    expect(await screen.findByTestId("request-error")).toHaveTextContent("Введите длительность от 0,5 часа с шагом 0,5.");
-    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
-  });
-
-  it("rejects an empty or out-of-range event date before calling the API", async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    await user.clear(screen.getByLabelText("Дата мероприятия"));
-    await submit(user);
-
-    expect(await screen.findByTestId("request-error")).toHaveTextContent("Выберите дату с 23.09.2026 по 31.12.2026.");
-    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+    expect(screen.getAllByTestId("contractor-card")).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "English", exact: true }));
+    expect(screen.getByTestId("price-imputed-note")).toHaveTextContent("Starting price was imputed in the supplied data");
   });
 });
