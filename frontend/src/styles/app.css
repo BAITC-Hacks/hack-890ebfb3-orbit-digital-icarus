@@ -25,10 +25,10 @@ input:focus, select:focus { border-color: #c75c2b; box-shadow: 0 0 0 3px rgb(199
 .results { margin-top: 62px; }.result-tabs { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; color: #a89f92; font-size: .95rem; font-weight: 700; }.result-tabs button { padding: 0; border: 0; color: #5d5852; background: none; font-weight: 700; }.result-tabs .active { color: #c85d2c; }.query-tags { display: flex; flex-wrap: wrap; gap: 12px; margin: 38px 0 24px; }.query-tag { border: 1px solid #e0d9ce; border-radius: 999px; padding: 9px 18px; background: #fff; font-weight: 800; }.results h2 { font-size: clamp(2.5rem, 5vw, 4.1rem); line-height: 1.05; }.result-message { margin: 16px 0 0; color: #716b63; font-size: 1.15rem; line-height: 1.5; }.shortfall { margin: 25px 0; padding: 20px 22px; border: 1px solid #e5dac4; border-radius: 16px; color: #554f46; background: #f3eee2; line-height: 1.5; }.card-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 40px; }.contractor-card { min-height: 340px; padding: 30px; border: 1px solid #e3ddd4; border-radius: 19px; background: #fff; }.card-person { display: flex; gap: 15px; align-items: center; }.avatar { display: grid; width: 54px; height: 54px; place-items: center; border-radius: 50%; color: white; background: #587363; font-family: Georgia, serif; font-size: 1.22rem; }.card-person h3 { margin: 0; font-size: 1.12rem; }.card-person p { margin: 5px 0 0; color: #837b71; font-size: .9rem; }.price { margin: 30px 0 0; color: #c75c2b; font-family: Georgia, serif; font-size: 1.85rem; font-weight: 700; }.availability { margin: 26px 0 0; padding-top: 20px; border-top: 1px solid #ebe5dc; color: #557260; font-weight: 800; }.card-explanation { margin: 10px 0 0; color: #4c4842; line-height: 1.55; }.notes { display: grid; gap: 7px; margin-top: 18px; color: #8b6135; font-size: .82rem; }.empty-state { max-width: 1060px; margin-top: 34px; padding: 68px 88px; border: 1px solid #e0dbd1; border-radius: 22px; background: #fff; }.empty-icon { display: block; color: #c75c2b; font-size: 3.2rem; line-height: 1; }.empty-state h2 { margin-top: 22px; font-size: clamp(2.5rem, 5vw, 4.1rem); }.empty-state p { max-width: 850px; color: #55504a; font-size: 1.2rem; line-height: 1.55; }.empty-state .empty-advice { margin-top: 30px; padding-top: 25px; border-top: 1px solid #e9e3dc; color: #756e65; }
 @media (max-width: 760px) { .page-shell { width: min(100% - 30px, 1280px); padding-top: 40px; }.match-form { margin-top: 34px; padding: 26px 20px; border-radius: 18px; }.field-grid, .card-grid { grid-template-columns: 1fr; gap: 20px; }.form-footer { display: grid; gap: 20px; }.form-footer button { width: 100%; }.results { margin-top: 45px; }.empty-state { padding: 36px 25px; }.result-tabs { gap: 11px; font-size: .82rem; }.query-tags { margin-top: 25px; }.contractor-card { min-height: auto; }.hero h1 br { display: none; } }
 
-.locale-switcher { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin: -28px 0 32px; color: #706b64; font-size: .88rem; }
+.locale-switcher { display: flex; justify-content: flex-end; align-items: center; gap: 0; margin: -28px 0 32px; padding: 5px; border-radius: 999px; color: #706b64; background: #f0eee6; font-size: .88rem; }
 .locale-switcher > span { margin-right: 5px; }
-.locale-switcher button { border: 1px solid #dbd5c9; border-radius: 999px; padding: 8px 14px; background: #fffdf8; color: #514b43; }
-.locale-switcher button[aria-pressed="true"] { color: #fff; background: #587363; border-color: #587363; }
+.locale-switcher button { min-height: 48px; border: 0; border-radius: 999px; padding: 0 25px; background: transparent; color: #706b64; font-size: 1rem; font-weight: 750; transition: background .2s ease, color .2s ease, box-shadow .2s ease; }
+.locale-switcher button[aria-pressed="true"] { color: #fff; background: #24211e; box-shadow: 0 3px 8px rgb(48 37 20 / 14%); }
 button:focus-visible, summary:focus-visible { outline: 3px solid #c75c2b; outline-offset: 4px; }
 button:disabled { cursor: not-allowed; }
 input:disabled, select:disabled { background: #f4f1eb; color: #8c8478; }
@@ -59,12 +59,11 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 @media (max-width: 1050px) and (min-width: 761px) { .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }.contractor-card { padding: 24px; }.form-footer { align-items: flex-start; flex-wrap: wrap; } }
 @media (max-width: 760px) { .locale-switcher { justify-content: flex-start; margin-top: -12px; }.locale-switcher > span { font-size: .8rem; }.form-footer button { white-space: normal; padding: 12px 20px; }.empty-state p { font-size: 1rem; } }
 
-/* Theme toggle remains compact beside language selection and works with a keyboard. */
+/* Theme toggle complements the language segmented control without competing with it. */
 .top-controls { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin: -28px 0 32px; }
 .top-controls .locale-switcher { margin: 0; }
-.theme-toggle { position: relative; display: flex; align-items: center; justify-content: space-between; width: 66px; height: 35px; padding: 4px 7px; border: 1px solid #d8d1c5; border-radius: 999px; color: #896039; background: #fffdf8; font-size: .95rem; line-height: 1; transition: background .2s ease, border-color .2s ease; }
-.theme-toggle::before { content: ""; position: absolute; width: 25px; height: 25px; border-radius: 50%; background: #f4b76b; box-shadow: 0 2px 5px rgb(48 37 20 / 20%); transform: translateX(0); transition: transform .2s ease, background .2s ease; }
-.theme-toggle span { position: relative; z-index: 1; }.theme-toggle span:last-child { color: #77867a; }.theme-toggle:focus-visible { outline: 3px solid #c75c2b; outline-offset: 4px; }
+.theme-toggle { display: grid; width: 68px; height: 68px; place-items: center; padding: 0; border: 1px solid #ded9cf; border-radius: 50%; color: #6e6961; background: #fffdf8; font-size: 2rem; line-height: 1; transition: background .2s ease, border-color .2s ease, transform .2s ease; }
+.theme-toggle:hover { border-color: #a9a297; background: #f5f2ea; transform: translateY(-1px); }.theme-toggle span:last-child { display: none; }.theme-toggle:focus-visible { outline: 3px solid #c75c2b; outline-offset: 4px; }
 @media (max-width: 760px) { .top-controls { justify-content: flex-start; margin-top: -12px; }.top-controls .locale-switcher > span { font-size: .8rem; } }
 
 /* Dark theme preserves the product's sage and clay accents with accessible contrast. */
@@ -73,7 +72,7 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 :root[data-theme="dark"] h1, :root[data-theme="dark"] h2 { color: #f4f7ee; }
 :root[data-theme="dark"] .eyebrow, :root[data-theme="dark"] .preview-note, :root[data-theme="dark"] .availability, :root[data-theme="dark"] .card-evidence summary { color: #9fd1af; }
 :root[data-theme="dark"] .lede, :root[data-theme="dark"] .result-message, :root[data-theme="dark"] .empty-state p, :root[data-theme="dark"] .card-explanation, :root[data-theme="dark"] .exclusion-details, :root[data-theme="dark"] .calendar-note, :root[data-theme="dark"] .catalog-status { color: #bac8bd; }
-:root[data-theme="dark"] .locale-switcher { color: #c9d5ca; }:root[data-theme="dark"] .locale-switcher button, :root[data-theme="dark"] .query-tag { color: #e8f0e7; background: #17221e; border-color: #40564a; }:root[data-theme="dark"] .locale-switcher button[aria-pressed="true"] { color: #08110d; background: #a9d8b4; border-color: #a9d8b4; }
+:root[data-theme="dark"] .locale-switcher { color: #c9d5ca; background: #20342a; }:root[data-theme="dark"] .locale-switcher button { color: #c9d5ca; background: transparent; }:root[data-theme="dark"] .locale-switcher button[aria-pressed="true"] { color: #101815; background: #a9d8b4; }:root[data-theme="dark"] .query-tag { color: #e8f0e7; background: #17221e; border-color: #40564a; }
 :root[data-theme="dark"] .match-form, :root[data-theme="dark"] .contractor-card, :root[data-theme="dark"] .empty-state { background: #17221e; border-color: #34483e; box-shadow: 0 14px 34px rgb(0 0 0 / 20%); }
 :root[data-theme="dark"] label { color: #e5ede5; }:root[data-theme="dark"] label em, :root[data-theme="dark"] .field-hint, :root[data-theme="dark"] .price-caveat, :root[data-theme="dark"] .source-quote-label, :root[data-theme="dark"] .exclusion-details small, :root[data-theme="dark"] .form-footer p { color: #9cac9f; }
 :root[data-theme="dark"] input, :root[data-theme="dark"] select { color: #eff6ef; background: #101815; border-color: #465d50; }:root[data-theme="dark"] select option { color: #eff6ef; background: #101815; }
@@ -84,5 +83,46 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 :root[data-theme="dark"] .avatar { color: #0d1712; background: #9fd1af; }:root[data-theme="dark"] .card-person p { color: #aab9ad; }:root[data-theme="dark"] .notes { color: #e9bd76; }
 :root[data-theme="dark"] .request-error { color: #ffd0c0; background: #3c211d; border-color: #925440; }:root[data-theme="dark"] .field-error { color: #ffad92; }
 :root[data-theme="dark"] .match-alternatives button { color: #d4edda; background: #193025; border-color: #527460; }:root[data-theme="dark"] .match-alternatives button:hover { border-color: #9fd1af; background: #20382b; }
-:root[data-theme="dark"] .theme-toggle { color: #eaf5ec; background: #20342a; border-color: #628a70; }:root[data-theme="dark"] .theme-toggle::before { background: #a9d8b4; transform: translateX(29px); }:root[data-theme="dark"] .theme-toggle span:first-child { color: #789684; }:root[data-theme="dark"] .theme-toggle span:last-child { color: #e9f5eb; }
+:root[data-theme="dark"] .theme-toggle { color: #e9f5eb; background: #17221e; border-color: #40564a; }:root[data-theme="dark"] .theme-toggle:hover { border-color: #789f85; background: #20342a; }:root[data-theme="dark"] .theme-toggle span:first-child { display: none; }:root[data-theme="dark"] .theme-toggle span:last-child { display: block; color: #e9f5eb; }
 :root[data-theme="dark"] button:focus-visible, :root[data-theme="dark"] summary:focus-visible { outline-color: #ff9a70; }
+
+/* Matching form: a calm, readable hierarchy that remains stable at every width. */
+.match-form { padding: 42px 54px 34px; overflow: hidden; box-shadow: 0 16px 38px rgb(48 37 20 / 5%); }
+.field-grid { padding: 0; gap: 25px 38px; }
+.field-grid > label { min-width: 0; }
+.form-details { margin-top: 34px; padding-top: 34px; border-top: 1px solid #eee9e0; }
+.language-field { grid-column: 1 / -1; min-width: 0; margin: 2px 0 0; padding: 0; border: 0; }
+.language-field legend { margin-bottom: 11px; padding: 0; color: #302d29; font-size: .95rem; font-weight: 700; }.language-field legend em { color: #aaa397; font-style: normal; font-weight: 400; }
+.language-options { display: flex; flex-wrap: wrap; gap: 12px; }.language-option { display: inline-flex; grid-template-columns: none; align-items: center; gap: 10px; min-height: 48px; padding: 0 20px; border: 1px solid #dcd5ca; border-radius: 999px; color: #302d29; background: #fffdfb; font-weight: 500; cursor: pointer; }
+.language-option input { appearance: none; width: 18px; min-width: 18px; min-height: 18px; height: 18px; margin: 0; padding: 0; border: 1px solid #aba69b; border-radius: 3px; background: #fff; }.language-option input:checked { border-color: #587363; background: #587363; box-shadow: inset 0 0 0 3px #fff; }.language-option:has(input:checked) { border-color: #587363; background: #f1f6ef; }.language-option input:focus-visible { outline: 3px solid rgb(199 92 43 / 35%); outline-offset: 3px; }
+.form-footer { gap: 32px; margin-top: 35px; padding: 28px 0 0; background: transparent; }.form-footer p { max-width: 520px; }
+.form-footer button { display: inline-flex; align-items: center; justify-content: center; min-width: 280px; }
+
+/* A complete footer gives the long landing page a deliberate finish. */
+.site-footer { margin-top: 72px; padding: 28px 0 0; font-size: .86rem; }
+.footer-main { display: grid; grid-template-columns: 1fr minmax(220px, 1.35fr) auto; align-items: center; gap: 30px; }
+.site-footer .brand { margin-right: 0; width: max-content; font-size: 1.22rem; }
+.site-footer .brand span { width: 29px; height: 29px; }
+.footer-main p, .footer-note { margin: 0; color: #706b64; }
+.footer-main nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 16px; }
+.footer-main nav a { color: #4d6252; font-weight: 700; text-decoration: none; text-underline-offset: 5px; }
+.footer-main nav a:hover { color: #a74621; text-decoration: underline; }
+.footer-note { margin-top: 25px; padding: 18px 0 0; border-top: 1px solid #e4ded4; font-size: .77rem; line-height: 1.55; }
+
+/* Prevent long labels, cards and controls from escaping their grid tracks. */
+.hero, .contractor-card, .empty-state, .form-footer > div { min-width: 0; overflow-wrap: anywhere; }
+.card-grid > *, .home-hero > *, .footer-main > * { min-width: 0; }
+
+@media (max-width: 900px) {
+  .footer-main { grid-template-columns: 1fr 1fr; }.footer-main nav { grid-column: 1 / -1; justify-content: flex-start; }
+}
+@media (max-width: 650px) {
+  .site-header { align-items: flex-start; }.top-controls { margin-left: auto; }.site-nav { gap: 17px; }
+  .match-form { padding: 26px 20px; }.form-details { margin-top: 26px; padding-top: 26px; }.field-grid { padding: 0; }.form-footer { padding: 22px 0 0; }
+  .form-footer button { min-width: 0; }.footer-main { grid-template-columns: 1fr; gap: 18px; }.footer-main nav { grid-column: auto; gap: 13px 18px; }.site-footer { margin-top: 52px; }
+}
+
+:root[data-theme="dark"] .footer-main p, :root[data-theme="dark"] .footer-note { color: #aebcaf; }
+:root[data-theme="dark"] .footer-main nav a { color: #a9d8b4; }
+:root[data-theme="dark"] .form-details { border-color: #31433b; }:root[data-theme="dark"] .language-field legend, :root[data-theme="dark"] .language-option { color: #e5ede5; }:root[data-theme="dark"] .language-option { border-color: #465d50; background: #101815; }:root[data-theme="dark"] .language-option input { border-color: #74877b; background: #101815; }:root[data-theme="dark"] .language-option input:checked { border-color: #a9d8b4; background: #a9d8b4; }:root[data-theme="dark"] .language-option:has(input:checked) { border-color: #789f85; background: #1c3027; }
+:root[data-theme="dark"] .footer-note { border-color: #31433b; }

@@ -32,11 +32,12 @@ describe("App: explicit demo fixtures, not production matching", () => {
 
     expect(screen.getByRole("combobox", { name: "Город", exact: true })).toBeVisible();
     expect(screen.getByLabelText("Дата мероприятия")).toHaveValue("2026-10-11");
-    expect(screen.getByRole("combobox", { name: "Формат мероприятия", exact: true })).toBeVisible();
+    expect(screen.getByRole("combobox", { name: "Тип мероприятия", exact: true })).toBeVisible();
     expect(screen.getByRole("combobox", { name: "Категория подрядчика", exact: true })).toBeVisible();
     expect(screen.getByLabelText("Бюджет, ₸")).toHaveDisplayValue("3000000");
     expect(screen.getByLabelText(/Длительность, ч/)).toBeVisible();
-    expect(screen.getByRole("combobox", { name: /Язык работы подрядчика/ })).toBeVisible();
+    expect(screen.getByRole("group", { name: /Язык работы подрядчика/ })).toBeVisible();
+    expect(screen.getAllByRole("checkbox")).toHaveLength(3);
     await user.selectOptions(screen.getByRole("combobox", { name: "Город", exact: true }), "Астана");
     expect(screen.getByRole("option", { name: "Декоратор" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Инструменталист" })).toBeInTheDocument();
