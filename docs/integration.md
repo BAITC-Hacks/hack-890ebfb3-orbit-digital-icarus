@@ -69,7 +69,7 @@ npm run test:e2e
 npm run measure:browser
 ```
 
-The eight application E2E tests use real matching responses; only explicit failure and delayed-delivery cases alter transport. Local verification passed 88 Python tests / 218 subtests, 49 client tests, 16 locale tests, six isolated UI tests and eight application browser tests, plus strict types and the frontend build. The built bundle also returned the dense real shortlist through the local Vite preview on port 4173.
+The eight application E2E tests use real matching responses; only explicit failure and delayed-delivery cases alter transport. Final isolated-clone regression at `190696c` passed 91 Python tests / 218 subtests, 49 client tests, 16 locale tests, six isolated UI tests and eight application browser tests, plus strict types and the frontend build. The built bundle also returned the dense real shortlist through the local Vite preview on port 4173.
 
 Recorded on 23 September 2026 with Windows 11, Python 3.12.10, Node 26.7.0, npm 11.19.0 and Chromium 153.0.8010.12: 160 real HTTP runs had p95 **21.521 ms**, maximum **53.115 ms**; 20 real browser submit-to-visible runs had p95 **65.88 ms**, maximum **90.76 ms**. Browser time includes automation overhead; setup/startup are excluded. These local figures are scoped measurements, not production throughput promises. See [demo measurements](demo.md#measured-scope) for commands, versions and scenarios.
 

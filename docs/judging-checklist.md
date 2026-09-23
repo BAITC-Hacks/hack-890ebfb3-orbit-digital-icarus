@@ -37,7 +37,7 @@ AI is used during development and in an optional offline proposal tool. Producti
 
 ## Verification record and limits
 
-Local integrated checks: **88 Python tests and 218 subtests**, **49 client tests**, **16 localization tests**, strict client TypeScript, production frontend build, **six isolated browser UI checks** with explicitly mocked responses, and **eight browser acceptance flows against the actual API**. The isolated suite is not backend evidence. Tests and measurements require no paid API calls.
+Final integrated checks at `190696c`: **91 Python tests and 218 subtests**, **49 client tests**, **16 localization tests**, strict client TypeScript, production frontend build, **six isolated browser UI checks** with explicitly mocked responses, and **eight browser acceptance flows against the actual API**. The isolated suite is not backend evidence. Tests and measurements require no paid API calls.
 
 The dataset contains 66 organizer-supplied profiles, including 13 supplied synthetic profiles, 8 imputed cities and 18 imputed prices. Flags are shown; the team has not added demo profiles to the catalog. Availability is only a snapshot from 2026-09-23 through 2026-12-31. Prices are starting prices; the app makes recommendations and does not confirm bookings.
 

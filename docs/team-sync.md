@@ -6,10 +6,10 @@ Enjoy now contains the working React/FastAPI application, deterministic matching
 
 | Branch | Inspected commit | Integration status |
 | --- | --- | --- |
-| `bbl` | `83cf4e3` | B1/B2 loader, normalization, filtering and routes integrated; B3 runtime factory/settings/CORS merged at `a4e7141` |
+| `bbl` | `ad630e3` | B1/B2/B3 integrated; final three regression tests merged at `190696c`, preserving the independently verified dependency lock |
 | `feature/sp3ctra` | `8ded1f1` | Actual frontend from `5d1df99` already integrated at `a08eee0`; later commit only restores a boilerplate frontend README |
 | `main` | `57b7a32` | Contains spectra's frontend merge; history synchronized into Enjoy at `1292b65`, retaining the tested, current frontend setup documentation |
-| `Enjoy` | `1292b65` | Complete source integration plus judging/demo documentation; full clean-clone verification passed |
+| `Enjoy` | `190696c` | Complete source integration and teammate regression tests; fresh-clone setup and final full regression passed |
 
 B2's success placeholder is replaced with normalization, real hard filters, evidence-aware ranking and typed cards. Startup validates the 66-profile catalog against the evidence digest. B3 keeps configurable data paths and explicit CORS origins, while the algorithm version comes from the actual code/evidence and cannot be overridden by an environment label. Regenerated OpenAPI includes request length limits and nullable evidence values.
 
@@ -20,6 +20,8 @@ After B3: 88 Python tests and 218 subtests pass. The integration checkpoint also
 Git only exposes pushed work. Remote refs are checked during the active task and at integration milestones; this file is not a background monitor between sessions.
 
 A new GitHub clone of `1292b65` passed fresh locked installations, all 88 Python tests / 218 subtests, 49 client tests, 16 locale tests, both browser suites (6 isolated + 8 real), type checks, build, evidence validation and 160 independent domain runs. A further 160-request real HTTP run passed with p95 23.071 ms / maximum 33.424 ms. No provider key or external source path was used. See [reproduction record](reproducibility.md); final handoff edits are documentation only. The tested Enjoy application still needs team integration into `main`.
+
+A final fetch found bbl's `ad630e3`: three additional tests plus an alternate dependency lock. The tests are integrated at `190696c`; the timing test now requires the working HTTP 200 match result instead of the old 503 placeholder. After reviewing both dependency sets, Enjoy retains the versions and platform markers that passed the complete fresh clone. The isolated clone checked out `190696c` and reran all suites: **91 Python tests / 218 subtests, 49 client, 16 locale, six isolated UI, eight real E2E, types and build all pass**. Application code and dependency locks are unchanged from `1292b65`.
 
 ## Historical checkpoints before the complete application
 

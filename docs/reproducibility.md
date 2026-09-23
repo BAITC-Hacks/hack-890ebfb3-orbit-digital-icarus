@@ -1,6 +1,6 @@
 # Integrated clean-clone verification
 
-Verified on **23 September 2026** from a new GitHub clone at **`1292b65394f05e7622bf63a21142ecbf6bb1b79c`** on Enjoy's history. This revision includes the integrated backend, frontend, Russian/English interface, tests and setup documentation. Subsequent handoff edits only update documentation; application code, tests, data and dependency locks remain the tested versions.
+Verified on **23 September 2026** from a new GitHub clone at **`1292b65394f05e7622bf63a21142ecbf6bb1b79c`** on Enjoy's history. This revision includes the integrated backend, frontend, Russian/English interface, tests and setup documentation. A later teammate merge added three backend tests; the full regression passed again at **`190696cb9da6b43207a08ae43c9548ada869c83d`** using this isolated environment. Application code, data and dependency locks are identical between these two revisions. Subsequent handoff edits only update documentation.
 
 ## Isolation and environment
 
@@ -39,6 +39,12 @@ CSV SHA-256:
 ```
 
 Algorithm/evidence version: **`explainable-v1:2553919e464d7030`**. The dense request returns `HK-42352 → HK-44923 → HK-27222`; changing its date to 2026-10-10 returns `HK-27222 → HK-77838 → HK-72938`. Rare, absent, booked, venue and December cases match the [frozen demo table](demo.md#frozen-scenarios).
+
+## Final teammate-test regression
+
+After fetching and checking out **`190696c`**, the isolated clone reran the suites using the unchanged, freshly installed locked environment. Results: **91 backend tests / 218 subtests**, **49 client tests**, **16 localization tests**, strict TypeScript, production build, **six isolated UI tests (5.1 s)** and **eight real application tests (13.3 s)** all passed. Git status remained clean, and the owned servers shut down afterward. Final logs have the `final-` prefix in the verification directory below.
+
+bbl's added checks cover request length limits, the complete response's ten-second target and retaining zero through more than three eligible profiles before ranking. The response check was aligned with the completed HTTP 200 matching path. The Windows-verified dependency lock with cross-platform markers and current setup documentation were retained after comparing bbl's alternate Python 3.14 lock.
 
 ## Evidence boundaries
 

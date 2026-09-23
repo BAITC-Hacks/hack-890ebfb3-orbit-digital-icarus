@@ -234,14 +234,14 @@ To let Playwright start both services itself, activate `.venv` and set `RUN_APP_
 
 | Check | Result |
 | --- | --- |
-| Python suite | **88 passing tests and 218 subtests**, including API/filter integration, startup/CORS configuration, source validation, deterministic matching and mocked offline-provider checks |
+| Python suite | **91 passing tests and 218 subtests**, including API/filter integration, startup/CORS configuration, source validation, deterministic matching and mocked offline-provider checks |
 | Transport / locale unit tests | **49 client + 16 localization tests passing** |
 | Strict transport types / full frontend build | **Passing** |
 | Isolated mocked browser UI | **6 Chromium tests passing** |
 | Application browser acceptance | **8 Chromium tests passing** against the integrated app |
 | Domain and real HTTP scenarios | **8 scenarios × 20 repeats = 160 runs** in each check |
 | Built-bundle preview | Dense shortlist returned by the real backend through the local port 4173 preview |
-| Complete integrated fresh-clone reproduction | **Passed at `1292b65`**, including fresh locked installs, all tests/build, six UI flows, eight real application flows and 160 real HTTP requests; see the [verification record](docs/reproducibility.md) |
+| Complete integrated fresh-clone reproduction | **Passed at `1292b65`** with fresh locked installs and 160 real HTTP requests; all suites/build passed again at **`190696c`** after three more teammate tests, with unchanged application/dependencies; see the [verification record](docs/reproducibility.md) |
 
 Measurements on **23 September 2026**, Windows 11, Python 3.12.10 and Chromium **153.0.8010.12**, with the CSV hash above and algorithm `explainable-v1:2553919e464d7030`:
 
