@@ -4,6 +4,8 @@ The integrated React interface searches the bundled contractor catalog through t
 
 ## Start locally
 
+**Only want to run the complete app?** Double-click `Start Orbit.cmd` in the repository root or run `python start.py`. It installs, builds and opens the real website/API together; see the [one-command guide](../README.md#run-from-a-fresh-checkout). The commands below are optional frontend development setup with hot reload.
+
 Run commands from the **repository root**, using Node `^22.12.0 || ^24.0.0 || >=26.0.0` and npm:
 
 ```bash
@@ -31,6 +33,10 @@ For design work only, copy `frontend/.env.example` to `frontend/.env` and explic
 
 ## Interface behavior
 
+- `/` or `/#/` opens the home page; `/#/match` opens the matching form. Metadata-driven category shortcuts never auto-submit. Back/forward preserves in-tab form/results.
+- Every card includes an honest inquiry draft with copy/manual-copy fallback. There are no fabricated contacts, delivery claims or bookings.
+- Budget and duration are controlled text drafts with numeric/decimal keyboard hints. Exponents, letters and signs are rejected atomically; dot/comma decimals are supported for positive hours.
+
 - City, category and event-format choices come from `/api/metadata`; date limits use its `calendar_start` and `calendar_end` fields.
 - **Русский / English** persists locally and updates the document language. Select labels are translated, while their canonical API values remain Russian.
 - **Contractor's working language** is a separate optional matching constraint. Changing interface language preserves that filter, existing card order and results without another match request.
@@ -47,6 +53,8 @@ Screenshots: [Russian](../docs/images/interface-ru.png) · [English](../docs/ima
 | Path | Purpose |
 | --- | --- |
 | `src/App.tsx`, `src/styles/app.css` | Form, result states, cards, evidence and responsive layout |
+| `src/components/HomePage.tsx`, `ContactPanel.tsx` | Home content and local inquiry preparation |
+| `src/usePage.ts`, `journeyCopy.ts`, `styles/journey.css` | Lightweight hash navigation, bilingual journey copy and shared visual extensions |
 | `src/api/client.ts`, `types.ts` | Framework-independent transport, abort support, errors and runtime response guards |
 | `src/api/demo.ts` | Explicitly selected design-preview responses |
 | `src/i18n/index.ts`, `evidence.en.json` | Labels, factual English explanations, reviewed quote translations and locale persistence |

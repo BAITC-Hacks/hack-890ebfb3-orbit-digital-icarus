@@ -1,4 +1,5 @@
 import evidenceEnglish from "./evidence.en.json";
+import { MAX_DURATION_HOURS } from "../formNumbers";
 import type { EvidenceItem, MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "../api/types";
 
 export type Locale = "ru" | "en";
@@ -179,7 +180,7 @@ export function evidenceValue(item: EvidenceItem, locale: Locale): string {
 
 export function fieldValidationMessage(field: string, metadata: MetadataResponse | null, locale: Locale): string {
   if (field === "budget_kzt") return locale === "en" ? "Enter a positive whole-number budget in KZT." : "Введите положительный целый бюджет в тенге.";
-  if (field === "duration_hours") return locale === "en" ? "Enter a positive duration, or leave this field empty." : "Введите положительную длительность или оставьте поле пустым.";
+  if (field === "duration_hours") return locale === "en" ? `Enter a duration greater than 0 and no more than ${MAX_DURATION_HOURS} hours, or leave this field empty.` : `Введите длительность больше 0 и не более ${MAX_DURATION_HOURS} часов или оставьте поле пустым.`;
   if (field === "event_date" && metadata) {
     const range = `${displayDate(metadata.calendar_start)}–${displayDate(metadata.calendar_end)}`;
     return locale === "en" ? `Choose a valid date within ${range}.` : `Выберите корректную дату в пределах ${range}.`;
@@ -194,7 +195,7 @@ export function invalidFields(request: MatchRequest, metadata: MetadataResponse)
   if (!metadata.event_formats.includes(request.event_format)) fields.push("event_format");
   if (request.language && !metadata.languages.includes(request.language)) fields.push("language");
   if (!Number.isSafeInteger(request.budget_kzt) || request.budget_kzt <= 0) fields.push("budget_kzt");
-  if (request.duration_hours != null && (!Number.isFinite(request.duration_hours) || request.duration_hours <= 0)) fields.push("duration_hours");
+  if (request.duration_hours != null && (!Number.isFinite(request.duration_hours) || request.duration_hours <= 0 || request.duration_hours > MAX_DURATION_HOURS)) fields.push("duration_hours");
   const parsed = new Date(`${request.event_date}T00:00:00Z`);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(request.event_date) || !Number.isFinite(parsed.valueOf())
     || parsed.toISOString().slice(0, 10) !== request.event_date

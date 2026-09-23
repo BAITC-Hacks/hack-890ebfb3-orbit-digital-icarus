@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
@@ -18,7 +18,7 @@ async function submit(user: ReturnType<typeof userEvent.setup>) {
 
 describe("App: explicit demo fixtures, not production matching", () => {
   beforeEach(() => {
-    window.history.replaceState(null, "", "/#/match");
+    window.history.replaceState(null, "", "/#/match"); // These legacy fixtures exercise the matching route.
     fetch.mockClear();
     window.localStorage.setItem("contractor-match-theme", "dark");
     vi.stubGlobal("fetch", fetch);
@@ -126,5 +126,160 @@ describe("App: explicit demo fixtures, not production matching", () => {
     expect(screen.getAllByTestId("contractor-card")).toHaveLength(1);
     await user.click(screen.getByRole("button", { name: "English", exact: true }));
     expect(screen.getByTestId("price-imputed-note")).toHaveTextContent("Starting price was imputed in the supplied data");
+  });
+
+  it("keeps a grouped multi-million budget intact through submission", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const budget = screen.getByLabelText("Бюджет, ₸");
+    await user.clear(budget);
+    await user.type(budget, "4 000 000");
+    await user.tab();
+    expect(budget).toHaveDisplayValue("4 000 000");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toHaveAttribute("data-status", "matches_found");
+    expect(screen.getByText(/^до 4\s000\s000 ₸$/)).toBeVisible();
+    expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("rejects duration letters with an error and accepts a corrected comma decimal", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const duration = screen.getByLabelText(/Длительность, ч/);
+    await user.type(duration, "6abc,5");
+    expect(duration).toHaveDisplayValue("6");
+    await submit(user);
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    expect(await screen.findByTestId("request-error")).toBeVisible();
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+    await user.clear(duration);
+    await user.type(duration, "6,5");
+    expect(duration).toHaveDisplayValue("6,5");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toHaveAttribute("data-status", "matches_found");
+    expect(screen.getByText("6.5 ч")).toBeVisible();
+    expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("accepts positive quarter-hour duration without inventing a half-hour restriction", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const duration = screen.getByLabelText(/Длительность, ч/);
+    await user.type(duration, "1.25");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toHaveAttribute("data-status", "matches_found");
+    expect(duration).toHaveDisplayValue("1.25");
+    expect(screen.getByText("1.25 ч")).toBeVisible();
+    expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("rejects empty and out-of-range dates before matching and accepts a correction", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const date = screen.getByLabelText("Дата мероприятия");
+    for (const value of ["", "2026-09-22", "2027-01-01"]) {
+      fireEvent.change(date, { target: { value } });
+      await submit(user);
+      expect(date).toHaveAttribute("aria-invalid", "true");
+      expect(date).toHaveAccessibleDescription(/23\.09\.2026–31\.12\.2026/);
+      expect(await screen.findByTestId("request-error")).toBeVisible();
+      expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+    }
+    fireEvent.change(date, { target: { value: "2026-10-31" } });
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toHaveAttribute("data-request-date", "2026-10-31");
+    expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("rejects invalid budget edits without silently changing their meaning", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    const budget = screen.getByLabelText("Бюджет, ₸");
+    await user.clear(budget);
+    // Malformed thousands grouping is kept visible and blocked, never repaired into 400000 or 4.
+    await user.type(budget, "4 00 000");
+    await user.tab();
+
+    expect(budget).toHaveValue("4 00 000");
+    await submit(user);
+    expect(budget).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+    await user.clear(budget);
+    await user.type(budget, "4000000");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("blocks duration letters and accepts a corrected comma decimal", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    const duration = screen.getByLabelText(/Длительность, ч/i);
+    await user.type(duration, "6abc,5");
+
+    expect(duration).toHaveValue("6");
+    await submit(user);
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    await user.clear(duration);
+    await user.type(duration, "6,5");
+    expect(duration).toHaveValue("6,5");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("accepts digits immediately after rejecting a letter in an empty duration", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const duration = screen.getByLabelText("Длительность, ч", { exact: true });
+    await user.type(duration, "e");
+    expect(duration).toHaveValue("");
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    // No clearing, refocusing or reload should be necessary to enter a fresh number.
+    await user.type(duration, "6,5");
+    expect(duration).toHaveValue("6,5");
+    expect(duration).toHaveAttribute("aria-invalid", "false");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("accepts fractional durations below the ceiling without inventing a half-hour constraint", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    await user.type(screen.getByLabelText(/Длительность, ч/i), "1.25");
+    await submit(user);
+
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+    expect(screen.queryByTestId("request-error")).not.toBeInTheDocument();
+  });
+
+  it("flags a duration over 12 immediately and accepts a corrected boundary value", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const duration = screen.getByLabelText("Длительность, ч", { exact: true });
+    await user.type(duration, "4903");
+    expect(duration).toHaveValue("4903"); // Show what was entered; never silently truncate it to 4.
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText(/Введите длительность больше 0 и не более 12/)).toBeVisible();
+    await submit(user);
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
+    await user.clear(duration);
+    await user.type(duration, "12");
+    expect(duration).toHaveAttribute("aria-invalid", "false");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
+  it("rejects an empty or out-of-range event date before calling the API", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+
+    await user.clear(screen.getByLabelText("Дата мероприятия"));
+    await submit(user);
+
+    expect(await screen.findByTestId("request-error")).toBeVisible();
+    expect(screen.getByLabelText(/Дата мероприятия/)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByTestId("result-summary")).not.toBeInTheDocument();
   });
 });

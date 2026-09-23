@@ -136,7 +136,7 @@ test.beforeEach(async ({ page, request }) => {
   expect(health.ok(), "Start the real backend or set RUN_APP_SERVERS=1").toBeTruthy();
   const metadata = await request.get(`${API_URL}/api/metadata`);
   expect(metadata.ok()).toBeTruthy();
-  await page.goto("/");
+  await page.goto("/#/match");
   await expect(form(page)).toBeVisible();
   await expect(await field(page, "city")).toContainText("Алматы");
   await expect(await field(page, "category")).toContainText("Декоратор");

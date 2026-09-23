@@ -2,6 +2,7 @@ import type { MetadataResponse } from "../api/types";
 import { optionLabel, type Locale } from "../i18n";
 import { journeyCopy } from "../journeyCopy";
 
+// The first screen explains the customer benefit before requesting event data.
 export function HomePage({ locale, metadata, onCategory }: { locale: Locale; metadata: MetadataResponse | null; onCategory: (category: string) => void }) {
   const t = journeyCopy[locale];
   return <div className="home-page" data-testid="home-page">

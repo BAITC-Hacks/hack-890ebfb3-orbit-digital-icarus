@@ -11,7 +11,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from .constants import CALENDAR_END, CALENDAR_START
+from .constants import CALENDAR_END, CALENDAR_START, MAX_DURATION_HOURS
 
 
 OutcomeStatus = Literal[
@@ -57,7 +57,7 @@ class MatchRequest(BaseModel):
     event_format: str = Field(max_length=80)
     category: str = Field(max_length=120)
     budget_kzt: int = Field(gt=0)
-    duration_hours: float | None = Field(default=None, gt=0)
+    duration_hours: float | None = Field(default=None, gt=0, le=MAX_DURATION_HOURS)
     language: str | None = Field(default=None, max_length=80)
 
     @field_validator("city", "event_format", "category", mode="before")
@@ -97,11 +97,9 @@ class MatchRequest(BaseModel):
     @field_validator("duration_hours", mode="before")
     @classmethod
     def require_numeric_duration(cls, value: object) -> object:
-        """Accept a numeric JSON value or null, never a coerced boolean/string."""
+        """Treat blank optional input as omitted; reject nonblank numeric strings."""
 
-        if value is None:
-            return None
-        if isinstance(value, str) and not value.strip():
+        if value is None or (isinstance(value, str) and not value.strip()):
             return None
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError("must be a positive numeric value or null")

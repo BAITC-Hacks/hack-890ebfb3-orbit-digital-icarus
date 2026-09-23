@@ -1,8 +1,10 @@
 # Browser acceptance and interface contract
 
+Current release: **13 real-application E2E tests and 13 isolated UI tests**; see [release review](release-review.md). Matching-focused tests use `/#/match`; root now opens the home page. New journeys cover category navigation, no hidden search, browser back/forward, clipboard copy/manual fallback and narrow screens. The older eight-flow/six-flow descriptions below identify the original suite and remain useful historical scope notes.
+
 Enjoy owns `tests/e2e/matching.spec.ts` and root `playwright.config.ts`, plus isolated `tests/ui/locale.spec.ts` and `playwright.ui.config.ts`. Both suites passed locally: **eight real-application tests and six isolated interface tests**. They have different scopes and do not replace backend or transport/localization unit tests.
 
-The production API, catalog filters, ranking/evidence modules and React interface are integrated on `Enjoy`. Actual browser execution, the frontend build and the local built-bundle preview are verified. [Complete integrated fresh-clone reproduction passed at `1292b65`](reproducibility.md); a deployment or green cloud CI run is not implied.
+The production API, catalog filters, ranking/evidence modules and React interface are integrated on `main`. Actual browser execution, the frontend build and the local built-bundle preview are verified. [Complete integrated fresh-clone reproduction passed at `1292b65`](reproducibility.md); a deployment or green cloud CI run is not implied.
 
 `npm run test:e2e:list` discovers eight Chromium tests without executing them. Use `npm run test:e2e` for the actual application suite and `npm run test:ui` for isolated UI behavior.
 
@@ -16,8 +18,8 @@ The application uses labeled native controls with the names below. Russian is th
 | `event_date` | Дата мероприятия / Event date | date input |
 | `event_format` | Формат мероприятия / Event format | select |
 | `category` | Категория подрядчика / Contractor category | select |
-| `budget_kzt` | Бюджет, ₸ / Budget, ₸ | number input |
-| `duration_hours` | Длительность, ч / Duration, hours | optional number input; empty means null |
+| `budget_kzt` | Бюджет, ₸ / Budget, ₸ | controlled text input, numeric keyboard hint; positive safe integer |
+| `duration_hours` | Длительность, ч / Duration, hours | controlled text input, decimal keyboard hint; empty means null, positive dot/comma decimal otherwise |
 | `language` | Язык работы подрядчика / Contractor's working language | optional select; option value `""` means null |
 
 All global categories remain available regardless of city. A valid but absent city/category combination is a required business outcome. Metadata supplies `calendar_start` and `calendar_end`; a metadata error disables the form and offers retry instead of invented options.

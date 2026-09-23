@@ -2,8 +2,9 @@ import { type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode
 import { ApiError, ApiResponseError, getMetadata, matchContractors } from "./api/client";
 import { metadata as previewMetadata, previewMatch } from "./api/demo";
 import type { MatchAlternative, MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
-import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft } from "./formNumbers";
+import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft, MAX_DURATION_HOURS } from "./formNumbers";
 import { HomePage } from "./components/HomePage";
+import { ContactPanel } from "./components/ContactPanel";
 import { journeyCopy } from "./journeyCopy";
 import { usePage } from "./usePage";
 import {
@@ -26,6 +27,7 @@ const THEME_STORAGE_KEY = "contractor-match-theme";
 const initials = (name: string) => name.split(" ").slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
 function storedLocale(): Locale {
+  // Private browsing or disabled storage must not prevent the app from opening.
   try { return initialLocale(window.localStorage); } catch { return "ru"; }
 }
 
@@ -42,6 +44,7 @@ function Tag({ children }: { children: ReactNode }) {
 }
 
 function ContractorCard({ card, request, locale }: { card: MatchCard; request: MatchRequest; locale: Locale }) {
+  // Presentation never changes server eligibility or order; quotes retain their original language.
   const t = copy[locale];
   return <article className="contractor-card" data-testid="contractor-card" data-contractor-id={card.id}>
     <div className="card-person">
@@ -70,6 +73,7 @@ function ContractorCard({ card, request, locale }: { card: MatchCard; request: M
         </li>,
       )}</ul>}
     </details>
+    <ContactPanel card={card} request={request} locale={locale} />
   </article>;
 }
 
@@ -82,6 +86,7 @@ function OutcomeDetails({ result, locale }: { result: MatchResponse; locale: Loc
 }
 
 function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; locale: Locale; onAlternative: (alternative: MatchAlternative) => void }) {
+  // Suggestions are already verified by the API and only execute through an explicit click.
   return <section className="empty-state" data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date}>
     <span className="empty-icon" aria-hidden="true">⌕</span>
     <h2>{resultTitle(result, locale)}</h2>
@@ -104,7 +109,7 @@ function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; 
 }
 
 export default function App() {
-  const page = usePage();
+  const page = usePage(); // Navigation does not discard the customer's form or previous result.
   const [locale, setLocale] = useState<Locale>(storedLocale);
   const [theme, setTheme] = useState<Theme>(storedTheme);
   const [form, setForm] = useState<MatchRequest>(initialRequest);
@@ -127,7 +132,7 @@ export default function App() {
 
   useEffect(() => {
     document.title = `Tandau · ${journey[page === "home" ? "home" : "match"]}`;
-  }, [locale, page]);
+  }, [locale, page]); // Direct links and locale switches keep the browser title useful.
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -141,6 +146,7 @@ export default function App() {
   }, [theme]);
 
   async function loadCatalog() {
+    // A generation guard also covers fetch implementations that ignore cancellation.
     const generation = ++metadataGeneration.current;
     metadataController.current?.abort();
     const active = new AbortController();
@@ -171,6 +177,7 @@ export default function App() {
   }, []);
 
   function clearSearch() {
+    // Editing any condition invalidates cards and outstanding responses before the next search.
     ++searchGeneration.current;
     controller.current?.abort();
     setLoading(false);
@@ -185,6 +192,7 @@ export default function App() {
   }
 
   function rejectNumericEdit(key: NumericField) {
+    // Remember the rejection separately from the retained visible draft; never submit a misleading prefix.
     clearSearch();
     rejectedEdits.current.add(key);
     setInvalid([...rejectedEdits.current]);
@@ -198,38 +206,47 @@ export default function App() {
   function editNumeric(key: NumericField, value: string) {
     if (!acceptsNumeric(key, value)) { rejectNumericEdit(key); return; }
     // A rejected 'e' must not turn subsequent typing of '4e2' into 42.
-    // Clear, delete, select/replace or paste a valid value to correct the edit.
-    if (rejectedEdits.current.has(key) && value !== "" && value.length >= numericDrafts[key].length) {
+    // An empty draft has no numeric prefix to corrupt: the next valid input starts fresh.
+    // Nonempty rejected drafts still require deletion/replacement to avoid '4e2' becoming 42.
+    if (rejectedEdits.current.has(key) && numericDrafts[key] !== "" && value !== "" && value.length >= numericDrafts[key].length) {
       rejectNumericEdit(key);
       return;
     }
     rejectedEdits.current.delete(key);
     clearSearch();
     setNumericDrafts(current => ({ ...current, [key]: value }));
+    // Keep an over-limit draft editable, but flag it immediately; never silently clamp its meaning.
+    if (key === "duration_hours" && Number(value.replace(",", ".")) > MAX_DURATION_HOURS) {
+      setInvalid([key]);
+      setError("validationError");
+    }
   }
 
   function numericKeyDown(key: NumericField, event: KeyboardEvent<HTMLInputElement>) {
+    // Leave navigation/selection shortcuts intact while blocking signs and exponent letters.
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.key === "Backspace" || event.key === "Delete") rejectedEdits.current.delete(key);
     if (event.key.length !== 1) return;
     const replacing = event.currentTarget.selectionStart !== event.currentTarget.selectionEnd;
-    if (!acceptsNumeric(key, event.key) || (rejectedEdits.current.has(key) && !replacing)) {
+    if (!acceptsNumeric(key, event.key) || (rejectedEdits.current.has(key) && numericDrafts[key] !== "" && !replacing)) {
       event.preventDefault();
       rejectNumericEdit(key);
     } else if (replacing) rejectedEdits.current.delete(key);
   }
 
   function numericPaste(key: NumericField, event: ClipboardEvent<HTMLInputElement>) {
+    // Validate the proposed full value, including any text outside the selected range.
     const input = event.currentTarget;
     const pasted = event.clipboardData.getData("text");
     const proposed = input.value.slice(0, input.selectionStart ?? 0) + pasted + input.value.slice(input.selectionEnd ?? input.value.length);
-    if (!acceptsNumeric(key, proposed)) {
+    if (!acceptsNumeric(key, proposed) || (key === "budget_kzt" && /[ \u00a0\u202f]/.test(proposed) && parseBudgetDraft(proposed) === undefined)) {
       event.preventDefault();
       rejectNumericEdit(key);
     } else rejectedEdits.current.delete(key);
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
+    // Parse only at submission: unfinished decimals are invalid, intentionally blank duration is null.
     event.preventDefault();
     if (!metadata || metadataLoading || loading) return;
     const budget = parseBudgetDraft(numericDrafts.budget_kzt);
@@ -246,6 +263,7 @@ export default function App() {
   }
 
   async function search(request: MatchRequest) {
+    // Errors never fall back to demo data or masquerade as an honest empty business outcome.
     const generation = ++searchGeneration.current;
     controller.current?.abort();
     const active = new AbortController();
@@ -278,7 +296,7 @@ export default function App() {
   }
 
   function chooseCategory(category: string) {
-    update("category", category);
+    update("category", category); // Preserve other draft conditions; require an explicit search.
     window.location.hash = "/match";
   }
 
@@ -286,7 +304,7 @@ export default function App() {
     ? <span className="field-error" id={`error-${key}`}>{fieldValidationMessage(key, metadata, locale)}</span> : null;
   const fieldAttributes = (key: keyof MatchRequest) => ({
     "aria-invalid": invalid.includes(key),
-    "aria-describedby": invalid.includes(key) ? `error-${key}` : undefined,
+    "aria-describedby": [invalid.includes(key) ? `error-${key}` : "", key === "budget_kzt" || key === "duration_hours" ? `hint-${key}` : ""].filter(Boolean).join(" ") || undefined,
   });
   const fields: Array<{ key: "city" | "event_format" | "category"; options: string[] }> = [
     { key: "city", options: metadata?.cities ?? [] },
@@ -296,6 +314,7 @@ export default function App() {
   const unavailable = !metadata || metadataLoading;
 
   return <div className="page-shell">
+    {/* The skip link moves focus without changing the hash route. */}
     <a className="skip-link" href="#content" onClick={event => { event.preventDefault(); document.getElementById("content")?.focus(); }}>{journey.skip}</a>
     <header className="site-header">
       <a className="brand" href="#/" aria-label="Tandau"><span aria-hidden="true">T</span> Tandau</a>
@@ -320,15 +339,15 @@ export default function App() {
     {metadataLoading && <p className="catalog-status" role="status">{t.metadataLoading}</p>}
     {metadataFailed && <div className="request-error" role="alert" data-testid="metadata-error">{t.metadataError} <button type="button" onClick={() => void loadCatalog()}>{t.retry}</button></div>}
     {page === "home" ? <HomePage locale={locale} metadata={metadata} onCategory={chooseCategory} /> : <>
-    <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
+    <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}{" "}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
     <form ref={formElement} className="match-form" data-testid="match-form" aria-busy={loading} onSubmit={submit} noValidate>
       <div className="field-grid">
         {fields.map(({ key, options }) => <label key={key}>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>
           {options.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
         </select>{fieldError(key)}</label>)}
         <label>{t.event_date}<input name="event_date" type="date" min={metadata?.calendar_start} max={metadata?.calendar_end} value={form.event_date} disabled={unavailable} {...fieldAttributes("event_date")} onChange={event => update("event_date", event.target.value)} required />{fieldError("event_date")}</label>
-        <label>{t.budget_kzt}<input name="budget_kzt" type="text" inputMode="numeric" value={numericDrafts.budget_kzt} disabled={unavailable} {...fieldAttributes("budget_kzt")} onKeyDown={event => numericKeyDown("budget_kzt", event)} onPaste={event => numericPaste("budget_kzt", event)} onChange={event => editNumeric("budget_kzt", event.target.value)} required />{fieldError("budget_kzt")}</label>
-        <label>{t.duration_hours} <em>{t.optional}</em><input name="duration_hours" type="text" inputMode="decimal" placeholder={t.durationPlaceholder} value={numericDrafts.duration_hours} disabled={unavailable} {...fieldAttributes("duration_hours")} onKeyDown={event => numericKeyDown("duration_hours", event)} onPaste={event => numericPaste("duration_hours", event)} onChange={event => editNumeric("duration_hours", event.target.value)} />{fieldError("duration_hours")}</label>
+        <label>{t.budget_kzt}<input name="budget_kzt" aria-label={t.budget_kzt} type="text" inputMode="numeric" autoComplete="off" value={numericDrafts.budget_kzt} disabled={unavailable} {...fieldAttributes("budget_kzt")} onKeyDown={event => numericKeyDown("budget_kzt", event)} onPaste={event => numericPaste("budget_kzt", event)} onChange={event => editNumeric("budget_kzt", event.target.value)} required /><small className="field-hint" id="hint-budget_kzt">{journey.budgetHint}</small>{fieldError("budget_kzt")}</label>
+        <label>{t.duration_hours} <em>{t.optional}</em><input name="duration_hours" aria-label={t.duration_hours} type="text" inputMode="decimal" autoComplete="off" placeholder={t.durationPlaceholder} value={numericDrafts.duration_hours} disabled={unavailable} {...fieldAttributes("duration_hours")} onKeyDown={event => numericKeyDown("duration_hours", event)} onPaste={event => numericPaste("duration_hours", event)} onChange={event => editNumeric("duration_hours", event.target.value)} /><small className="field-hint" id="hint-duration_hours">{journey.durationHint}</small>{fieldError("duration_hours")}</label>
         <label>{t.language} <em>{t.optional}</em><select name="language" value={form.language ?? ""} disabled={unavailable} {...fieldAttributes("language")} onChange={event => update("language", event.target.value || null)}>
           <option value="">{t.noLanguage}</option>{metadata?.languages.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
         </select><small className="field-hint">{t.languageHint}</small>{fieldError("language")}</label>

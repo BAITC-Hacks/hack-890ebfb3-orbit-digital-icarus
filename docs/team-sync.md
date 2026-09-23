@@ -1,5 +1,9 @@
 # Integration observations
 
+## Current release handoff
+
+The current integration combines `bbl` f3c8529, `Enjoy` 9e7d5d0, `feature/sp3ctra` fc3a958 and `main` e691a58 without rewriting their history. The home/inquiry journey was added at 032561f and the concurrent main update merged at a1930af. Follow [release-review.md](release-review.md) for current checks, merge decisions, product behavior and the demo script. The earlier checkpoints below are retained as historical records; their pending-integration notes no longer describe the current source.
+
 ## Integrated handoff, 23 September 2026
 
 Enjoy now contains the working React/FastAPI application, deterministic matching, bilingual evidence and the documented acceptance tooling. Latest inspected remote checkpoints:

@@ -21,3 +21,10 @@ secrets/
 .vitest/
 *.tsbuildinfo
 tmp/
+# One-command launcher environment, fingerprints and diagnostic setup log.
+.orbit/
+*.pem
+*.key
+*-key.txt
+*_key.txt
+credentials*.json

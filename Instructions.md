@@ -2,7 +2,17 @@
 
 Shared plan for Orbit Digital | Icarus, task **#79-lite**. Prepared on 23 September 2026 from the official task, judging rubric, screenshot, CSV, HTML preview, and current remote branches.
 
-This records the original shared implementation plan. The integrated application and checks are now implemented on `Enjoy`; see the [README](README.md), [judging evidence and remaining release gates](docs/judging-checklist.md), and [branch handoff](docs/team-sync.md) for current status. Requirements from the organizer are distinguished below from our implementation decisions and optional extensions. Planning checklists are preserved as the original acceptance scope, not a current completion report.
+This records the original shared implementation plan. BBL, Enjoy and spectra are now integrated for `main`; see the [README](README.md) and [current release review](docs/release-review.md). Requirements from the organizer are distinguished below from our implementation decisions and optional extensions. Original planning checklists and branch locations are historical, not a current completion report.
+
+## Approved integration extensions, 23 September
+
+The captain authorized merging all three branches and requested a complete user journey. The stack and authoritative server pipeline below are unchanged. The application now opens a bilingual home page (`/#/`), with a separate form (`/#/match`) and workflow link (`/#/how`). Home categories come from API metadata and only prefill the form. UI components live under `frontend/src/components`; a small hash hook supports navigation without a router dependency.
+
+Every result offers an honest local inquiry draft, explicitly approved because the anonymized data has no verified phone/email directory. No message is transmitted and no booking is created. The organizer's exclusion of booking/notifications remains respected. Numeric drafts reject invalid edits instead of removing characters; the API separately rejects invalid JSON types, datetimes and non-finite values. Empty-result alternatives are verified against all other conditions and applied only after a user click.
+
+The captain also supplied a separate Demo Day rubric (25/20/15/20/20). It does not replace the task's technical rubric (25/25/25/15/10) below. Both are mapped to actual evidence in the [release review](docs/release-review.md) and [technical checklist](docs/judging-checklist.md). Neither is a guaranteed score.
+
+The approved distribution shortcut is now `python start.py` (or double-click `Start Orbit.cmd` on Windows), after installing Python and Node once. It uses locked dependencies, an ignored private `.orbit/venv`, and a production frontend build mounted after the existing API routes by `backend/app/web.py`. One loopback server serves both; filtering/ranking/contracts and the optional separate hot-reload workflow are unchanged. The organizer's additional README notice is recorded in the [submission reminder](README.md#organizer-reminder-and-submission).
 
 ## 1. Product idea and priorities
 
@@ -47,6 +57,7 @@ These are rubric weights, not scores already earned. Documentation receives as m
 - Starting price equal to budget passes. Show `от … ₸` and state that final price needs confirmation; do not claim a fixed quote or guaranteed savings.
 - Only dates from **2026-09-23 through 2026-12-31 inclusive** are supported by this snapshot. Reject dates outside it with a clear validation message; absence from the calendar outside the window does not prove availability.
 - `max_hours = null` means duration is not tied to on-site presence. It passes the duration check and must not be described as unlimited attendance.
+- Captain-approved input ceiling: duration must be greater than zero and at most 12 hours, or omitted. Twelve is the largest defined `max_hours` in the supplied CSV, not a minimum or a claim that all contractors support twelve hours. The UI and API both reject larger event durations; null attendance limits do not bypass this input rule.
 - Structured fields govern filtering. A description mentioning travel to another city does not expand the selected city's catalog; contradictions are documented rather than silently changing facts.
 - Keep all 66 supplied profiles. No extra synthetic contractors are needed for the MVP.
 

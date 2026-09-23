@@ -405,6 +405,7 @@
             "anyOf": [
               {
                 "type": "number",
+                "maximum": 12.0,
                 "exclusiveMinimum": 0.0
               },
               {

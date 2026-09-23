@@ -28,6 +28,11 @@ const result: MatchResponse = {
 };
 
 describe("interface locale", () => {
+  it("rejects a duration above the request ceiling while accepting the boundary and omission", () => {
+    for (const duration_hours of [12.0001, 13, 4903]) expect(invalidFields({ ...request, duration_hours }, metadata)).toContain("duration_hours");
+    for (const duration_hours of [null, 0.5, 12]) expect(invalidFields({ ...request, duration_hours }, metadata)).not.toContain("duration_hours");
+  });
+
   it("defaults to Russian and respects only a stored English preference", () => {
     expect(initialLocale()).toBe("ru");
     expect(initialLocale({ getItem: () => "en" })).toBe("en");
