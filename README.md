@@ -106,7 +106,7 @@ flowchart LR
 | `backend/app/matching/` | Ranking, evidence validation and card construction |
 | `backend/app/api/routes.py`, `main.py` | HTTP responses, startup validation and dataset/algorithm versions |
 | `data/contractors.csv` | Unchanged organizer-supplied 66-profile catalog |
-| `frontend/src/App.tsx`, `styles.css` | Form, cards, evidence, loading/error states and responsive presentation |
+| `frontend/src/App.tsx`, `frontend/src/styles/app.css` | Form, cards, evidence, loading/error states and responsive presentation |
 | `frontend/src/api/` | Typed transport, runtime response checks and opt-in design preview |
 | `frontend/src/i18n/` | Russian/English labels, evidence translations and locale checks |
 | `contracts/` | Published OpenAPI contract and three response examples |
@@ -241,7 +241,7 @@ To let Playwright start both services itself, activate `.venv` and set `RUN_APP_
 | Application browser acceptance | **8 Chromium tests passing** against the integrated app |
 | Domain and real HTTP scenarios | **8 scenarios × 20 repeats = 160 runs** in each check |
 | Built-bundle preview | Dense shortlist returned by the real backend through the local port 4173 preview |
-| Complete integrated fresh-clone reproduction | **Pending final verification**; the earlier `fff79d9` clone check covered only the earlier core and is not a full-app reproduction claim |
+| Complete integrated fresh-clone reproduction | **Passed at `1292b65`**, including fresh locked installs, all tests/build, six UI flows, eight real application flows and 160 real HTTP requests; see the [verification record](docs/reproducibility.md) |
 
 Measurements on **23 September 2026**, Windows 11, Python 3.12.10 and Chromium **153.0.8010.12**, with the CSV hash above and algorithm `explainable-v1:2553919e464d7030`:
 
@@ -266,6 +266,6 @@ The practical value is a short, repeatable shortlist with reasons the user can i
 | Value and applicability | 15 | Inspectable reasons, price/calendar caveats, responsive Russian/English interface and actionable exclusions |
 | Development potential and originality | 10 | Versioned extractive evidence, guarded offline proposals, reviewable translations and reproducible matching |
 
-See the [judging checklist](docs/judging-checklist.md) for the detailed demonstration mapping. Remaining release work is final clean-clone verification, CI rerun when the account permits it, and agreed integration into `main`. Potential product extensions include live calendar freshness, confirmed quotations, customer-approved changes to constraints, feedback-based evaluation and retrieval for a larger catalog; these are future work.
+See the [judging checklist](docs/judging-checklist.md) for the detailed demonstration mapping and the [complete clean-clone verification](docs/reproducibility.md). Remaining release work is CI rerun when the account permits it, agreed integration into `main`, and the team's live rehearsal/submission. Potential product extensions include live calendar freshness, confirmed quotations, customer-approved changes to constraints, feedback-based evaluation and retrieval for a larger catalog; these are future work.
 
 Team ownership: **Enjoy** — matching, evidence, integration and verification; **bbl** — backend models, catalog and filtering; **feature/sp3ctra** — interface design and frontend. Small increments are pushed to the owner's branch, and remote updates/contracts are checked before merging. See [Instructions.md](Instructions.md) and [team synchronization notes](docs/team-sync.md).

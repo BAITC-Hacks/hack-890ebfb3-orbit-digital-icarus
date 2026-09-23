@@ -46,7 +46,7 @@ Screenshots: [Russian](../docs/images/interface-ru.png) · [English](../docs/ima
 
 | Path | Purpose |
 | --- | --- |
-| `src/App.tsx`, `src/styles.css` | Form, result states, cards, evidence and responsive layout |
+| `src/App.tsx`, `src/styles/app.css` | Form, result states, cards, evidence and responsive layout |
 | `src/api/client.ts`, `types.ts` | Framework-independent transport, abort support, errors and runtime response guards |
 | `src/api/demo.ts` | Explicitly selected design-preview responses |
 | `src/i18n/index.ts`, `evidence.en.json` | Labels, factual English explanations, reviewed quote translations and locale persistence |
