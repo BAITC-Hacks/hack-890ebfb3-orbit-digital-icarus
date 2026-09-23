@@ -138,6 +138,21 @@ describe("App: explicit demo fixtures, not production matching", () => {
     expect(await screen.findByTestId("result-summary")).toBeVisible();
   });
 
+  it("accepts digits immediately after rejecting a letter in an empty duration", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    const duration = screen.getByLabelText("Длительность, ч", { exact: true });
+    await user.type(duration, "e");
+    expect(duration).toHaveValue("");
+    expect(duration).toHaveAttribute("aria-invalid", "true");
+    // No clearing, refocusing or reload should be necessary to enter a fresh number.
+    await user.type(duration, "6,5");
+    expect(duration).toHaveValue("6,5");
+    expect(duration).toHaveAttribute("aria-invalid", "false");
+    await submit(user);
+    expect(await screen.findByTestId("result-summary")).toBeVisible();
+  });
+
   it("accepts any positive fractional duration without inventing a half-hour constraint", async () => {
     const user = userEvent.setup();
     await renderPreview();

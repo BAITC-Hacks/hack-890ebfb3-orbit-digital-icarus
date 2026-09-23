@@ -189,8 +189,9 @@ export default function App() {
   function editNumeric(key: NumericField, value: string) {
     if (!acceptsNumeric(key, value)) { rejectNumericEdit(key); return; }
     // A rejected 'e' must not turn subsequent typing of '4e2' into 42.
-    // Clear, delete, select/replace or paste a valid value to correct the edit.
-    if (rejectedEdits.current.has(key) && value !== "" && value.length >= numericDrafts[key].length) {
+    // An empty draft has no numeric prefix to corrupt: the next valid input starts fresh.
+    // Nonempty rejected drafts still require deletion/replacement to avoid '4e2' becoming 42.
+    if (rejectedEdits.current.has(key) && numericDrafts[key] !== "" && value !== "" && value.length >= numericDrafts[key].length) {
       rejectNumericEdit(key);
       return;
     }
@@ -205,7 +206,7 @@ export default function App() {
     if (event.key === "Backspace" || event.key === "Delete") rejectedEdits.current.delete(key);
     if (event.key.length !== 1) return;
     const replacing = event.currentTarget.selectionStart !== event.currentTarget.selectionEnd;
-    if (!acceptsNumeric(key, event.key) || (rejectedEdits.current.has(key) && !replacing)) {
+    if (!acceptsNumeric(key, event.key) || (rejectedEdits.current.has(key) && numericDrafts[key] !== "" && !replacing)) {
       event.preventDefault();
       rejectNumericEdit(key);
     } else if (replacing) rejectedEdits.current.delete(key);
