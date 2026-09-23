@@ -15,8 +15,8 @@ export function usePage() {
       });
     };
     window.addEventListener("hashchange", navigate);
-    if (window.location.hash === "#/how") navigate(); // Direct help links also reach their section.
-    return () => window.removeEventListener("hashchange", navigate); // StrictMode must not duplicate listeners.
+    if (window.location.hash === "#/how") navigate();
+    return () => window.removeEventListener("hashchange", navigate);
   }, []);
   return page;
 }

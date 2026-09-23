@@ -39,7 +39,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         yield
 
     application = FastAPI(
-        title="Orbit Digital Contractor Matching",
+        title="Tandau Contractor Matching",
         version="0.1.0",
         description="Explainable event-contractor recommendations.",
         lifespan=lifespan,

@@ -22,11 +22,21 @@ const initialRequest: MatchRequest = {
 };
 type ErrorKind = "requestError" | "serviceError" | "responseError" | "validationError";
 type NumericField = "budget_kzt" | "duration_hours";
+type Theme = "light" | "dark";
+const THEME_STORAGE_KEY = "contractor-match-theme";
 const initials = (name: string) => name.split(" ").slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
 function storedLocale(): Locale {
   // Private browsing or disabled storage must not prevent the app from opening.
   try { return initialLocale(window.localStorage); } catch { return "ru"; }
+}
+
+function storedTheme(): Theme {
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  } catch { return "dark"; }
 }
 
 function Tag({ children }: { children: ReactNode }) {
@@ -101,6 +111,7 @@ function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; 
 export default function App() {
   const page = usePage(); // Navigation does not discard the customer's form or previous result.
   const [locale, setLocale] = useState<Locale>(storedLocale);
+  const [theme, setTheme] = useState<Theme>(storedTheme);
   const [form, setForm] = useState<MatchRequest>(initialRequest);
   const [numericDrafts, setNumericDrafts] = useState({ budget_kzt: String(initialRequest.budget_kzt), duration_hours: "" });
   const rejectedEdits = useRef(new Set<NumericField>());
@@ -120,13 +131,19 @@ export default function App() {
   const journey = journeyCopy[locale];
 
   useEffect(() => {
-    document.title = `Orbit · ${journey[page === "home" ? "home" : "match"]}`;
+    document.title = `Tandau · ${journey[page === "home" ? "home" : "match"]}`;
   }, [locale, page]); // Direct links and locale switches keep the browser title useful.
 
   useEffect(() => {
     document.documentElement.lang = locale;
     try { window.localStorage.setItem(LOCALE_STORAGE_KEY, locale); } catch { /* Locale still works for this page. */ }
   }, [locale]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#101815" : "#faf8f2");
+    try { window.localStorage.setItem(THEME_STORAGE_KEY, theme); } catch { /* The visual preference still works for this page. */ }
+  }, [theme]);
 
   async function loadCatalog() {
     // A generation guard also covers fetch implementations that ignore cancellation.
@@ -300,15 +317,21 @@ export default function App() {
     {/* The skip link moves focus without changing the hash route. */}
     <a className="skip-link" href="#content" onClick={event => { event.preventDefault(); document.getElementById("content")?.focus(); }}>{journey.skip}</a>
     <header className="site-header">
-      <a className="brand" href="#/" aria-label="Orbit"><span aria-hidden="true">◎</span> orbit</a>
+      <a className="brand" href="#/" aria-label="Tandau"><span aria-hidden="true">T</span> Tandau</a>
       <nav className="site-nav" aria-label={locale === "ru" ? "Основная навигация" : "Main navigation"}>
         <a href="#/" aria-current={page === "home" ? "page" : undefined}>{journey.home}</a>
         <a href="#/match" aria-current={page === "match" ? "page" : undefined}>{journey.match}</a>
       </nav>
-    <div className="locale-switcher" data-testid="locale-switcher" role="group" aria-label={t.interfaceLanguage}>
-      <span>{t.interfaceLanguage}</span>
-      <button type="button" lang="ru" aria-pressed={locale === "ru"} onClick={() => setLocale("ru")}>Русский</button>
-      <button type="button" lang="en" aria-pressed={locale === "en"} onClick={() => setLocale("en")}>English</button>
+    <div className="top-controls">
+      <div className="locale-switcher" data-testid="locale-switcher" role="group" aria-label={t.interfaceLanguage}>
+        <span>{t.interfaceLanguage}</span>
+        <button type="button" lang="ru" aria-pressed={locale === "ru"} onClick={() => setLocale("ru")}>Русский</button>
+        <button type="button" lang="en" aria-pressed={locale === "en"} onClick={() => setLocale("en")}>English</button>
+      </div>
+      <button className="theme-toggle" data-theme={theme} type="button" aria-pressed={theme === "dark"}
+        aria-label={theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"} onClick={() => setTheme(current => current === "dark" ? "light" : "dark")}>
+        <span aria-hidden="true">☼</span><span aria-hidden="true">☾</span>
+      </button>
     </div>
     </header>
     <main id="content" tabIndex={-1}>
