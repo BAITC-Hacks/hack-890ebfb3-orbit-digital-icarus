@@ -99,7 +99,9 @@ class MatchRequest(BaseModel):
     def require_numeric_duration(cls, value: object) -> object:
         """Accept a numeric JSON value or null, never a coerced boolean/string."""
 
-        if value is None or (isinstance(value, str) and not value.strip()):
+        if value is None:
+            return None
+        if isinstance(value, str) and not value.strip():
             return None
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError("must be a positive numeric value or null")

@@ -172,19 +172,14 @@ class ApiTests(unittest.TestCase):
             "string_budget": {"budget_kzt": "3000000"},
             "whole_number_float_budget": {"budget_kzt": 3_000_000.0},
             "boolean_duration": {"duration_hours": True},
-            "datetime_instead_of_date": {
-                "event_date": "2026-10-11T00:00:00"
-            },
+            "datetime_instead_of_date": {"event_date": "2026-10-11T00:00:00"},
             "impossible_date": {"event_date": "2026-02-30"},
         }
 
         with TestClient(app) as client:
             for name, override in invalid_values.items():
                 with self.subTest(name=name):
-                    response = client.post(
-                        "/api/match",
-                        json=base_payload | override,
-                    )
+                    response = client.post("/api/match", json=base_payload | override)
 
                     self.assertEqual(response.status_code, 422)
                     self.assertIsInstance(response.json()["detail"], list)
