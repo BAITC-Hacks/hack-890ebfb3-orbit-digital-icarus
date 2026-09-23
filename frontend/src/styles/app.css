@@ -27,7 +27,7 @@ input:focus, select:focus { border-color: #c75c2b; box-shadow: 0 0 0 3px rgb(199
 
 .locale-switcher { display: flex; justify-content: flex-end; align-items: center; gap: 0; margin: -28px 0 32px; padding: 5px; border-radius: 999px; color: #706b64; background: #f0eee6; font-size: .88rem; }
 .locale-switcher > span { margin-right: 5px; }
-.locale-switcher button { min-height: 48px; border: 0; border-radius: 999px; padding: 0 25px; background: transparent; color: #706b64; font-size: 1rem; font-weight: 750; transition: background .2s ease, color .2s ease, box-shadow .2s ease; }
+.locale-switcher button { min-height: 36px; border: 0; border-radius: 999px; padding: 0 18px; background: transparent; color: #706b64; font-size: .88rem; font-weight: 750; transition: background .2s ease, color .2s ease, box-shadow .2s ease; }
 .locale-switcher button[aria-pressed="true"] { color: #fff; background: #24211e; box-shadow: 0 3px 8px rgb(48 37 20 / 14%); }
 button:focus-visible, summary:focus-visible { outline: 3px solid #c75c2b; outline-offset: 4px; }
 button:disabled { cursor: not-allowed; }
@@ -62,7 +62,7 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 /* Theme toggle complements the language segmented control without competing with it. */
 .top-controls { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin: -28px 0 32px; }
 .top-controls .locale-switcher { margin: 0; }
-.theme-toggle { display: grid; width: 68px; height: 68px; place-items: center; padding: 0; border: 1px solid #ded9cf; border-radius: 50%; color: #6e6961; background: #fffdf8; font-size: 2rem; line-height: 1; transition: background .2s ease, border-color .2s ease, transform .2s ease; }
+.theme-toggle { display: grid; width: 42px; height: 42px; place-items: center; padding: 0; border: 1px solid #ded9cf; border-radius: 50%; color: #6e6961; background: #fffdf8; font-size: 1.25rem; line-height: 1; transition: background .2s ease, border-color .2s ease, transform .2s ease; }
 .theme-toggle:hover { border-color: #a9a297; background: #f5f2ea; transform: translateY(-1px); }.theme-toggle span:last-child { display: none; }.theme-toggle:focus-visible { outline: 3px solid #c75c2b; outline-offset: 4px; }
 @media (max-width: 760px) { .top-controls { justify-content: flex-start; margin-top: -12px; }.top-controls .locale-switcher > span { font-size: .8rem; } }
 
