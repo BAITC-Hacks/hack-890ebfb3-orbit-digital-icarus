@@ -3,12 +3,14 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router
 from .catalog import dataset_sha256, load_catalog
 from .matching import algorithm_version, load_evidence
 from .settings import AppSettings
+from .validation_errors import request_validation_exception_handler
 
 
 def create_app(settings: AppSettings | None = None) -> FastAPI:
@@ -43,6 +45,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     application.state.settings = resolved_settings
+    application.add_exception_handler(RequestValidationError, request_validation_exception_handler)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=list(resolved_settings.cors_origins),

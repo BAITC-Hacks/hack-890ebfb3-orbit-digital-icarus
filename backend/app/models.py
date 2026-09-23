@@ -198,6 +198,14 @@ class MatchCard(BaseModel):
     evidence: list[EvidenceItem] = Field(default_factory=list)
 
 
+class MatchAlternative(BaseModel):
+    """An explicit, verified change for the user to choose after an empty result."""
+
+    changed_field: Literal["city", "event_date", "budget_kzt"]
+    request: MatchRequest
+    eligible_total: int = Field(gt=0)
+
+
 class MatchResponse(BaseModel):
     """Stable response envelope for the match endpoint."""
 
@@ -210,6 +218,7 @@ class MatchResponse(BaseModel):
     counts: CountSummary
     exclusions: ExclusionCounts
     cards: list[MatchCard] = Field(default_factory=list, max_length=3)
+    alternatives: list[MatchAlternative] = Field(default_factory=list, max_length=3)
 
 
 class HealthResponse(BaseModel):

@@ -254,6 +254,35 @@
         ],
         "title": "HealthResponse"
       },
+      "MatchAlternative": {
+        "properties": {
+          "changed_field": {
+            "type": "string",
+            "enum": [
+              "city",
+              "event_date",
+              "budget_kzt"
+            ],
+            "title": "Changed Field"
+          },
+          "request": {
+            "$ref": "#/components/schemas/MatchRequest"
+          },
+          "eligible_total": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Eligible Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "changed_field",
+          "request",
+          "eligible_total"
+        ],
+        "title": "MatchAlternative",
+        "description": "An explicit, verified change for the user to choose after an empty result."
+      },
       "MatchCard": {
         "properties": {
           "id": {
@@ -452,6 +481,14 @@
             "type": "array",
             "maxItems": 3,
             "title": "Cards"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/MatchAlternative"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Alternatives"
           }
         },
         "type": "object",
