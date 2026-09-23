@@ -1,0 +1,557 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Orbit Digital Contractor Matching",
+    "description": "Explainable event-contractor recommendations.",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Report readiness only after catalog validation has succeeded.",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metadata": {
+      "get": {
+        "summary": "Metadata",
+        "description": "Return canonical values for form controls.",
+        "operationId": "metadata_api_metadata_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetadataResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/match": {
+      "post": {
+        "summary": "Match",
+        "description": "Validate, normalize, and hard-filter a matching request.\n\nB2 returns complete business-empty states. Matching candidates require the\nranking and grounded-card implementation owned by Enjoy, so this path\nremains an explicit 503 until that handoff is integrated.",
+        "operationId": "match_api_match_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Ranking and card construction are not integrated yet."
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CountSummary": {
+        "properties": {
+          "city_category_total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "City Category Total"
+          },
+          "eligible_total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Eligible Total"
+          },
+          "returned_total": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Returned Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "city_category_total",
+          "eligible_total",
+          "returned_total"
+        ],
+        "title": "CountSummary"
+      },
+      "EvidenceItem": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "availability",
+              "budget",
+              "format",
+              "language",
+              "duration",
+              "description"
+            ],
+            "title": "Code"
+          },
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ],
+            "title": "Value"
+          },
+          "source_quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Quote"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "field",
+          "value"
+        ],
+        "title": "EvidenceItem",
+        "description": "One fact supporting an explanation card."
+      },
+      "ExclusionCounts": {
+        "properties": {
+          "booked": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Booked",
+            "default": 0
+          },
+          "over_budget": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Over Budget",
+            "default": 0
+          },
+          "unsupported_format": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Unsupported Format",
+            "default": 0
+          },
+          "unsupported_language": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Unsupported Language",
+            "default": 0
+          },
+          "duration_exceeded": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Duration Exceeded",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "ExclusionCounts",
+        "description": "Mutually exclusive first-failure counts for a city/category pool."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ready",
+            "title": "Status"
+          },
+          "profile_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Profile Count"
+          },
+          "dataset_version": {
+            "type": "string",
+            "title": "Dataset Version"
+          },
+          "algorithm_version": {
+            "type": "string",
+            "title": "Algorithm Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "profile_count",
+          "dataset_version",
+          "algorithm_version"
+        ],
+        "title": "HealthResponse"
+      },
+      "MatchCard": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "anon_name": {
+            "type": "string",
+            "title": "Anon Name"
+          },
+          "category": {
+            "type": "string",
+            "title": "Category"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "price_from_kzt": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Price From Kzt"
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Event Date"
+          },
+          "availability": {
+            "type": "string",
+            "const": "free_in_dataset",
+            "title": "Availability",
+            "default": "free_in_dataset"
+          },
+          "synthetic": {
+            "type": "boolean",
+            "title": "Synthetic"
+          },
+          "source_kind": {
+            "type": "string",
+            "enum": [
+              "provided",
+              "team_added"
+            ],
+            "title": "Source Kind"
+          },
+          "city_imputed": {
+            "type": "boolean",
+            "title": "City Imputed"
+          },
+          "price_imputed": {
+            "type": "boolean",
+            "title": "Price Imputed"
+          },
+          "explanation": {
+            "type": "string",
+            "title": "Explanation"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceItem"
+            },
+            "type": "array",
+            "title": "Evidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "anon_name",
+          "category",
+          "categories",
+          "city",
+          "price_from_kzt",
+          "event_date",
+          "synthetic",
+          "source_kind",
+          "city_imputed",
+          "price_imputed",
+          "explanation"
+        ],
+        "title": "MatchCard",
+        "description": "One ranked contractor returned to the customer."
+      },
+      "MatchRequest": {
+        "properties": {
+          "city": {
+            "type": "string",
+            "maxLength": 80,
+            "title": "City"
+          },
+          "event_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Event Date"
+          },
+          "event_format": {
+            "type": "string",
+            "maxLength": 80,
+            "title": "Event Format"
+          },
+          "category": {
+            "type": "string",
+            "maxLength": 120,
+            "title": "Category"
+          },
+          "budget_kzt": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Budget Kzt"
+          },
+          "duration_hours": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Hours"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          }
+        },
+        "type": "object",
+        "required": [
+          "city",
+          "event_date",
+          "event_format",
+          "category",
+          "budget_kzt"
+        ],
+        "title": "MatchRequest",
+        "description": "Normalized request accepted by the matching domain."
+      },
+      "MatchResponse": {
+        "properties": {
+          "schema_version": {
+            "type": "string",
+            "title": "Schema Version",
+            "default": "1"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "matches_found",
+              "category_absent",
+              "no_eligible_contractors"
+            ],
+            "title": "Status"
+          },
+          "request": {
+            "$ref": "#/components/schemas/MatchRequest"
+          },
+          "dataset_version": {
+            "type": "string",
+            "title": "Dataset Version"
+          },
+          "algorithm_version": {
+            "type": "string",
+            "title": "Algorithm Version"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/CountSummary"
+          },
+          "exclusions": {
+            "$ref": "#/components/schemas/ExclusionCounts"
+          },
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/MatchCard"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Cards"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "request",
+          "dataset_version",
+          "algorithm_version",
+          "message",
+          "counts",
+          "exclusions"
+        ],
+        "title": "MatchResponse",
+        "description": "Stable response envelope for the match endpoint."
+      },
+      "MetadataResponse": {
+        "properties": {
+          "cities": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Cities"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "event_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Event Formats"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "calendar_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Calendar Start"
+          },
+          "calendar_end": {
+            "type": "string",
+            "format": "date",
+            "title": "Calendar End"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cities",
+          "categories",
+          "event_formats",
+          "languages",
+          "calendar_start",
+          "calendar_end"
+        ],
+        "title": "MetadataResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

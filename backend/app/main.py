@@ -1,0 +1,58 @@
+"""FastAPI application entrypoint.
+
+Run the service from the repository root with:
+
+    uvicorn backend.app.main:app --reload
+"""
+
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from .api.routes import router
+from .catalog import CatalogValidationError, dataset_sha256, load_catalog
+from .settings import AppSettings
+
+
+def create_app(settings: AppSettings | None = None) -> FastAPI:
+    """Create the API with explicit, testable startup configuration."""
+
+    resolved_settings = settings or AppSettings.from_environment()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Load the entire catalog before accepting API traffic."""
+
+        try:
+            catalog = load_catalog(resolved_settings.data_path)
+        except CatalogValidationError as error:
+            raise RuntimeError(
+                f"Catalog startup validation failed: {error}"
+            ) from error
+
+        app.state.catalog = catalog
+        app.state.dataset_version = dataset_sha256(resolved_settings.data_path)
+        app.state.algorithm_version = resolved_settings.algorithm_version
+        yield
+
+    application = FastAPI(
+        title="Orbit Digital Contractor Matching",
+        version="0.1.0",
+        description="Explainable event-contractor recommendations.",
+        lifespan=lifespan,
+    )
+    application.state.settings = resolved_settings
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(resolved_settings.cors_origins),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
+        max_age=600,
+    )
+    application.include_router(router)
+    return application
+
+
+app = create_app()

@@ -1,0 +1,59 @@
+{
+  "schema_version": "1",
+  "status": "matches_found",
+  "request": {
+    "city": "Алматы",
+    "event_date": "2026-10-10",
+    "event_format": "свадьба",
+    "category": "Флорист",
+    "budget_kzt": 300000,
+    "duration_hours": null,
+    "language": null
+  },
+  "dataset_version": "6a724b6b7dfb5973343e68ba18dadb60fc807d87e3d78f03ee86fb26cb089f7d",
+  "algorithm_version": "hard-filter-v1",
+  "message": "Найден 1 подходящий подрядчик из 2 в этой категории.",
+  "counts": {
+    "city_category_total": 2,
+    "eligible_total": 1,
+    "returned_total": 1
+  },
+  "exclusions": {
+    "booked": 1,
+    "over_budget": 0,
+    "unsupported_format": 0,
+    "unsupported_language": 0,
+    "duration_exceeded": 0
+  },
+  "cards": [
+    {
+      "id": "HK-39372",
+      "anon_name": "Тони Тони Чоппер",
+      "category": "Флорист",
+      "categories": ["Флорист"],
+      "city": "Алматы",
+      "price_from_kzt": 200000,
+      "event_date": "2026-10-10",
+      "availability": "free_in_dataset",
+      "synthetic": false,
+      "source_kind": "provided",
+      "city_imputed": false,
+      "price_imputed": true,
+      "explanation": "Доступен на выбранную дату и работает со свадьбами. Стартовая цена от 200 000 ₸ укладывается в бюджет 300 000 ₸.",
+      "evidence": [
+        {
+          "code": "availability",
+          "field": "busy_dates",
+          "value": "2026-10-10",
+          "source_quote": null
+        },
+        {
+          "code": "budget",
+          "field": "price_from_kzt",
+          "value": 200000,
+          "source_quote": null
+        }
+      ]
+    }
+  ]
+}
