@@ -183,10 +183,7 @@ class ApiTests(unittest.TestCase):
         with TestClient(app) as client:
             for name, override in invalid_values.items():
                 with self.subTest(name=name):
-                    response = client.post(
-                        "/api/match",
-                        json=base_payload | override,
-                    )
+                    response = client.post("/api/match", json=base_payload | override)
 
                     self.assertEqual(response.status_code, 422)
                     self.assertIsInstance(response.json()["detail"], list)
