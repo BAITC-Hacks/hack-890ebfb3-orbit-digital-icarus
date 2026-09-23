@@ -4,7 +4,7 @@ Orbit Digital | Icarus · hackathon task **#79-lite**
 
 Find an event contractor in Kazakhstan without searching a long catalog. Enter the city, date, event format, category and budget to receive **up to three eligible profiles**, each with a short explanation and inspectable evidence. A date change can change the shortlist; a rare category can return one card; an empty result explains what prevented a match.
 
-**The integrated local application works on the `Enjoy` branch:** React interface, FastAPI service, production filtering, deterministic ranking and grounded explanations. Russian is the default interface; a separate English switch preserves Russian source quotes and canonical request values. This is a local hackathon demonstration; it has not yet been released to `main` or deployed as a booking service.
+**The integrated application is on `main`:** React interface, FastAPI service, production filtering, deterministic ranking, grounded explanations and verified recovery suggestions for empty results. Russian is the default interface; a separate English switch preserves Russian source quotes and canonical request values. This is a local hackathon demonstration, not a deployed booking service.
 
 ![Russian interface showing a real API shortlist](docs/images/interface-ru.png)
 
@@ -19,7 +19,6 @@ Run all commands below from the repository root:
 ```bash
 git clone https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus.git
 cd hack-890ebfb3-orbit-digital-icarus
-git switch Enjoy
 python -m venv .venv
 ```
 
@@ -64,6 +63,19 @@ Open **http://127.0.0.1:5173**. The frontend proxies `/api` to port 8000. API do
 
 The catalog is bundled as `data/contractors.csv`. Setup and matching do not read a developer's Downloads folder or contact an AI provider. `VITE_API_MODE=demo` is an explicit, visibly labeled design-preview option; leave it unset for the real application. API errors never switch to preview data.
 
+### Environment variables
+
+Every variable is optional; the commands above work with none of them set. Examples are in `.env.example` and `frontend/.env.example`. Load a copied backend file with `python -m uvicorn backend.app.main:app --env-file .env`.
+
+| Variable | Used by | Default | Purpose |
+| --- | --- | --- | --- |
+| `DATA_PATH` | Backend | `data/contractors.csv` | Catalog CSV; relative paths resolve from the repository root |
+| `CORS_ORIGINS` | Backend | `http://127.0.0.1:5173,http://localhost:5173` | Comma-separated browser origins allowed to call the API |
+| `VITE_API_MODE` | Frontend | `api` | `demo` shows a labeled design preview; leave unset for real matching |
+| `RUN_APP_SERVERS` | `npm run test:e2e` | unset | `1` lets Playwright start the backend and frontend itself |
+| `E2E_BASE_URL`, `E2E_API_URL` | `npm run test:e2e` | local ports 5173 / 8000 | Point browser acceptance at already-running services |
+| `NVIDIA_API_KEY`, `OPENAI_API_KEY` | Optional offline evidence tool only | unset | Never needed by the app, tests or checks; prefer `--key-file` outside the repository |
+
 ### Build and preview
 
 ```bash
@@ -80,6 +92,10 @@ The build runs the application TypeScript check and writes `frontend/dist`. Keep
 3. Change only the date to **2026-10-10**. The shortlist becomes `HK-27222 → HK-77838 → HK-72938` because availability and the eligible pool change.
 4. Try **Алматы / Флорист / свадьба / 2026-10-10 / 300,000 ₸**. One card, `HK-39372`, is returned. The other florist is booked; the 200,000 ₸ starting price is explicitly marked as imputed.
 5. Compare **Астана / Декоратор** with **Астана / Флорист / 2026-10-11 / 300,000 ₸**. The first category is absent in the city; the second exists but has no eligible profile.
+
+6. Try **Астана / Ресторан / свадьба / 2026-10-31 / 4 000 000 ₸**. The category is absent in Astana, so the result offers checked one-field alternatives. Choosing the suggested city **Алматы** runs a new search with the other fields unchanged and returns one eligible profile. Suggestions never change the query without a click.
+
+The budget field accepts plain digits or correctly grouped thousands such as `4 000 000`. Letters, exponents such as `4e6`, signs and badly grouped numbers are rejected with an error instead of being silently repaired.
 
 All dates are in 2026 and prices are per contractor's service. See the [complete demo](docs/demo.md) for the venue date pair, December scarcity, exclusion counts and explanation audit.
 
@@ -114,7 +130,7 @@ flowchart LR
 | `tests/ui/`, `playwright.ui.config.ts` | Isolated browser checks with explicitly mocked API responses |
 | `tests/e2e/`, `playwright.config.ts` | Browser acceptance against the running application |
 | `scripts/` | Independent dataset oracle, live HTTP checks, browser timing and offline evidence review tools |
-| `.github/workflows/enjoy-checks.yml` | Locked setup, tests, build and real-browser CI workflow |
+| `.github/workflows/enjoy-checks.yml` | Locked setup, tests, build and real-browser checks; manual trigger only, see [Automated checks](#automated-checks) |
 | `Instructions.md`, `docs/` | Shared architecture, responsibilities, demo, evidence and integration notes |
 
 Backend dependencies are pinned to FastAPI **0.136.1**, Pydantic **2.13.3**, Uvicorn **0.46.0**, pytest **9.1.1** and HTTPX **0.28.1**, with resolved dependencies and platform markers in `requirements-dev.lock`. The UI uses React **19.1.1**, Vite **7.3.6** and TypeScript **5.9.2**. Root integration tools separately pin Playwright **1.63.0**, Vitest **5.0.1** and TypeScript **5.8.3**. Both npm packages have lockfiles and require their own `npm ci`.
@@ -211,12 +227,14 @@ python scripts/matching_acceptance.py --repeat 20
 python scripts/validate_evidence_proposal.py --input backend/app/matching/profile_evidence.json
 npm run test:client
 npm run test:i18n
+npm run test:numeric
+npm --prefix frontend test
 npm run typecheck:client
 npm --prefix frontend run build
 npm run test:ui
 ```
 
-`test:ui` starts Vite and uses explicit mocked metadata/match responses. Its six flows check the interface independently; they are not evidence that backend matching works. The domain acceptance tool independently loads and filters the bundled data, checks frozen ordered IDs and repeatability, and can print full cards with `--json`.
+`test:ui` starts Vite and uses explicit mocked metadata/match responses. Its flows check the interface independently; they are not evidence that backend matching works. The domain acceptance tool independently loads and filters the bundled data, checks frozen ordered IDs and repeatability, and can print full cards with `--json`.
 
 With the real backend and frontend running in the two terminals:
 
@@ -234,13 +252,14 @@ To let Playwright start both services itself, activate `.venv` and set `RUN_APP_
 
 | Check | Result |
 | --- | --- |
-| Python suite | **91 passing tests and 218 subtests**, including API/filter integration, startup/CORS configuration, source validation, deterministic matching and mocked offline-provider checks |
-| Transport / locale unit tests | **49 client + 16 localization tests passing** |
+| Python suite | **114 passing tests and 253 subtests**, including API/filter integration, startup/CORS configuration, source validation, deterministic matching and mocked offline-provider checks |
+| Transport, locale, numeric and component tests | **95 client + 16 localization + 8 numeric + 9 component tests passing** |
 | Strict transport types / full frontend build | **Passing** |
-| Isolated mocked browser UI | **6 Chromium tests passing** |
-| Application browser acceptance | **8 Chromium tests passing** against the integrated app |
+| Isolated mocked browser UI | **13 Chromium tests passing** |
+| Application browser acceptance | **11 Chromium tests passing** against the integrated app, including recovery suggestions |
 | Domain and real HTTP scenarios | **8 scenarios × 20 repeats = 160 runs** in each check |
 | Built-bundle preview | Dense shortlist returned by the real backend through the local port 4173 preview |
+| All three branches integrated | Every suite above, the domain acceptance runs, the type check and the production build were rerun on 23 September 2026 after merging `Enjoy`, `bbl` and `feature/sp3ctra` into `main` |
 | Complete integrated fresh-clone reproduction | **Passed at `1292b65`** with fresh locked installs and 160 real HTTP requests; all suites/build passed again at **`190696c`** after three more teammate tests, with unchanged application/dependencies; see the [verification record](docs/reproducibility.md) |
 
 Measurements on **23 September 2026**, Windows 11, Python 3.12.10 and Chromium **153.0.8010.12**, with the CSV hash above and algorithm `explainable-v1:2553919e464d7030`:
@@ -252,7 +271,9 @@ Measurements on **23 September 2026**, Windows 11, Python 3.12.10 and Chromium *
 
 Browser timing includes automation click/wait overhead. These local measurements exclude installation and server startup; they do not predict internet hosting latency or production throughput. The measured local flows are below the task's ten-second target. Rerun the commands to measure the current machine and versions.
 
-The CI workflow includes locked installation, Python/client/locale checks, the frontend build and both browser suites. [The inspected run for `d6933a1`](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798) executed zero test steps: GitHub reported, “The job was not started because your account is locked due to a billing issue.” Local results above are verified; a green cloud run is not claimed. The repository owner must resolve that account condition and rerun CI. Each push triggers a new attempt and can generate another failure notification.
+### Automated checks
+
+`.github/workflows/enjoy-checks.yml` runs the same steps as this section: locked installation, Python, domain acceptance, client, locale, numeric and component checks, the type check, the frontend build and both browser suites. GitHub cannot start any job in the organizer's `BAITC-Hacks` organization. Every run fails in about three seconds with “The job was not started because your account is locked due to a billing issue.” ([example run](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798)). That is an organization billing condition, not a test failure. The workflow is therefore set to manual `workflow_dispatch` only, so pushes do not show false red checks. Run the commands above locally; a green cloud run is not claimed. Restore the `push` and `pull_request` triggers once the organization's Actions billing works.
 
 ## Value, judging and next steps
 
@@ -266,6 +287,30 @@ The practical value is a short, repeatable shortlist with reasons the user can i
 | Value and applicability | 15 | Inspectable reasons, price/calendar caveats, responsive Russian/English interface and actionable exclusions |
 | Development potential and originality | 10 | Versioned extractive evidence, guarded offline proposals, reviewable translations and reproducible matching |
 
-See the [judging checklist](docs/judging-checklist.md) for the detailed demonstration mapping and the [complete clean-clone verification](docs/reproducibility.md). Remaining release work is CI rerun when the account permits it, agreed integration into `main`, and the team's live rehearsal/submission. Potential product extensions include live calendar freshness, confirmed quotations, customer-approved changes to constraints, feedback-based evaluation and retrieval for a larger catalog; these are future work.
+See the [judging checklist](docs/judging-checklist.md) for the detailed demonstration mapping and the [complete clean-clone verification](docs/reproducibility.md). Remaining release work is a cloud CI run once the organization's Actions billing permits it, and the team's live rehearsal/submission. Potential product extensions include live calendar freshness, confirmed quotations, customer-approved changes to constraints, feedback-based evaluation and retrieval for a larger catalog; these are future work.
 
-Team ownership: **Enjoy** — matching, evidence, integration and verification; **bbl** — backend models, catalog and filtering; **feature/sp3ctra** — interface design and frontend. Small increments are pushed to the owner's branch, and remote updates/contracts are checked before merging. See [Instructions.md](Instructions.md) and [team synchronization notes](docs/team-sync.md).
+Team ownership: **Enjoy** (`Enjoy` branch) — matching, evidence, integration and verification; **bbl** (`bbl` branch) — backend models, catalog and filtering; **spectra** (`feature/sp3ctra` branch) — interface design and frontend. All work is merged into `main` through pull requests. Small increments are pushed to the owner's branch, and remote updates/contracts are checked before merging. See [Instructions.md](Instructions.md) and [team synchronization notes](docs/team-sync.md).
+
+## Third-party components, data and AI tools
+
+Disclosed under the hackathon rules on third-party materials. All core matching, filtering, API, interface and test code was written by the team during the competition.
+
+| Component | Version | License | Use |
+| --- | --- | --- | --- |
+| FastAPI | 0.136.1 | MIT | HTTP API |
+| Pydantic | 2.13.3 | MIT | Request and response validation |
+| Uvicorn | 0.46.0 | BSD-3-Clause | ASGI server |
+| pytest, HTTPX | 9.1.1, 0.28.1 | MIT, BSD-3-Clause | Backend tests |
+| React, React DOM | 19.1.1 | MIT | Interface |
+| Vite, @vitejs/plugin-react | 7.3.6, 5.0.2 | MIT | Frontend build and dev server |
+| TypeScript | 5.9.2 (frontend), 5.8.3 (root) | Apache-2.0 | Type checking |
+| Vitest, Testing Library, jsdom | 5.0.1, 16.3.0, 26.1.0 | MIT | Unit and component tests |
+| Playwright | 1.63.0 | Apache-2.0 | Browser tests |
+
+Full resolved dependency sets are in `requirements-dev.lock`, `package-lock.json` and `frontend/package-lock.json`.
+
+- **Dataset:** `data/contractors.csv` is the unchanged organizer-supplied catalog, including its 13 synthetic profiles, imputed values and calendar. The team added no profiles.
+- **Design:** `design.pdf` and the interface design were made by the team.
+- **Fonts:** the interface uses locally installed system fonts; no web fonts are downloaded.
+- **AI coding assistants:** OpenAI Codex and Anthropic Claude Code were used as development tools for code, tests, reviews and documentation, as the rules allow. The team directed and reviewed the work.
+- **AI in the product:** none at runtime. The optional offline evidence tool in `scripts/propose_evidence.py` can call the OpenAI or NVIDIA API with the operator's own key. No model output was adopted into the shipped evidence, and the app never needs a key or a personal account.

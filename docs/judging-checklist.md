@@ -1,6 +1,6 @@
 # Judging evidence and release gates
 
-This maps the organizer's requirements and 100-point rubric to the implemented local application on `Enjoy`. It records evidence and limitations; the jury awards the score. Follow the [README](../README.md) for installation and the [live demo](demo.md) for exact inputs.
+This maps the organizer's requirements and 100-point rubric to the implemented local application on `main`. It records evidence and limitations; the jury awards the score. Follow the [README](../README.md) for installation and the [live demo](demo.md) for exact inputs.
 
 ## Five judging criteria
 
@@ -49,8 +49,8 @@ Recorded runtime: Windows 11, Python 3.12.10, Node 26.7.0, npm 11.19.0, Chromium
 - [x] Local automated suites, production build, built-preview/API proxy and measured response target checked.
 - [x] Source data and locked dependencies bundled; provider keys remain outside Git.
 - [x] Final integrated clean-clone installation and regression [completed and recorded](reproducibility.md) at `1292b65`.
-- [ ] Cloud workflow green after the repository owner's GitHub billing lock is resolved. The [inspected run](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798) ran zero test steps.
-- [ ] The team merges the tested `Enjoy` revision into `main` and reruns the release checks there.
+- [ ] Cloud workflow green after the organizer's GitHub billing lock is resolved. The [inspected run](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798) ran zero test steps, so the workflow is manual-only until then.
+- [x] All three branches are merged into `main`, and the release checks were rerun on the integrated revision.
 - [ ] Rehearse the live demo and submit the repository/demo links through the tournament portal before its actual deadline.
 
 A hosted deployment is optional future work for this local deliverable. No public deployment, confirmed booking, independently verified contractor claims or guaranteed judging score is claimed.

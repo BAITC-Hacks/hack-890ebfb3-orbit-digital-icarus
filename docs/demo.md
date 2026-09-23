@@ -1,6 +1,6 @@
 # Reproducible demo and explanation audit
 
-These scenarios are verified against the bundled 66-profile CSV, the integrated production API and the React interface on `Enjoy`. The local application is ready to demonstrate: the real-browser suite passed eight tests, and a separate six-test mocked suite checked interface behavior. Follow the [root setup](../README.md#run-from-a-fresh-checkout) and keep the backend and frontend running. Leave `VITE_API_MODE` unset so the interface uses the real API.
+These scenarios are verified against the bundled 66-profile CSV, the integrated production API and the React interface on `main`. The local application is ready to demonstrate: the real-browser suite passed 11 tests, and a separate 13-test mocked suite checked interface behavior. Follow the [root setup](../README.md#run-from-a-fresh-checkout) and keep the backend and frontend running. Leave `VITE_API_MODE` unset so the interface uses the real API.
 
 From the repository root:
 
