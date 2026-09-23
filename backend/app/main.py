@@ -1,47 +1,58 @@
-"""FastAPI application entrypoint.
-
-Run the service from the repository root with:
-
-    uvicorn backend.app.main:app --reload
-"""
+"""FastAPI application and explicit, testable startup configuration."""
 
 from contextlib import asynccontextmanager
-from os import getenv
-from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router
-from .catalog import DEFAULT_DATA_PATH, dataset_sha256, load_catalog
+from .catalog import dataset_sha256, load_catalog
 from .matching import algorithm_version, load_evidence
+from .settings import AppSettings
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Load the entire catalog before accepting API traffic."""
+def create_app(settings: AppSettings | None = None) -> FastAPI:
+    """Build the API and validate its catalog and evidence before readiness."""
 
-    try:
-        data_path = Path(getenv("DATA_PATH", str(DEFAULT_DATA_PATH)))
-        if not data_path.is_absolute():
-            data_path = DEFAULT_DATA_PATH.parent.parent / data_path
-        catalog = load_catalog(data_path)
-        dataset_version = dataset_sha256(data_path)
-        evidence = load_evidence(catalog, dataset_sha256=dataset_version)
-    except (ValueError, OSError) as error:
-        raise RuntimeError(f"Catalog/evidence startup validation failed: {error}") from error
+    resolved_settings = settings or AppSettings.from_environment()
 
-    app.state.catalog = catalog
-    app.state.dataset_version = dataset_version
-    app.state.evidence = evidence
-    app.state.algorithm_version = algorithm_version()
-    yield
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        """Load the entire catalog before accepting API traffic."""
+
+        try:
+            catalog = load_catalog(resolved_settings.data_path)
+            dataset_version = dataset_sha256(resolved_settings.data_path)
+            evidence = load_evidence(catalog, dataset_sha256=dataset_version)
+            version = algorithm_version()
+        except (ValueError, OSError) as error:
+            raise RuntimeError(
+                f"Catalog/evidence startup validation failed: {error}"
+            ) from error
+
+        app.state.catalog = catalog
+        app.state.dataset_version = dataset_version
+        app.state.evidence = evidence
+        app.state.algorithm_version = version
+        yield
+
+    application = FastAPI(
+        title="Orbit Digital Contractor Matching",
+        version="0.1.0",
+        description="Explainable event-contractor recommendations.",
+        lifespan=lifespan,
+    )
+    application.state.settings = resolved_settings
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=list(resolved_settings.cors_origins),
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type"],
+        max_age=600,
+    )
+    application.include_router(router)
+    return application
 
 
-app = FastAPI(
-    title="Orbit Digital Contractor Matching",
-    version="0.1.0",
-    description="Explainable event-contractor recommendations.",
-    lifespan=lifespan,
-)
-
-app.include_router(router)
+app = create_app()
