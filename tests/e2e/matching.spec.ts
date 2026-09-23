@@ -44,7 +44,8 @@ function form(page: Page) {
 }
 
 function submitButton(page: Page) {
-  return form(page).getByRole("button", { name: /подобрать|найти|поиск|match|search/i }).first();
+  // The accessible name changes while loading; the submit control stays the same.
+  return form(page).locator('button[type="submit"]');
 }
 
 async function fillRequest(page: Page, payload: MatchRequest) {
@@ -248,21 +249,17 @@ test("in-flight protection prevents an older date from replacing the newer resul
   await expect(form(page)).toHaveAttribute("aria-busy", "true");
   const newer = { ...DENSE, event_date: "2026-10-10" };
   try {
-    if (await submitButton(page).isDisabled()) {
-      // Serial submission is a valid safeguard: no later request can overtake this one.
-      releaseOld();
-      await oldFinished;
-      await expect(submitButton(page)).toBeEnabled();
-      const current = await submit(page, newer);
-      await assertRendered(page, current);
-    } else {
-      // UIs allowing a second request must ignore or abort the delayed first response.
-      const current = await submit(page, newer);
-      releaseOld();
-      await oldFinished;
-      await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
-      await assertRendered(page, current);
-    }
+    // Editing stays available during a search and must invalidate that search.
+    // Keep the old response held until the newer result is already displayed.
+    await expect(await field(page, "event_date")).toBeEnabled();
+    await (await field(page, "event_date")).fill(newer.event_date);
+    await expect(submitButton(page)).toBeEnabled();
+    const current = await submit(page, newer);
+    expect(current.request.event_date).toBe("2026-10-10");
+    releaseOld();
+    await oldFinished;
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => resolve())));
+    await assertRendered(page, current);
   } finally {
     releaseOld();
     await page.unroute("**/api/match");
