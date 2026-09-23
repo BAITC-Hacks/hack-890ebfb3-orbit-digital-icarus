@@ -119,6 +119,32 @@ describe("App: explicit demo fixtures, not production matching", () => {
     expect(document.documentElement.lang).toBe("ru");
   });
 
+  it("switches the visual theme and remembers the choice", async () => {
+    window.localStorage.setItem("contractor-match-theme", "dark");
+    const user = userEvent.setup();
+    await renderPreview();
+
+    const toggle = screen.getByRole("switch", { name: "Тёмная тема" });
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    await user.click(toggle);
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(window.localStorage.getItem("contractor-match-theme")).toBe("light");
+    expect(screen.getByRole("switch", { name: "Тёмная тема" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("opens Tandau's product journey first and carries a selected category into matching", async () => {
+    window.history.replaceState(null, "", "/");
+    const user = userEvent.setup();
+    render(<App />);
+
+    expect(screen.getByTestId("home-page")).toBeVisible();
+    expect(screen.queryByTestId("match-form")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Флорист/ }));
+    await waitFor(() => expect(screen.getByTestId("match-form")).toBeVisible());
+    expect(screen.getByRole("combobox", { name: "Категория подрядчика" })).toHaveValue("Флорист");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
   it("renders the demonstration shortlist in fixture order and preserves it in English", async () => {
     const user = userEvent.setup();
     await renderPreview();
