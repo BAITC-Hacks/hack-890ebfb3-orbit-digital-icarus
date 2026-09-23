@@ -67,9 +67,18 @@ class MatchRequest(BaseModel):
     @field_validator("language", mode="before")
     @classmethod
     def clean_optional_language(cls, value: object) -> str | None:
-        if value is None:
+        if value is None or (isinstance(value, str) and not value.strip()):
             return None
         return _clean_required_text(value)
+
+    @field_validator("duration_hours", mode="before")
+    @classmethod
+    def clean_optional_duration(cls, value: object) -> object:
+        if isinstance(value, bool):
+            raise ValueError("must be a positive number")
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @field_validator("budget_kzt", mode="before")
     @classmethod

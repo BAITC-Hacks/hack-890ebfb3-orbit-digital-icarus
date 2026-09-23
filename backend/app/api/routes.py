@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Request, status
 
 from ..constants import CALENDAR_END, CALENDAR_START
 from ..filtering import filter_candidates
+from ..matching import build_cards, rank_candidates
 from ..models import (
     CountSummary,
     HealthResponse,
@@ -115,28 +116,15 @@ def _no_eligible_message(request_body: MatchRequest, exclusions) -> str:
     )
 
 
-@router.post(
-    "/match",
-    response_model=MatchResponse,
-    responses={
-        status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "description": "Ranking and card construction are not integrated yet."
-        }
-    },
-)
+@router.post("/match", response_model=MatchResponse)
 def match(request_body: MatchRequest, request: Request) -> MatchResponse:
-    """Validate, normalize, and hard-filter a matching request.
-
-    B2 returns complete business-empty states. Matching candidates require the
-    ranking and grounded-card implementation owned by Enjoy, so this path
-    remains an explicit 503 until that handoff is integrated.
-    """
+    """Validate, filter, rank and render from the same versioned catalog."""
 
     try:
         normalized_request = normalize_match_request(request_body, _catalog(request))
     except ValueError as error:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
                 "code": "unsupported_catalog_value",
                 "message": str(error),
@@ -167,18 +155,23 @@ def match(request_body: MatchRequest, request: Request) -> MatchResponse:
             request=request,
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail={
-            "code": "ranking_not_integrated",
-            "message": (
-                f"Found {len(filtered.eligible)} eligible candidates, but ranking "
-                "and grounded card construction are not integrated yet."
-            ),
-            "counts": {
-                "city_category_total": filtered.city_category_total,
-                "eligible_total": len(filtered.eligible),
-            },
-            "exclusions": filtered.exclusions.model_dump(),
-        },
+    evidence = request.app.state.evidence
+    ranked = rank_candidates(normalized_request, filtered.eligible, evidence)
+    cards = build_cards(normalized_request, ranked, evidence)
+    return MatchResponse(
+        status="matches_found",
+        request=normalized_request,
+        dataset_version=request.app.state.dataset_version,
+        algorithm_version=request.app.state.algorithm_version,
+        message=(
+            f"Подходит {len(filtered.eligible)} из {filtered.city_category_total} "
+            f"профилей категории; показано {len(cards)}."
+        ),
+        counts=CountSummary(
+            city_category_total=filtered.city_category_total,
+            eligible_total=len(filtered.eligible),
+            returned_total=len(cards),
+        ),
+        exclusions=filtered.exclusions,
+        cards=cards,
     )
