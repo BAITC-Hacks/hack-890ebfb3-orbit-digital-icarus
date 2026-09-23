@@ -1,24 +1,22 @@
-bbl.md
-
-# Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
-venv/
-*.egg-info/
-
-# Frontend
 node_modules/
 dist/
-*.tsbuildinfo
-test-results/
-playwright-report/
-artifacts/
-
-# Local environment and tooling
 .env
 .env.*
 !.env.example
+test-results/
+playwright-report/
+artifacts/
+venv/
 .DS_Store
-tmp/
+bbl.md
+*.egg-info/
+# Credentials belong outside the repository; local proposals/usage live in artifacts/.
+*_API_KEY*
+*_api_key*
+secrets/
+.vitest/
+*.tsbuildinfo

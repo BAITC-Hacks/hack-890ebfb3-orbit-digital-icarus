@@ -1,9 +1,12 @@
-"""B1 API contract tests."""
+"""API contract tests across the integrated data, filtering and matching layers."""
 
 from fastapi.testclient import TestClient
+from time import perf_counter
 import unittest
 
 from backend.app.main import app
+from backend.app.matching import algorithm_version
+from scripts.matching_acceptance import demo_requests
 
 
 class ApiTests(unittest.TestCase):
@@ -16,6 +19,28 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(body["status"], "ready")
         self.assertEqual(body["profile_count"], 66)
         self.assertEqual(len(body["dataset_version"]), 64)
+        self.assertEqual(body["algorithm_version"], algorithm_version())
+
+    def test_empty_optional_values_normalize_to_null(self) -> None:
+        payload = demo_requests()["rare_florist"] | {"language": "  ", "duration_hours": ""}
+        with TestClient(app) as client:
+            response = client.post("/api/match", json=payload)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.json()["request"]["language"])
+        self.assertIsNone(response.json()["request"]["duration_hours"])
+
+    def test_boolean_duration_is_rejected(self) -> None:
+        with TestClient(app) as client:
+            response = client.post("/api/match", json=demo_requests()["rare_florist"] | {"duration_hours": True})
+        self.assertEqual(response.status_code, 422)
+
+    def test_null_duration_source_evidence_survives_real_http_serialization(self) -> None:
+        with TestClient(app) as client:
+            response = client.post("/api/match", json=demo_requests()["rare_florist"] | {"duration_hours": 12})
+        self.assertEqual(response.status_code, 200)
+        card = response.json()["cards"][0]
+        self.assertEqual(card["id"], "HK-39372")
+        self.assertEqual(next(item["value"] for item in card["evidence"] if item["code"] == "duration"), None)
 
     def test_metadata_exposes_canonical_values(self) -> None:
         with TestClient(app) as client:
@@ -30,7 +55,7 @@ class ApiTests(unittest.TestCase):
         self.assertIn("свадьба", body["event_formats"])
         self.assertIn("русский", body["languages"])
 
-    def test_match_returns_ranked_cards_for_user_friendly_aliases(self) -> None:
+    def test_match_accepts_user_friendly_aliases(self) -> None:
         payload = {
             "city": "Alma-Ata",
             "event_date": "2026-10-11",
@@ -46,10 +71,11 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.json()
         self.assertEqual(body["status"], "matches_found")
-        self.assertGreater(body["counts"]["eligible_total"], 0)
-        self.assertEqual(body["counts"]["returned_total"], len(body["cards"]))
-        self.assertLessEqual(len(body["cards"]), 3)
-        self.assertTrue(all(card["evidence"] for card in body["cards"]))
+        self.assertEqual(body["request"]["city"], "Алматы")
+        self.assertEqual(body["request"]["event_format"], "свадьба")
+        self.assertEqual(body["request"]["category"], "Ведущий")
+        self.assertEqual(body["request"]["language"], "русский")
+        self.assertEqual(len(body["cards"]), 3)
 
     def test_match_returns_category_absent_as_a_business_response(self) -> None:
         payload = {
@@ -114,4 +140,46 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(
             response.json()["detail"]["code"],
             "unsupported_catalog_value",
+        )
+
+    def test_match_rejects_oversized_request_values(self) -> None:
+        payload = {
+            "city": "Almaty",
+            "event_date": "2026-10-10",
+            "event_format": "wedding",
+            "category": "x" * 121,
+            "budget_kzt": 500000,
+        }
+        with TestClient(app) as client:
+            response = client.post("/api/match", json=payload)
+
+        self.assertEqual(response.status_code, 422)
+        errors = response.json()["detail"]
+        self.assertTrue(
+            any(error["loc"][-1] == "category" for error in errors),
+            errors,
+        )
+
+    def test_complete_match_response_meets_the_ten_second_target(self) -> None:
+        """Measure the in-process API call, not browser or network latency."""
+        payload = {
+            "city": "Almaty",
+            "event_date": "2026-10-11",
+            "event_format": "wedding",
+            "category": "MC",
+            "budget_kzt": 3_000_000,
+            "language": "RU",
+        }
+        with TestClient(app) as client:
+            started_at = perf_counter()
+            response = client.post("/api/match", json=payload)
+            elapsed_seconds = perf_counter() - started_at
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "matches_found")
+        self.assertEqual(len(response.json()["cards"]), 3)
+        self.assertLess(
+            elapsed_seconds,
+            10,
+            f"Filtering response took {elapsed_seconds:.3f} seconds",
         )

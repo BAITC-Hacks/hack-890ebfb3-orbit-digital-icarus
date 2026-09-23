@@ -47,7 +47,7 @@
     "/api/match": {
       "post": {
         "summary": "Match",
-        "description": "Validate, normalize, and hard-filter a matching request.\n\nB2 returns complete business-empty states. Matching candidates require the\nranking and grounded-card implementation owned by Enjoy, so this path\nremains an explicit 503 until that handoff is integrated.",
+        "description": "Validate, filter, rank and render from the same versioned catalog.",
         "operationId": "match_api_match_post",
         "requestBody": {
           "content": {
@@ -69,9 +69,6 @@
                 }
               }
             }
-          },
-          "503": {
-            "description": "Ranking and card construction are not integrated yet."
           },
           "422": {
             "description": "Validation Error",
@@ -149,6 +146,9 @@
                   "type": "string"
                 },
                 "type": "array"
+              },
+              {
+                "type": "null"
               }
             ],
             "title": "Value"
@@ -253,6 +253,35 @@
           "algorithm_version"
         ],
         "title": "HealthResponse"
+      },
+      "MatchAlternative": {
+        "properties": {
+          "changed_field": {
+            "type": "string",
+            "enum": [
+              "city",
+              "event_date",
+              "budget_kzt"
+            ],
+            "title": "Changed Field"
+          },
+          "request": {
+            "$ref": "#/components/schemas/MatchRequest"
+          },
+          "eligible_total": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Eligible Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "changed_field",
+          "request",
+          "eligible_total"
+        ],
+        "title": "MatchAlternative",
+        "description": "An explicit, verified change for the user to choose after an empty result."
       },
       "MatchCard": {
         "properties": {
@@ -452,6 +481,14 @@
             "type": "array",
             "maxItems": 3,
             "title": "Cards"
+          },
+          "alternatives": {
+            "items": {
+              "$ref": "#/components/schemas/MatchAlternative"
+            },
+            "type": "array",
+            "maxItems": 3,
+            "title": "Alternatives"
           }
         },
         "type": "object",
@@ -542,6 +579,13 @@
           "type": {
             "type": "string",
             "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
           }
         },
         "type": "object",

@@ -128,6 +128,23 @@ class EvidenceValidationTests(unittest.TestCase):
         self.save()
         self.assertNotEqual(initial, algorithm_version(self.path))
 
+    def test_malformed_evidence_root_has_clear_error(self):
+        for payload in (None, [], "bad"):
+            self.payload = payload
+            self.save()
+            with self.subTest(payload=payload), self.assertRaisesRegex(ValueError, "root must be an object"):
+                load_evidence([contractor()], self.path)
+
+    def test_attribution_only_evidence_uses_structured_fallback(self):
+        record = self.payload["profiles"]["HK-A"][0]
+        record["event_formats"] = []
+        record["use_in_explanation"] = False
+        self.save()
+        p = contractor()
+        index = load_evidence([p], self.path)
+        cards = build_cards(request(), rank_candidates(request(), [p], index), index)
+        self.assertFalse(any(item["code"] == "description" for item in cards[0]["evidence"]))
+
 
 if __name__ == "__main__":
     unittest.main()

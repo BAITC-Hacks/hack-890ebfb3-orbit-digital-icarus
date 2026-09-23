@@ -12,8 +12,17 @@ DEFAULT_EVIDENCE_PATH = Path(__file__).with_name("profile_evidence.json")
 RANKING_VERSION = "explainable-v1"
 
 
-def load_evidence(catalog: Iterable[ContractorLike], path: str | Path = DEFAULT_EVIDENCE_PATH, *, dataset_sha256: str | None = None) -> EvidenceIndex:
-    """Reject stale/unsupported evidence rather than inventing replacement facts."""
+def load_evidence(
+    catalog: Iterable[ContractorLike],
+    path: str | Path = DEFAULT_EVIDENCE_PATH,
+    *,
+    dataset_sha256: str | None = None,
+) -> EvidenceIndex:
+    """Reject stale/unsupported evidence rather than inventing replacement facts.
+
+    A missing profile entry is allowed: ranking falls back to price and ID.
+    A missing file, malformed record, or incorrect quote is a startup error.
+    """
     payload = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError("Profile evidence root must be an object")
@@ -41,7 +50,9 @@ def load_evidence(catalog: Iterable[ContractorLike], path: str | Path = DEFAULT_
         for record in records:
             if not isinstance(record, dict):
                 raise ValueError(f"Invalid evidence record for {contractor_id}")
-            evidence_id, quote, formats = record.get("id"), record.get("quote"), record.get("event_formats")
+            evidence_id = record.get("id")
+            quote = record.get("quote")
+            formats = record.get("event_formats")
             if not isinstance(evidence_id, str) or not evidence_id.startswith(f"{contractor_id}:"):
                 raise ValueError(f"Evidence ID does not belong to {contractor_id}")
             if evidence_id in seen_ids:
@@ -50,7 +61,9 @@ def load_evidence(catalog: Iterable[ContractorLike], path: str | Path = DEFAULT_
                 raise ValueError(f"Evidence quote is not in the description of {contractor_id}")
             if quote in seen_quotes:
                 raise ValueError(f"Duplicate evidence quote for {contractor_id}")
-            if not isinstance(formats, list) or any(not isinstance(item, str) or item not in contractor.event_formats for item in formats) or len(formats) != len(set(formats)):
+            if not isinstance(formats, list) or any(
+                not isinstance(item, str) or item not in contractor.event_formats for item in formats
+            ) or len(formats) != len(set(formats)):
                 raise ValueError(f"Unsupported evidence format for {contractor_id}")
             use_in_explanation = record.get("use_in_explanation", True)
             if not isinstance(use_in_explanation, bool):

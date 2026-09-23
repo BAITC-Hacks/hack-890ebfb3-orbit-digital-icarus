@@ -17,6 +17,7 @@ from ..models import (
     MetadataResponse,
 )
 from ..normalization import normalize_match_request
+from ..recovery import suggest_alternatives
 
 
 router = APIRouter(prefix="/api")
@@ -93,6 +94,7 @@ def _empty_response(
         ),
         exclusions=exclusions,
         cards=[],
+        alternatives=suggest_alternatives(request_body, _catalog(request)),
     )
 
 
@@ -124,7 +126,7 @@ def match(request_body: MatchRequest, request: Request) -> MatchResponse:
         normalized_request = normalize_match_request(request_body, _catalog(request))
     except ValueError as error:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
                 "code": "unsupported_catalog_value",
                 "message": str(error),
