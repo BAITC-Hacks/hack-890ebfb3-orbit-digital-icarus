@@ -19,7 +19,7 @@ export function HomePage({ locale, metadata, onCategory }: {
       </div>
       {/* A vector mark describes choosing a match without fabricating a contractor or live result. */}
       <aside className="principle-card">
-        <div className="tandau-mark" aria-hidden="true"><svg viewBox="0 0 160 120" focusable="false"><rect x="42" y="13" width="76" height="94" rx="18" /><path d="M62 36h36M80 36v47M59 66l15 15 28-29" /><circle cx="127" cy="31" r="9" /></svg></div>
+        <div className="tandau-mark" aria-hidden="true"><svg viewBox="0 0 160 120" focusable="false"><circle className="mark-ring" cx="80" cy="60" r="46" /><path d="M60 40h40M80 40v43" /><circle cx="113" cy="27" r="9" /></svg></div>
         <small>{t.visualLabel}</small><h2>{t.visualTitle}</h2>
         <ul>{t.visualChecks.map(item => <li key={item}><span aria-hidden="true">✓</span>{item}</li>)}</ul>
         <p>{t.visualFoot}</p>

@@ -24,6 +24,7 @@ main:focus { outline: none; }
 .tandau-mark { display: grid; place-items: center; height: 120px; margin-bottom: 14px; color: var(--sage); }
 .tandau-mark svg { width: 160px; height: 120px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
 .tandau-mark circle { fill: var(--accent); stroke: none; }
+.tandau-mark .mark-ring { fill: none; stroke: currentColor; }
 .principle-card small { display: block; text-transform: uppercase; font-size: .72rem; letter-spacing: .06em; color: var(--muted); line-height: 1.5; }
 .principle-card h2 { font-size: 2rem; margin: 13px 0 22px; line-height: 1.12; }
 .principle-card ul { padding: 0; list-style: none; }
