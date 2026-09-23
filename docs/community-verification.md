@@ -1,6 +1,6 @@
 # Tandau integration verification — 23 September 2026
 
-This record covers the captain-approved provider/event extension and the retained public matching workflow. Earlier reports refer to older source revisions; their counts are not silently reused as proof of new behavior. Final committed-source reproduction is recorded below when completed.
+This record covers the captain-approved provider/event extension and the retained public matching workflow. Earlier reports refer to older source revisions; their counts are not silently reused as proof of new behavior. Committed-source clean-clone reproduction and final follow-up checks are recorded below.
 
 ## What was checked
 
@@ -48,7 +48,17 @@ The [event screenshot](images/community-team-en.png) is captured from that real 
 
 The new work started on main `1b19dd8` (Enjoy fixes), with Spectra's Tandau/theme changes adapted into the five-route application. The later main PR #7 and Spectra layout commits through `1a10197` are reviewed separately. The optional working-language select remains single-valued, and the provided calendar disclosure is not removed for presentation. The older Enjoy/bbl history is preserved; it is not force-merged over the organizer's rewritten main history. See [team synchronization notes](team-sync.md).
 
-Final merge/fresh-clone results will be appended before release. Do not interpret this pre-merge table as a completed clean-clone run.
+### Committed-source clean-clone run
+
+A fresh local Git clone of **`0edbb86`** was created in a new Windows temporary directory containing spaces. Before starting, `.venv`, `.orbit`, root/frontend `node_modules` and `frontend/dist` were all absent. From an unrelated working directory, `Start Tandau.cmd --no-browser --port 8791` installed its own Python/frontend dependencies, checked the Python environment, built the UI and started the real single-server app. The only suppressed step was opening an automated browser.
+
+That clone passed **277 Python tests / 265 subtests**, **160 real HTTP matching requests** (p95 25.340 ms, maximum 26.690 ms) and **all 16 real-application browser tests**, including local signup/publication and three separate accepting provider sessions. Tests used a fresh local database initialized by the app. The one remaining warning is the pinned Starlette/httpx deprecation; no application check failed.
+
+Subsequent visual review found two community-specific contrast gaps (dark validation/removal icons and input borders). They now use the shared tested error/control tokens, with a stylesheet regression. The latest Spectra control changes through `62da9c4` and main PR #8 are merged normally, adapting segmented language controls while retaining 44px hit targets and a centered SVG theme switch. Current component count is **66 passing**. Final follow-up checks on this palette refinement are recorded below.
+
+The same independent clone was fast-forwarded to **`978c002`**, rebuilt through the launcher, and passed **66 component tests** plus **all 16 real browser journeys again** on its production server. No backend, matcher or dependency change occurred between these two source snapshots. Its Git worktree stayed clean after generated caches/database/builds. A subsequent `Start Tandau.cmd --prepare-only` with `PIP_NO_INDEX=1` and `npm_config_offline=true` reused all three completed stages without installation or rebuilding. This is a package-tool offline cache check, not an internet-disconnection experiment. Stop/restart was checked; the ignored SQLite listings persisted.
+
+On the final working-checkout bundle, all **16 isolated browser tests** and **16 real browser journeys** passed again. Actual computed CSS measurements (temporary browser-only samples, not simulated API results) now give input borders **3.94:1 light / 5.36:1 dark**, and error/removal foregrounds **7.70:1 light / 9.83:1 dark**. Core and community screenshots were regenerated from the real app. The frontend production build and strict client types pass; no failed test is left unresolved.
 
 ## Boundaries and human actions
 

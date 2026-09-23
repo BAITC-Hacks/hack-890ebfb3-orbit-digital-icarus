@@ -337,6 +337,8 @@ npm.cmd run test:e2e
 
 **Current Tandau/community checks:** see [the new integration verification](docs/community-verification.md) for provider accounts, multi-person consent/chat, themes and date comparison. The table below is the historical pre-extension baseline, not a claim that its old commit hashes contain the new features.
 
+Latest verified source (`978c002`): **277 Python tests + 265 subtests**, **66 component tests**, **95 client / 17 locale / 10 numeric units**, **16 isolated + 16 real browser journeys**, TypeScript and production build. A clean clone launched automatically; after the final palette update it rebuilt and repeated the component/browser checks successfully. Matching source data and frozen results remain unchanged. This is local Windows evidence, not a cloud-CI or production-scale claim.
+
 | Check | Result |
 | --- | --- |
 | Python suite | **152 passing tests and 265 subtests**, including 35 launcher/static-serving checks, duration boundaries, strict types, JSON-safe errors, verified alternatives and published OpenAPI parity |

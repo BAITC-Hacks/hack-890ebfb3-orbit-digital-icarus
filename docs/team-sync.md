@@ -6,6 +6,10 @@ On 23 September the captain authorized integrating the optional provider/event w
 
 `Enjoy` at `60b1b0d` is an archived original-history branch. Its new progress log explicitly warns not to merge its pre-rewrite history back into main; the functional fixes are already on main via PR #6. `bbl` at `f3c8529` likewise preserves earlier development history whose functionality is already integrated. This task does not rewrite, force-push or delete those branches. Current extension behavior and verification are recorded in [community.md](community.md) and [community-verification.md](community-verification.md); older checkpoints below remain historical.
 
+The later `main` PR #8 (`537401c`) and Spectra tip `62da9c4` were also inspected and merged normally. Their segmented RU/EN control and compact theme-button intent is preserved with shared palette tokens and minimum 44px targets. The source snapshot for the first new clean-clone run is `0edbb86`; later refinements only address presentation/contrast and verification documentation, not matching rules or community permissions.
+
+Final branch check also inspected Enjoy `2627a3a`: one additional historical progress-log row only, with no functional changes to integrate. The archive's explicit no-remerge warning remains respected.
+
 ## Current release handoff
 
 The current integration combines `bbl` f3c8529, `Enjoy` 9e7d5d0, `feature/sp3ctra` fc3a958 and `main` e691a58 without rewriting their history. The home/inquiry journey was added at 032561f and the concurrent main update merged at a1930af. Follow [release-review.md](release-review.md) for current checks, merge decisions, product behavior and the demo script. The earlier checkpoints below are retained as historical records; their pending-integration notes no longer describe the current source.
