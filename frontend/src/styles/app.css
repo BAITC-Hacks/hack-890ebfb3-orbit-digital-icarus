@@ -86,3 +86,51 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: #b34320;
 :root[data-theme="dark"] .match-alternatives button { color: #d4edda; background: #193025; border-color: #527460; }:root[data-theme="dark"] .match-alternatives button:hover { border-color: #9fd1af; background: #20382b; }
 :root[data-theme="dark"] .theme-toggle { color: #eaf5ec; background: #20342a; border-color: #628a70; }:root[data-theme="dark"] .theme-toggle::before { background: #a9d8b4; transform: translateX(29px); }:root[data-theme="dark"] .theme-toggle span:first-child { color: #789684; }:root[data-theme="dark"] .theme-toggle span:last-child { color: #e9f5eb; }
 :root[data-theme="dark"] button:focus-visible, :root[data-theme="dark"] summary:focus-visible { outline-color: #ff9a70; }
+
+/* Matching form: a calm, readable hierarchy that remains stable at every width. */
+.match-form { padding: 0; overflow: hidden; box-shadow: 0 16px 38px rgb(48 37 20 / 5%); }
+.form-intro { display: flex; align-items: end; justify-content: space-between; gap: 32px; padding: 30px 54px 27px; border-bottom: 1px solid #eee9e0; background: linear-gradient(118deg, #fffdf9 0%, #f3f6ee 100%); }
+.form-step { display: block; margin-bottom: 8px; color: #9a4a28; font-size: .75rem; font-weight: 850; letter-spacing: .14em; }
+.form-intro h2 { font-size: clamp(1.75rem, 3vw, 2.3rem); line-height: 1.05; }
+.form-intro p { max-width: 610px; margin: 9px 0 0; color: #716b63; line-height: 1.55; }
+.form-intro .form-promise { display: flex; flex: 0 0 260px; align-items: flex-start; gap: 9px; margin-bottom: 4px; color: #49614f; font-size: .86rem; font-weight: 700; }
+.form-promise span { display: grid; flex: 0 0 20px; height: 20px; place-items: center; border-radius: 50%; color: #fff; background: #587363; font-size: .72rem; }
+.field-grid { padding: 31px 54px 0; gap: 25px 38px; }
+.field-grid > label { min-width: 0; }
+.calendar-note { margin: 24px 54px 0; padding: 12px 14px; border-radius: 10px; color: #687064; background: #f5f3ec; }
+.form-footer { gap: 32px; margin-top: 25px; padding: 25px 54px 30px; background: #fffdf9; }
+.form-footer > div { min-width: 0; }.form-footer strong { display: block; margin-bottom: 5px; color: #30483c; font-size: .92rem; }
+.form-footer button { display: inline-flex; align-items: center; justify-content: center; gap: 18px; min-width: 270px; }
+.form-footer button span { font-size: 1.2em; transition: transform .18s ease; }.form-footer button:hover:not(:disabled) span { transform: translateX(3px); }
+
+/* A complete footer gives the long landing page a deliberate finish. */
+.site-footer { margin-top: 72px; padding: 28px 0 0; font-size: .86rem; }
+.footer-main { display: grid; grid-template-columns: 1fr minmax(220px, 1.35fr) auto; align-items: center; gap: 30px; }
+.site-footer .brand { margin-right: 0; width: max-content; font-size: 1.22rem; }
+.site-footer .brand span { width: 29px; height: 29px; }
+.footer-main p, .footer-note { margin: 0; color: #706b64; }
+.footer-main nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 16px; }
+.footer-main nav a { color: #4d6252; font-weight: 700; text-decoration: none; text-underline-offset: 5px; }
+.footer-main nav a:hover { color: #a74621; text-decoration: underline; }
+.footer-note { margin-top: 25px; padding: 18px 0 0; border-top: 1px solid #e4ded4; font-size: .77rem; line-height: 1.55; }
+
+/* Prevent long labels, cards and controls from escaping their grid tracks. */
+.hero, .contractor-card, .empty-state, .form-footer > div { min-width: 0; overflow-wrap: anywhere; }
+.card-grid > *, .home-hero > *, .footer-main > * { min-width: 0; }
+
+@media (max-width: 900px) {
+  .form-intro { align-items: flex-start; flex-direction: column; }.form-intro .form-promise { flex-basis: auto; }
+  .footer-main { grid-template-columns: 1fr 1fr; }.footer-main nav { grid-column: 1 / -1; justify-content: flex-start; }
+}
+@media (max-width: 650px) {
+  .site-header { align-items: flex-start; }.top-controls { margin-left: auto; }.site-nav { gap: 17px; }
+  .form-intro { gap: 17px; padding: 24px 20px; }.field-grid { padding: 25px 20px 0; }.calendar-note { margin: 20px 20px 0; }.form-footer { padding: 22px 20px 24px; }
+  .form-footer button { min-width: 0; }.footer-main { grid-template-columns: 1fr; gap: 18px; }.footer-main nav { grid-column: auto; gap: 13px 18px; }.site-footer { margin-top: 52px; }
+}
+
+:root[data-theme="dark"] .form-intro { background: linear-gradient(118deg, #17221e 0%, #1c3027 100%); border-color: #31433b; }
+:root[data-theme="dark"] .form-intro p, :root[data-theme="dark"] .footer-main p, :root[data-theme="dark"] .footer-note { color: #aebcaf; }
+:root[data-theme="dark"] .form-intro .form-promise, :root[data-theme="dark"] .form-footer strong, :root[data-theme="dark"] .footer-main nav a { color: #a9d8b4; }
+:root[data-theme="dark"] .form-promise span { color: #0d1712; background: #a9d8b4; }
+:root[data-theme="dark"] .calendar-note, :root[data-theme="dark"] .form-footer { color: #bac8bd; background: #141e1a; }
+:root[data-theme="dark"] .footer-note { border-color: #31433b; }

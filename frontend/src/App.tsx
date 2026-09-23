@@ -341,6 +341,10 @@ export default function App() {
     {page === "home" ? <HomePage locale={locale} metadata={metadata} onCategory={chooseCategory} /> : <>
     <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}{" "}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
     <form ref={formElement} className="match-form" data-testid="match-form" aria-busy={loading} onSubmit={submit} noValidate>
+      <div className="form-intro">
+        <div><span className="form-step" aria-hidden="true">01</span><h2>{journey.formTitle}</h2><p>{journey.formIntro}</p></div>
+        <p className="form-promise"><span aria-hidden="true">✓</span>{journey.formPromise}</p>
+      </div>
       <div className="field-grid">
         {fields.map(({ key, options }) => <label key={key}>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>
           {options.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
@@ -353,7 +357,7 @@ export default function App() {
         </select><small className="field-hint">{t.languageHint}</small>{fieldError("language")}</label>
       </div>
       {metadata && <p className="calendar-note">{calendarLabel(metadata, locale)}</p>}
-      <div className="form-footer"><p>{t.footer}</p><button type="submit" disabled={loading || unavailable}>{loading ? t.loading : t.submit}</button></div>
+      <div className="form-footer"><div><strong>{journey.formFooterTitle}</strong><p>{t.footer}</p></div><button type="submit" disabled={loading || unavailable}>{loading ? t.loading : t.submit}<span aria-hidden="true">→</span></button></div>
     </form>
     {error && <div className="request-error" role="alert" data-testid="request-error">{t[error]} <button type="button" disabled={loading || unavailable} onClick={() => formElement.current?.requestSubmit()}>{t.retry}</button></div>}
     {result && <section className="results" aria-live="polite">
@@ -367,6 +371,9 @@ export default function App() {
     </section>}
     </>}
     </main>
-    <footer className="site-footer">{journey.footer}</footer>
+    <footer className="site-footer">
+      <div className="footer-main"><a className="brand" href="#/" aria-label="Tandau"><span aria-hidden="true">T</span> Tandau</a><p>{journey.footer}</p><nav aria-label={journey.footerNav}><a href="#/">{journey.home}</a><a href="#/match">{journey.match}</a><a href="#/how-it-works">{journey.learn}</a></nav></div>
+      <p className="footer-note">{journey.footerNote}</p>
+    </footer>
   </div>;
 }
