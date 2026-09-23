@@ -28,4 +28,3 @@ exclude = ["backend.tests", "backend.tests.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["backend/tests"]
-

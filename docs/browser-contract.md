@@ -1,28 +1,28 @@
-# Real browser acceptance contract
+# Browser acceptance and interface contract
 
-Enjoy owns `tests/e2e/matching.spec.ts` and the root `playwright.config.ts`. The suite exercises the actual UI, backend and pinned CSV. It does not replace backend matching or frontend component tests.
+Enjoy owns `tests/e2e/matching.spec.ts` and root `playwright.config.ts`, plus isolated `tests/ui/locale.spec.ts` and `playwright.ui.config.ts`. Both suites passed locally: **eight real-application tests and six isolated interface tests**. They have different scopes and do not replace backend or transport/localization unit tests.
 
-**Readiness:** the suite is authored against the shared API contract in `Instructions.md`. At the time of this handoff, bbl's API and spectra's application scaffold have not been integrated, so no passing browser run is claimed. The first integrated run must reconcile selectors with the actual UI, record results and fix defects before release.
+The production API, catalog filters, ranking/evidence modules and React interface are integrated on `Enjoy`. Actual browser execution, the frontend build and the local built-bundle preview are verified. Complete integrated fresh-clone reproduction remains pending; a deployment or green cloud CI run is not implied.
 
-`npx playwright test --list` successfully loaded the configuration and discovered all eight Chromium tests. This checks test discovery/transpilation only; it does not start either service or verify browser behavior.
+`npm run test:e2e:list` discovers eight Chromium tests without executing them. Use `npm run test:e2e` for the actual application suite and `npm run test:ui` for isolated UI behavior.
 
-## Minimal UI contract for spectra
+## Implemented UI contract
 
-Use labeled native form controls with these names or test IDs. Russian labels are preferred; the tests recognize English equivalents as a fallback. Select option values must use the canonical values received from metadata; visible labels may be capitalized.
+The application uses labeled native controls with the names below. Russian is the default; the English switch changes visible labels. Select values always retain the canonical Russian strings from metadata. Names are stable across locales.
 
-| Name / optional control test ID | Visible label | Control |
+| Name | Russian / English label | Control |
 | --- | --- | --- |
-| `city` | Город | select |
-| `event_date` | Дата мероприятия | date input |
-| `event_format` | Формат мероприятия / Тип мероприятия | select |
-| `category` | Категория | select |
-| `budget_kzt` | Бюджет | number input |
-| `duration_hours` | Длительность / Продолжительность | optional number input; empty means null |
-| `language` | Язык | optional select; option value `""` means null |
+| `city` | Город / City | select |
+| `event_date` | Дата мероприятия / Event date | date input |
+| `event_format` | Формат мероприятия / Event format | select |
+| `category` | Категория подрядчика / Contractor category | select |
+| `budget_kzt` | Бюджет, ₸ / Budget, ₸ | number input |
+| `duration_hours` | Длительность, ч / Duration, hours | optional number input; empty means null |
+| `language` | Язык работы подрядчика / Contractor's working language | optional select; option value `""` means null |
 
-Keep all global categories available regardless of city. A valid but absent city/category combination is a required business outcome.
+All global categories remain available regardless of city. A valid but absent city/category combination is a required business outcome. Metadata supplies `calendar_start` and `calendar_end`; a metadata error disables the form and offers retry instead of invented options.
 
-The form's submit button must have an accessible name such as `Подобрать`, `Найти` or `Поиск`. Use the following small hooks; they are test metadata and need not appear as technical details in the visible UI:
+The submit button is named **Подобрать подрядчика / Find contractors**, with localized loading text. The following hooks are implemented as test metadata; they do not introduce technical labels into the visible interface:
 
 | Element | Hook |
 | --- | --- |
@@ -32,11 +32,19 @@ The form's submit button must have an accessible name such as `Подобрат�
 | Synthetic profile note | `data-testid="synthetic-note"` within the applicable card |
 | Imputed price note | `data-testid="price-imputed-note"` within the applicable card |
 | Imputed city note | `data-testid="city-imputed-note"` within the applicable card |
-| Request failure | `data-testid="request-error"` or an accessible `role="alert"` |
+| Request failure | `data-testid="request-error"`, `role="alert"` |
+| Metadata failure | `data-testid="metadata-error"`, `role="alert"` |
+| Locale switch | `data-testid="locale-switcher"`, `role="group"`, localized accessible name; Русский / English buttons with `aria-pressed` |
 
-Render the API's summary and each explanation without replacing them with independent browser prose, and preserve card order. Show city, category, starting-price wording and a `DD.MM.YYYY` availability date. Notes should explain synthetic/imputed data in ordinary Russian. Native labels and controls remain the primary interaction contract; hooks do not replace accessibility.
+Cards show city, category, starting-price wording and a `DD.MM.YYYY` availability date, with localized synthetic/imputed notices. Server order is preserved. Native labels and controls remain the primary interaction contract; hooks do not replace accessibility. Exact accessible role names are used for select controls because a raw label-text query can include nested option text.
 
-## What the suite checks
+### Localization and grounded content
+
+Russian mode renders the API summary and explanations. English mode renders summaries from the response status/counts/exclusions and explanations from typed date, format, price, budget, working-language and duration facts plus reviewed source-quote translations. All 93 usable evidence quotes have translations in `frontend/src/i18n/evidence.en.json`; evidence expanders also retain the original Russian text. An unknown future quote is labeled as original Russian, and profiles without usable quotes use structured facts.
+
+Locale is stored under `contractor-match-locale` and updates `document.documentElement.lang`. Switching it does not refetch matches, change canonical request values, alter the working-language filter or reorder results. Matching and localization make no online model request. The renderer cannot invent criteria or reinterpret server eligibility.
+
+## Eight application E2E flows
 
 1. Dense autumn category: exact pool/eligible/returned counts, identical repeated response and rendered order, changed visible IDs after changing only the date, distinct explanations after removing names.
 2. Rare florist: exactly HK-39372, booked exclusion and visible imputed-price note.
@@ -44,23 +52,43 @@ Render the API's summary and each explanation without replacing them with indepe
 4. Venue: HK-90012 available on 10 October and booked on 11 October; English and the exact 10-hour duration pass; 11 hours and unsupported Kazakh fail.
 5. A null duration limit does not exclude the florist; December scarcity returns one real host without padding.
 6. Deliberately aborted network request is a visible error, preserves input and succeeds when retried against the real backend.
-7. A delayed real response cannot replace a newer date result. The test accepts serial submission with a disabled button; if concurrent requests are permitted, it releases the older response last and checks the newer result remains.
+7. A held real response cannot replace a newer date result. The test obtains the first response from the actual API and holds delivery, verifies the date input stays editable while loading, edits the date, submits and displays the newer result, then releases the old response. The application aborts the superseded request and also checks a generation counter; the newer result must remain visible after old delivery finishes.
 8. A real submission works at 375px without horizontal overflow; the test captures a mobile screenshot.
 
-The tests parse the real browser response and compare its card IDs, order, explanations and metadata to the DOM. They also assert fixed outcomes independently established from the supplied CSV. API payloads are attached to the Playwright report with observed submit-to-render timing. Every tested successful submission must complete in under ten seconds.
+This suite uses the default Russian interface. It parses real browser responses and compares their card IDs, order, explanations and metadata to the DOM, alongside fixed outcomes established from the supplied CSV. API payloads are attached to the Playwright report with observed submit-to-render timing. Successful submissions through the measurement helper must complete in under ten seconds.
 
 Only the deliberate network-failure and delayed-delivery tests intercept requests. Delayed-delivery content still comes from the actual API. Business-success and empty-state tests never substitute response fixtures.
 
-Per-submission observations are not a complete benchmark. Before release, perform the planned twenty-run representative latency measurement separately, record environment/version details, and distinguish HTTP time from full browser rendering time.
+## Six isolated UI flows
 
-## Running after integration
+`tests/ui/locale.spec.ts` intercepts `/api/metadata` and `/api/match` explicitly. It uses the actual metadata schema and published contract fixtures, with documented UI-only variations. It requires Vite and Chromium but no Python service, provider key or inference request.
 
-The root Playwright dependency and lockfile are now committed. Run `npm ci` and `npx playwright install chromium`, install the locked backend dependencies, and install the frontend dependencies once spectra publishes the application package. Browser execution still needs real backend endpoints and the actual UI.
+1. Russian default, English labels/document language and preference persistence after reload.
+2. English form labels still send canonical Russian city/category/format/working-language values.
+3. Locale changes after results preserve response ID order and the working-language filter without fetching metadata or matches again.
+4. English explanations use the reviewed translation, starting-price caveat and inspectable original Russian quote.
+5. A failed request can retry successfully; over-budget and category-absent outcomes remain distinct, and a budget exclusion does not claim everyone is booked.
+6. Keyboard locale selection, submission and evidence expansion work at 375px in both languages without horizontal overflow.
+
+These tests verify presentation and client behavior with controlled responses. They do not establish that production filtering/ranking is correct; that evidence comes from backend, HTTP and application E2E checks.
+
+## Run the suites
+
+Follow the [root setup](../README.md#run-from-a-fresh-checkout) for the locked Python dependencies and environment, then install both npm packages and Chromium from the repository root:
+
+```bash
+npm ci
+npm --prefix frontend ci
+npx playwright install chromium
+npm run test:ui
+```
+
+The isolated config starts Vite at port 5173 with `VITE_API_MODE=api`, runs one Chromium worker, reports to the console and writes failure artifacts under `test-results/ui`. Outside CI it can reuse an existing Vite server; keep it in real API mode so the mocks exercise the transport path.
 
 Start the real backend and frontend using the integrated README commands, then run from repository root:
 
 ```bash
-npx playwright test
+npm run test:e2e
 ```
 
 Alternatively, set `RUN_APP_SERVERS=1` in the environment before running. The config then starts:
@@ -70,6 +98,24 @@ python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-Default frontend URL is `http://127.0.0.1:5173`; API URL is `http://127.0.0.1:8000`. For already-running services, `E2E_BASE_URL` and `E2E_API_URL` override those addresses. Auto-start commands use the fixed default ports; if overriding ports, start the services explicitly. The Vite development server must proxy `/api` to the backend, or the frontend client must use its documented API base URL with backend CORS configured.
+Set the variable with `$env:RUN_APP_SERVERS="1"` in PowerShell, or use `RUN_APP_SERVERS=1 npm run test:e2e` on macOS/Linux. Keep the Python environment active. Default frontend URL is `http://127.0.0.1:5173`; API URL is `http://127.0.0.1:8000`. For already-running services, `E2E_BASE_URL` and `E2E_API_URL` override those addresses. Auto-start commands use fixed default ports; if overriding ports, start services explicitly and arrange the corresponding `/api` proxy. The committed Vite configuration proxies `/api` to port 8000.
 
-The backend must load the exact pinned CSV and the Enjoy evidence/ranking modules. A stub or alternate dataset should fail the acceptance suite clearly. Playwright retains traces/screenshots/video on failures and writes an HTML report; inspect the report before attributing a failure to matching logic versus integration or browser setup.
+The backend loads the pinned CSV and reviewed evidence/ranking modules; a stub or alternate dataset should fail the acceptance suite. The application suite retains traces/screenshots/video on failures under `test-results` and writes an HTML report. The isolated suite retains traces and screenshots. Inspect the relevant output before attributing a failure to matching logic, integration or browser setup.
+
+## Recorded measurements
+
+The local environment on **23 September 2026** was Windows 11, Python **3.12.10**, Node **26.7.0**, npm **11.19.0**, Chromium **153.0.8010.12**, dataset SHA-256 `6a724b6b7dfb5973343e68ba18dadb60fc807d87e3d78f03ee86fb26cb089f7d` and algorithm `explainable-v1:2553919e464d7030`.
+
+With real services running:
+
+```bash
+python scripts/check_api.py --base-url http://127.0.0.1:8000 --repeat 20
+npm run measure:browser
+```
+
+| Measurement | Runs | p95 | Maximum |
+| --- | ---: | ---: | ---: |
+| Real HTTP across eight dataset scenarios | 160 | **21.521 ms** | **53.115 ms** |
+| Real browser submit-to-visible result across five scenarios | 20 | **65.88 ms** | **90.76 ms** |
+
+The separate browser measurement script uses real responses without interception, includes automation click/wait overhead and writes `artifacts/browser-latency.json`. Installation/startup time is excluded. These local figures meet the ten-second target for the measured flows; they do not establish hosted network latency or production throughput. Full fresh-clone reproduction remains pending. An earlier cloud CI job was blocked before execution by an account billing lock, so the passing local suites are not a green GitHub Actions claim.
