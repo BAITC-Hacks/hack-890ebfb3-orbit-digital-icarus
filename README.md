@@ -6,6 +6,8 @@ Find an event contractor in Kazakhstan without searching a long catalog. Enter t
 
 **Browse and match without an account.** Providers can also create a local account and publish their own listings. Signed-in users can assemble an event team from those listings, edit service-specific checklists, request each provider's agreement and discuss the event in a private group chat. The community directory is separate from the unchanged organizer CSV: nobody can impersonate an anonymized source profile. This is a local prototype, not a deployed booking/payment service. See the [community walkthrough](docs/community.md) and [Demo Day scorecard](docs/release-review.md).
 
+**Providers** opens the browsable 66-profile **Supplied catalog** by default. Switch to **Community listings** for services published by registered users. These views are explicitly separate: browsing a source profile does not prove date availability or create an account/invitation; use matching to check event conditions.
+
 ## Run from a fresh checkout
 
 **Windows: open the downloaded/cloned project folder and double-click [Start Tandau.cmd](<Start Tandau.cmd>).** The launcher installs dependencies, builds the website, starts the application and opens your browser. Keep its window open while using Tandau; press **Ctrl+C** there to stop (answer **Y** if Windows asks to terminate the batch job). `Start Orbit.cmd` remains a compatibility shortcut.
@@ -54,7 +56,8 @@ For both empty outcomes, venues, optional constraints and exact expected IDs, fo
 | Python cannot create its environment on Linux | Install your distribution's Python venv support (commonly `python3-venv` on Debian/Ubuntu), then relaunch. No administrator access is needed once Python/Node/venv support are installed. |
 | Browser does not open | Copy the `Tandau is ready!` address from the launch window into your browser. |
 | A specific port is busy | Normally Tandau picks another automatically. To choose one yourself: `python start.py --port 8790`. The launcher never stops another program. |
-| You changed frontend code | Stop with Ctrl+C and launch again; the production website is rebuilt when needed. For automatic hot reload use the developer setup below. |
+| You pulled or changed application code | Stop with Ctrl+C and launch again; the backend loads the new routes and the production website is rebuilt when needed. Refresh the browser at the address printed by this new launch. For automatic hot reload use the developer setup below. |
+| Community pages show session/template errors and `/api/community/*` returns 404 | An older backend may still be running, even if matching works. Restart your backend, or use `Start Tandau.cmd` and open its printed address instead of an old `5173` tab. Do not delete the database or recreate your account. |
 
 Optional switches: `--no-browser` skips opening a browser; `--prepare-only` installs/builds without starting. Local use is bound to `127.0.0.1`, not exposed to your network. Windows is the locally verified platform; macOS/Linux paths are supported by the launcher but are not claimed as separately verified machines.
 
@@ -110,7 +113,7 @@ The browser installation is needed for browser checks. On Linux machines missing
 **Terminal 1 — backend**, with the Python environment activated:
 
 ```bash
-python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --reload --reload-dir backend
 ```
 
 **Terminal 2 — frontend**, from the same repository root:
@@ -263,6 +266,7 @@ Source materials: [CSV](https://drive.google.com/file/d/1uUCu-szctwaTaV0-Yfg3FKH
 | --- | --- |
 | `GET /api/health` | `status: ready`, profile count, dataset hash and algorithm version after successful startup |
 | `GET /api/metadata` | Canonical cities, categories, formats and languages, plus `calendar_start` / `calendar_end` |
+| `GET /api/catalog` | Public read-only source directory: 66 supplied profiles, provenance flags and snapshot bounds; no implied availability, contact details or community accounts |
 | `POST /api/match` | Normalized request, versions, counts, exclusions, status and zero to three cards |
 | `POST /api/insights/dates` | Compare two otherwise identical requests; explain removed/added shortlist IDs without guessing from aggregate counts |
 | `/api/community/*` | Separate authentication, listings, templates, invitations and chat; interactive schema at `/api/community/docs` |

@@ -455,6 +455,7 @@ Only after this checklist: add explicit date-comparison explanations, user-confi
 The captain authorized direct integration/push to `main`, selected **Tandau** as the product name, and requested an optional provider/event workspace. This supplements, not replaces, the original public matching Definition of Done. Team identity remains Orbit Digital | Icarus.
 
 - Anonymous visitors retain full source matching and public provider browsing.
+- Provider browsing opens the read-only supplied catalog by default, with a separately labeled community-listings view. `/api/catalog` adds a typed public projection of the 66 source profiles; it does not change matching or create provider accounts. Browse cards must retain provenance flags and must not imply date eligibility, contact verification or invitation consent.
 - Only authenticated provider accounts publish/edit their own community listings. The organizer CSV remains untouched; source profiles cannot be claimed or silently invited.
 - Signed-in event owners choose an event template, edit suggested service roles/checklists and invite suitable registered providers. Explicit current-version acceptance is required for each role before declaring a team ready. Private chat is limited to owners/current accepted members.
 - Semantic plan changes require renewed agreement; checking off completed tasks does not. Stale edits and decisions cannot silently overwrite newer versions.

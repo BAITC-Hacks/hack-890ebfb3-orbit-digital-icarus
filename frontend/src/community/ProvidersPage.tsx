@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { communityApi } from "./api";
+import { CatalogDirectory } from "./CatalogDirectory";
 import { cityLabel, money, serviceLabel } from "./copy";
 import { EmptyState, ErrorNotice, Loading, useCommunity, useQuery } from "./shared";
 import type { Listing, Templates } from "./types";
@@ -14,7 +15,7 @@ export function ListingCard({ listing, templates, action }: { listing: Listing; 
   </article>;
 }
 
-export function ProvidersPage({ templates }: { templates: Templates | null }) {
+function CommunityListings({ templates }: { templates: Templates | null }) {
   const { t, locale } = useCommunity();
   const [city, setCity] = useState("");
   const [category, setCategory] = useState("");
@@ -23,7 +24,6 @@ export function ProvidersPage({ templates }: { templates: Templates | null }) {
   const matching = (listings.data?.listings ?? []).filter(item => `${item.title} ${item.provider_name} ${item.description} ${serviceLabel(item.category, templates, locale)}`.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
   const filtered = Boolean(city || category || search);
   return <>
-    <div className="cm-hero"><div><p className="cm-eyebrow">{t.community}</p><h1>{t.providersTitle}</h1><p className="cm-lede">{t.providersIntro}</p><div className="cm-actions"><a href="#/account" className="cm-button">{t.publish} <span aria-hidden="true">↗</span></a><a href="#/events" className="cm-button cm-secondary">{t.planEvent}</a></div></div><div className="cm-hero-art" aria-hidden="true"><span className="cm-orbit cm-orbit-one" /><span className="cm-orbit cm-orbit-two" /><span className="cm-orbit cm-orbit-three" /><span className="cm-art-center">t.</span><span className="cm-art-star">✳</span></div></div>
     <form className="cm-filters" onSubmit={e => e.preventDefault()} role="search">
       <label className="cm-search">{t.search}<input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder={t.searchPlaceholder} maxLength={120} /></label>
       <label>{t.city}<select value={city} onChange={e => setCity(e.target.value)}><option value="">{t.allCities}</option>{templates?.cities.map(item => <option key={item} value={item}>{cityLabel(item, locale)}</option>)}</select></label>
@@ -34,5 +34,18 @@ export function ProvidersPage({ templates }: { templates: Templates | null }) {
     {listings.loading ? <Loading /> : !listings.error && (matching.length ? <div className="cm-listing-grid">{matching.map(listing => <ListingCard key={listing.id} listing={listing} templates={templates} />)}</div> : <EmptyState title={t.noListings}>{t.noListingsBody}</EmptyState>)}
     {listings.data && listings.data.listings.length >= 200 && <p className="cm-footnote">{t.directoryLimit}</p>}
     <p className="cm-footnote">{t.inviteHint} <a href="#/events">{t.planEvent} ↗</a></p><div className="cm-trust-note"><span aria-hidden="true">ⓘ</span><div><p>{t.publicNote}</p><p>{t.separateCatalog}</p></div></div>
+  </>;
+}
+
+export function ProvidersPage({ templates }: { templates: Templates | null }) {
+  const { t, locale } = useCommunity();
+  const [view, setView] = useState<"catalog" | "community">("catalog");
+  return <>
+    <div className="cm-hero"><div><p className="cm-eyebrow">{t.community}</p><h1>{t.providersTitle}</h1><p className="cm-lede">{t.providersIntro}</p><div className="cm-actions"><a href="#/account" className="cm-button">{t.publish} <span aria-hidden="true">↗</span></a><a href="#/events" className="cm-button cm-secondary">{t.planEvent}</a></div></div><div className="cm-hero-art" aria-hidden="true"><span className="cm-orbit cm-orbit-one" /><span className="cm-orbit cm-orbit-two" /><span className="cm-orbit cm-orbit-three" /><span className="cm-art-center">t.</span><span className="cm-art-star">✳</span></div></div>
+    <div className="cm-actions cm-directory-switch" aria-label={locale === "ru" ? "Источник профилей" : "Profile source"}>
+      <button className={`cm-button${view === "catalog" ? "" : " cm-secondary"}`} aria-pressed={view === "catalog"} onClick={() => setView("catalog")}>{locale === "ru" ? "Исходный каталог" : "Supplied catalog"}</button>
+      <button className={`cm-button${view === "community" ? "" : " cm-secondary"}`} aria-pressed={view === "community"} onClick={() => setView("community")}>{locale === "ru" ? "Объявления сообщества" : "Community listings"}</button>
+    </div>
+    {view === "catalog" ? <CatalogDirectory /> : <CommunityListings templates={templates} />}
   </>;
 }

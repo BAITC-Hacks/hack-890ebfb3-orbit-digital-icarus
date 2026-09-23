@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { communityApi, CommunityApiError } from "./api";
@@ -9,6 +9,7 @@ import { InvitationPanel } from "./Invitations";
 import { PlanEditor } from "./PlanEditor";
 import { CommunityContext, errorText } from "./shared";
 import type { EventDetail, Listing, Templates, User } from "./types";
+import { useEventDetail } from "./useEventDetail";
 
 const provider: User = { id: "provider1", username: "florist", display_name: "Aida", role: "provider" };
 const organizer: User = { id: "owner1", username: "planner", display_name: "Dana", role: "organizer" };
@@ -38,6 +39,10 @@ function mockApi(handler?: Handler) {
       else if (path === "/events") body = { events: [] };
       else if (path === "/events/event1") body = event;
       else if (path === "/logout") body = { ok: true };
+      else if (path.split("?")[0] === "/api/catalog" && (!options.method || options.method === "GET")) {
+        // Match the public catalog contract; explicit handler errors take precedence.
+        body = { dataset_version: "test-catalog", calendar_start: "2026-10-10", calendar_end: "2026-10-11", profiles: [] };
+      }
       else throw new Error(`Unexpected test request: ${path}`);
     }
     return new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
@@ -48,6 +53,10 @@ function mockApi(handler?: Handler) {
 
 const context = (user: User = organizer) => ({ locale: "en" as const, user, expireSession: vi.fn() });
 afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers(); });
+
+async function selectCommunityTab(locale: "en" | "ru") {
+  fireEvent.click(await screen.findByRole("button", { name: locale === "en" ? "Community listings" : "Объявления сообщества", exact: true }));
+}
 
 async function openListingForm() {
   const fetch = mockApi((path, options) => {
@@ -65,6 +74,57 @@ async function openListingForm() {
 }
 
 describe("community transport and public browsing", () => {
+  it.each(["session", "templates", "listings"] as const)("shows a localized restart hint for a framework 404 from %s", async endpoint => {
+    mockApi(path => path.split("?")[0] === `/${endpoint}` ? new Response(JSON.stringify({ detail: "Not Found" }), { status: 404 }) : undefined);
+    await expect(communityApi[endpoint]()).rejects.toMatchObject({ code: "endpoint_unavailable", status: 404 });
+    const view = render(<CommunityPage page="providers" locale="en" />);
+    await selectCommunityTab("en");
+    expect(await screen.findByText(copy.en.endpointUnavailable)).toBeVisible();
+    expect(screen.queryByText(copy.en.missingError)).not.toBeInTheDocument();
+    view.rerender(<CommunityPage page="providers" locale="ru" />);
+    await selectCommunityTab("ru");
+    expect(await screen.findByText(copy.ru.endpointUnavailable)).toBeVisible();
+    expect(screen.queryByText(copy.ru.missingError)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [404, "event_not_found", "missingError"],
+    [404, "listing_not_found", "missingError"],
+    [404, "slot_not_found", "missingError"],
+    [403, "owner_required", "ownerRequired"],
+    [403, "invitation_required", "permissionError"],
+  ] as const)("preserves structured %s %s errors", async (status, code, key) => {
+    mockApi(() => new Response(JSON.stringify({ detail: { code } }), { status }));
+    const error = await communityApi.event("private-id").catch(cause => cause);
+    expect(error).toBeInstanceOf(CommunityApiError);
+    expect(error).toMatchObject({ status, code });
+    for (const locale of ["ru", "en"] as const) expect(errorText(error, locale)).toBe(copy[locale][key]);
+  });
+
+  it("does not relabel a plain 403 as an unavailable endpoint", async () => {
+    mockApi(() => new Response(JSON.stringify({ detail: "Not Found" }), { status: 403 }));
+    const error = await communityApi.event("private-id").catch(cause => cause);
+    expect(error).toMatchObject({ status: 403, code: "unknown" });
+    expect(errorText(error, "en")).toBe(copy.en.permissionError);
+  });
+
+  it.each([403, 404])("still removes private event data on a structured %s response", async status => {
+    let denied = false;
+    const code = status === 403 ? "invitation_required" : "event_not_found";
+    mockApi(path => path === "/events/event1" ? denied
+      ? new Response(JSON.stringify({ detail: { code } }), { status })
+      : { ...event, can_chat: true, messages: [{ id: 1, event_id: event.id, user_id: provider.id, display_name: provider.display_name, text: "Private message", created_at: event.created_at }] }
+      : undefined);
+    const shared = context(provider);
+    const { result } = renderHook(() => useEventDetail(event.id), { wrapper: ({ children }) => <CommunityContext.Provider value={shared}>{children}</CommunityContext.Provider> });
+    await waitFor(() => expect(result.current.detail?.messages).toHaveLength(1));
+    denied = true;
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.detail).toBeNull());
+    expect(result.current.error).toMatchObject({ status, code });
+    expect(shared.expireSession).not.toHaveBeenCalled();
+  });
+
   it("sends JSON and same-origin cookies on logout", async () => {
     const fetch = mockApi();
     await communityApi.logout();
@@ -85,6 +145,7 @@ describe("community transport and public browsing", () => {
       if (path.startsWith("/listings")) return { listings: [listing] };
     });
     render(<CommunityPage page="providers" locale="en" />);
+    await selectCommunityTab("en");
     expect(await screen.findByTestId("community-listing")).toHaveTextContent("Seasonal flowers");
     expect(screen.getByText(copy.en.unverified)).toBeVisible();
     expect(screen.queryByTestId("auth-form")).not.toBeInTheDocument();

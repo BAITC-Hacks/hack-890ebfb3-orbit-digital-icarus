@@ -4,9 +4,9 @@ This is an optional extension to the hackathon's public matching flow. The origi
 
 ## Launch and browse
 
-Double-click `Start Tandau.cmd` on Windows, or run `python start.py` after installing Python and Node as described in [README](../README.md#run-from-a-fresh-checkout). No database server, API key, external identity provider or email account is needed. Open **Providers** to browse/filter community listings without signing in. A fresh database starts empty, deliberately: there are no fabricated providers or implicit demonstration consents.
+Double-click `Start Tandau.cmd` on Windows, or run `python start.py` after installing Python and Node as described in [README](../README.md#run-from-a-fresh-checkout). No database server, API key, external identity provider or email account is needed. Open **Providers** to browse the 66 supplied profiles without signing in. **Supplied catalog** is the default directory view; **Community listings** shows services published by local accounts. A fresh community database starts empty, deliberately: there are no fabricated accounts or implicit demonstration consents.
 
-The core **Find a match** page stays public and uses only the organizer dataset. The provider directory shows user-entered services separately, marked **unverified**. Prices are starting prices, not quotations; a published listing makes no claim of verified availability.
+The core **Find a match** page stays public and uses only the organizer dataset. Browsing the source directory is not a date/budget eligibility check or a ranked recommendation: open matching to check those conditions. Source profiles retain synthetic/imputed flags and have no account or invitation action. The separate community view shows user-entered services marked **unverified**. Prices are starting prices, not quotations; a published listing makes no claim of verified availability.
 
 ## Who can do what?
 
@@ -27,7 +27,7 @@ Account types are chosen at signup, not silently upgraded. Choose **Provider** t
 Use separate browser profiles or a normal window plus an incognito window on the **same printed app address**. Tabs in one profile share the same login. A participant on a different laptop does not share a loopback-only local installation.
 
 1. **Provider window:** open Account, select Provider, register, choose New listing. Enter a title, category **Florist**, city **Almaty**, a positive starting price and a description (20–2,000 characters). Publish. Repeat with separate provider accounts for **Catering** and **Live band** if demonstrating three-person collaboration; sign out between accounts.
-2. **Visitor window:** open Providers without an account. The published listings are visible; event creation instead offers a sign-in prompt. No login wall blocks source matching or directory browsing.
+2. **Visitor window:** open Providers without an account and select **Community listings**. The published listings are visible; event creation instead offers a sign-in prompt. The default **Supplied catalog** view is independently browsable. No login wall blocks source matching or either directory.
 3. **Organizer window:** register an Organizer account and open Events. Create an Almaty event using the Wedding template. It suggests a venue, florist, catering, band, host and photographer. Remove unneeded roles, add another service if useful, and edit each role's notes/checklist. Save the plan before inviting.
 4. Select the appropriate published listing for each role and send an invitation. The app only offers active listings matching that role's category and the event's city. An invitation is **pending**, never an automatic agreement or booking.
 5. Each provider signs in, opens Events, reads the plan and explicitly chooses **Accept** or **Decline**. A pending/declined invitee cannot read or write the chat. Accepted participants and the owner can discuss the event; messages refresh periodically (about five seconds), not by email/SMS.
@@ -59,6 +59,6 @@ These are prototype safeguards, **not** a production security certification. The
 
 ## Architecture and verification
 
-`backend/app/community/` is an isolated mounted FastAPI application backed by Python's built-in SQLite. `frontend/src/community/` contains the public directory, local account dashboard and event workspace. This separation preserves the core matcher, its OpenAPI schema and source-evidence rules. Interactive extension docs are at `/api/community/docs`; schema at `/api/community/openapi.json`.
+`backend/app/community/` is an isolated mounted FastAPI application backed by Python's built-in SQLite. `frontend/src/community/` contains the public directory, local account dashboard and event workspace. The read-only `/api/catalog` endpoint projects the authoritative loaded CSV into the source-directory view; the published core OpenAPI includes this additive endpoint. Matching request/response contracts and source-evidence rules are unchanged. Interactive community docs are at `/api/community/docs`; schema at `/api/community/openapi.json`.
 
 Backend checks in `backend/tests/test_community.py` cover permissions, explicit agreement, version conflicts, storage persistence, validation, credential redaction and unchanged CSV hashing. Browser acceptance in `tests/e2e/community.spec.ts` exercises the real running service; [current verification](community-verification.md) records executed checks, not intended results. Use a separate `COMMUNITY_DB_PATH` for test runs so demo accounts do not pollute your working database.

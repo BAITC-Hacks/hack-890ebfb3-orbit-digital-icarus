@@ -1,6 +1,7 @@
 import type { Locale, Templates } from "./types";
 
 const en = {
+  endpointUnavailable: "The community API endpoint is unavailable on this server. If you are running Tandau locally, restart the backend from the current project, then try again.",
   community: "TANDAU / COMMUNITY", providersTitle: "Good people. Great gatherings.",
   providersIntro: "Meet independent event professionals, explore their services, and bring your team together.",
   providers: "Find a provider", events: "My events", account: "My account", signIn: "Sign in", signUp: "Create account", signOut: "Sign out",
@@ -30,6 +31,7 @@ const en = {
 };
 
 const ru: Record<keyof typeof en, string> = {
+  endpointUnavailable: "На этом сервере недоступен маршрут API сообщества. Если вы запускаете Tandau локально, перезапустите серверную часть из актуального проекта и повторите попытку.",
   community: "TANDAU / СООБЩЕСТВО", providersTitle: "Свои люди. Особенные события.",
   providersIntro: "Знакомьтесь со специалистами, выбирайте услуги и собирайте команду для вашего события.",
   providers: "Найти специалиста", events: "Мои события", account: "Мой аккаунт", signIn: "Войти", signUp: "Создать аккаунт", signOut: "Выйти",

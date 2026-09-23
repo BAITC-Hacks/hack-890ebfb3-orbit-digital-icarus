@@ -270,3 +270,6 @@
 @media (prefers-reduced-motion: reduce) {
   .cm *, .cm *::before, .cm *::after { animation: none !important; transition: none !important; }
 }
+.cm-directory-switch { margin-bottom: 1.5rem; }
+.cm-catalog-description summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; }
+.cm-catalog-description p { overflow-wrap: anywhere; }

@@ -142,6 +142,32 @@ class Contractor(BaseModel):
     source_kind: SourceKind = "provided"
 
 
+class CatalogProfile(BaseModel):
+    """Public source profile, without an account, contact or availability claim."""
+
+    id: str
+    anon_name: str
+    categories: list[str]
+    city: str
+    price_from_kzt: int = Field(gt=0)
+    description: str
+    event_formats: list[str]
+    languages: list[str]
+    synthetic: bool
+    city_imputed: bool
+    price_imputed: bool
+    source_kind: SourceKind
+
+
+class CatalogResponse(BaseModel):
+    """Read-only directory from the same authoritative snapshot as matching."""
+
+    dataset_version: str
+    calendar_start: date
+    calendar_end: date
+    profiles: list[CatalogProfile]
+
+
 class ExclusionCounts(BaseModel):
     """Mutually exclusive first-failure counts for a city/category pool."""
 

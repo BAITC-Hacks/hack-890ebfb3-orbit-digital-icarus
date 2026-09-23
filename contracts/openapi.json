@@ -44,6 +44,25 @@
         }
       }
     },
+    "/api/catalog": {
+      "get": {
+        "summary": "Catalog",
+        "description": "Browse source profiles by stable ID; no accounts or availability are implied.",
+        "operationId": "catalog_api_catalog_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/match": {
       "post": {
         "summary": "Match",
@@ -86,6 +105,123 @@
   },
   "components": {
     "schemas": {
+      "CatalogProfile": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "anon_name": {
+            "type": "string",
+            "title": "Anon Name"
+          },
+          "categories": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "price_from_kzt": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Price From Kzt"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "event_formats": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Event Formats"
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "synthetic": {
+            "type": "boolean",
+            "title": "Synthetic"
+          },
+          "city_imputed": {
+            "type": "boolean",
+            "title": "City Imputed"
+          },
+          "price_imputed": {
+            "type": "boolean",
+            "title": "Price Imputed"
+          },
+          "source_kind": {
+            "type": "string",
+            "enum": [
+              "provided",
+              "team_added"
+            ],
+            "title": "Source Kind"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "anon_name",
+          "categories",
+          "city",
+          "price_from_kzt",
+          "description",
+          "event_formats",
+          "languages",
+          "synthetic",
+          "city_imputed",
+          "price_imputed",
+          "source_kind"
+        ],
+        "title": "CatalogProfile",
+        "description": "Public source profile, without an account, contact or availability claim."
+      },
+      "CatalogResponse": {
+        "properties": {
+          "dataset_version": {
+            "type": "string",
+            "title": "Dataset Version"
+          },
+          "calendar_start": {
+            "type": "string",
+            "format": "date",
+            "title": "Calendar Start"
+          },
+          "calendar_end": {
+            "type": "string",
+            "format": "date",
+            "title": "Calendar End"
+          },
+          "profiles": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogProfile"
+            },
+            "type": "array",
+            "title": "Profiles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dataset_version",
+          "calendar_start",
+          "calendar_end",
+          "profiles"
+        ],
+        "title": "CatalogResponse",
+        "description": "Read-only directory from the same authoritative snapshot as matching."
+      },
       "CountSummary": {
         "properties": {
           "city_category_total": {

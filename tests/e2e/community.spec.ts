@@ -90,6 +90,7 @@ test("three providers explicitly accept an editable event plan and share private
 
     // Public directory works before the organizer registers.
     await openEnglish(page, "providers");
+    await page.getByRole("button", { name: "Community listings", exact: true }).click();
     await page.getByRole("searchbox").fill(run);
     await expect(page.getByTestId("community-listing")).toHaveCount(3);
     await signupUI(page, `${run}_owner`, false);

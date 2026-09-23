@@ -10,6 +10,8 @@ from ..constants import CALENDAR_END, CALENDAR_START
 from ..filtering import filter_candidates
 from ..matching import build_cards, rank_candidates
 from ..models import (
+    CatalogProfile,
+    CatalogResponse,
     CountSummary,
     HealthResponse,
     MatchRequest,
@@ -69,6 +71,21 @@ def metadata(request: Request) -> MetadataResponse:
         ),
         calendar_start=CALENDAR_START,
         calendar_end=CALENDAR_END,
+    )
+
+
+@router.get("/catalog", response_model=CatalogResponse)
+def catalog(request: Request) -> CatalogResponse:
+    """Browse source profiles by stable ID; no accounts or availability are implied."""
+
+    return CatalogResponse(
+        dataset_version=request.app.state.dataset_version,
+        calendar_start=CALENDAR_START,
+        calendar_end=CALENDAR_END,
+        profiles=[
+            CatalogProfile.model_validate(profile, from_attributes=True)
+            for profile in sorted(_catalog(request), key=lambda profile: profile.id)
+        ],
     )
 
 

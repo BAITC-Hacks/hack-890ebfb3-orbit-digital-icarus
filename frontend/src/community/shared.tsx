@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { CommunityApiError } from "./api";
+import { CommunityApiError, isCommunityEndpointUnavailable } from "./api";
 import { copy } from "./copy";
 import type { Locale, User } from "./types";
 
@@ -9,6 +9,7 @@ export function useCommunity() { const context = useContext(CommunityContext); r
 export function errorText(error: unknown, locale: Locale) {
   const t = copy[locale];
   if (!(error instanceof CommunityApiError)) return t.genericError;
+  if (isCommunityEndpointUnavailable(error)) return t.endpointUnavailable;
   if (["invalid_credentials", "bad_credentials"].includes(error.code)) return t.credentialsError;
   if (["username_taken", "username_exists", "username_unavailable"].includes(error.code)) return t.usernameTaken;
   if (["listing_unavailable", "listing_mismatch", "invalid_listing", "listing_not_eligible", "listing_not_suitable"].includes(error.code)) return t.listingError;

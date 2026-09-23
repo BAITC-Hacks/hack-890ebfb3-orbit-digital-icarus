@@ -4,6 +4,10 @@ export class CommunityApiError extends Error {
   constructor(public code: string, public status = 0) { super(code); }
 }
 
+export function isCommunityEndpointUnavailable(error: unknown): boolean {
+  return error instanceof CommunityApiError && error.status === 404 && error.code === "endpoint_unavailable";
+}
+
 /** Cookie credentials stay in the browser; server details never become UI copy. */
 export async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   let response: Response;
@@ -18,7 +22,10 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   }
   const body = await response.json().catch(() => null);
   if (!response.ok) {
-    const code = typeof body?.detail?.code === "string" ? body.detail.code : response.status === 422 ? "validation" : "unknown";
+    // Framework route misses differ from the API's deliberate private-resource 404s.
+    // Keep the HTTP status unchanged so existing access-revocation behavior still applies.
+    const code = response.status === 404 && body?.detail === "Not Found" ? "endpoint_unavailable"
+      : typeof body?.detail?.code === "string" ? body.detail.code : response.status === 422 ? "validation" : "unknown";
     throw new CommunityApiError(code, response.status);
   }
   if (body === null) throw new CommunityApiError("invalid_response");
