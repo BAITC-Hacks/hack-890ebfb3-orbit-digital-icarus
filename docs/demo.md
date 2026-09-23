@@ -2,7 +2,7 @@
 
 Open the root URL for the home page, then click **Начать подбор / Start matching** or a category. The form's direct link is `/#/match`. Categories only prefill; search is explicit. Each returned card has an honest inquiry draft that can be copied but is never sent. The dataset has no verified contact directory. See the [three-minute pitch and Q&A](release-review.md) for the separate Demo Day rubric. The inputs below remain authoritative; historical timing/count records identify older revisions.
 
-These scenarios are verified against the bundled 66-profile CSV, the integrated production API and the React interface. The current suite has 13 real-application browser tests and 13 isolated UI tests. Follow the [root setup](../README.md#run-from-a-fresh-checkout) and keep both services running. Leave `VITE_API_MODE` unset so the interface uses the real API.
+These scenarios use the bundled 66-profile CSV, the production API and the React interface. Follow the [one-command root setup](../README.md#run-from-a-fresh-checkout) and keep its launch window open. No second server or account is needed. Leave `VITE_API_MODE` unset for manual development so the interface uses the real API. Current extension checks are recorded in [community verification](community-verification.md); historical counts/timings below describe earlier runs.
 
 From the repository root:
 
@@ -45,7 +45,7 @@ Exclusion counters use the first failed condition in the fixed order `booked`, `
 | Venue booked | `booked: 1` |
 | December scarcity | `booked: 9` |
 
-The equal booked totals on the two dense dates do not mean the same people are booked. HK-42352 and HK-44923 are available on 11 October and booked on 10 October; other profiles differ too. The visible list really changes while every request field except the date stays fixed.
+The equal booked totals on the two dense dates do not mean the same people are booked. HK-42352 and HK-44923 are available on 11 October and booked on 10 October; other profiles differ too. The visible list really changes while every request field except the date stays fixed. Tandau now shows a date-comparison explanation based on recomputed contractor IDs. On reversing this date change, displaced but still eligible profiles are labeled as overtaken in ranking, not falsely called booked. The comparison is supplementary: an insights failure never hides valid matching results.
 
 ## Short presentation sequence
 
@@ -81,9 +81,13 @@ The florist explanation cites author floral design; the venue explanation cites 
 
 Automated tests check distinct demo explanations after removing names and validate quote containment. This inspection is a coding-assistant review, not a human usability study. Some non-demo descriptions are too sparse for a useful quote; six weak records are excluded from prose and structured-fact fallback is used where necessary. See [evidence decisions](evidence-review.md).
 
+## Optional collaboration demonstration
+
+After the core scenario, show a separate provider-owned listing and a signed-in event team using the [community walkthrough](community.md). Use independent browser profiles for organizer/provider identities. Pending invitations are not agreements; accepted participants can chat, and changed scope requires reconfirmation. Never present the source catalog's anonymous florist as the owner of a newly created demonstration account.
+
 ## API and browser rehearsal
 
-After starting the actual integrated backend and frontend:
+After starting the actual integrated backend and frontend (the single launcher serves both; replace port 8000 below with its printed port and set `E2E_BASE_URL` / `E2E_API_URL` for that server):
 
 ```bash
 python scripts/check_api.py --base-url http://127.0.0.1:8000 --repeat 20
@@ -91,9 +95,9 @@ npm run test:e2e
 npm run measure:browser
 ```
 
-The HTTP checker compares the live service with these expected statuses, counts, exclusions, order and explanations. It also expects HTTP 422 for 1 January 2027. All **eight real-browser tests passed**, covering the form, real results, deliberate network failure/retry, delayed-response protection and a 375px viewport. The strengthened delayed-response check holds a response obtained from the real API, edits the date while the search is loading, completes a newer search, then releases the old response and verifies it cannot replace the new result.
+The HTTP checker compares the live service with these expected statuses, counts, exclusions, order and explanations. It also expects HTTP 422 for 1 January 2027. The original **eight real-browser tests passed**, covering the form, real results, deliberate network failure/retry, delayed-response protection and a 375px viewport; newer journeys are additional. The strengthened delayed-response check holds a response obtained from the real API, edits the date while the search is loading, completes a newer search, then releases the old response and verifies it cannot replace the new result.
 
-`npm run test:ui` runs **six additional tests with explicit API mocks**. Those check locale persistence, canonical values, preserved order, English evidence/original Russian, retry versus business-empty outcomes and keyboard/mobile behavior. They are isolated interface checks; the eight-test application suite obtains actual backend results. Detailed hooks, test scope and setup are in the [browser contract](browser-contract.md).
+`npm run test:ui` runs additional tests with explicit API mocks. Those check locale persistence, canonical values, preserved order, English evidence/original Russian, retry versus business-empty outcomes, numeric recovery and keyboard/mobile behavior. They are isolated interface checks; the application suite obtains actual backend results. Detailed hooks, test scope and setup are in the [browser contract](browser-contract.md).
 
 Real screenshots are available in [Russian](images/interface-ru.png) and [English](images/interface-en.png). Rehearse the request sequence before presenting. The frontend build and its local port 4173 preview were also checked against the real backend; see [build and preview](../README.md#build-and-preview). [Complete integrated fresh-clone verification passed at `1292b65`](reproducibility.md), including all suites and 160 real HTTP requests. No internet deployment is claimed.
 

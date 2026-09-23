@@ -9,7 +9,7 @@ test("root home -> category -> real shortlist -> honest inquiry -> back/forward"
   await expect(page.getByTestId("home-page")).toBeVisible();
   await expect(page.getByTestId("match-form")).toHaveCount(0);
   await page.getByRole("button", { name: "English", exact: true }).click();
-  await expect(page).toHaveTitle("Orbit · Home");
+  await expect(page).toHaveTitle("Tandau · Home");
   await page.getByRole("button", { name: /Florist.*requirements/ }).click();
   await expect(page).toHaveURL(/#\/match$/);
   await expect(page.locator('select[name="category"]')).toHaveValue("Флорист");

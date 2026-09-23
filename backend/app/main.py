@@ -1,6 +1,8 @@
 """FastAPI application and explicit, testable startup configuration."""
 
 from contextlib import asynccontextmanager
+from os import getenv
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -8,8 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .api.routes import router
 from .catalog import dataset_sha256, load_catalog
+from .community.api import create_community_app
 from .matching import algorithm_version, load_evidence
-from .settings import AppSettings
+from .insights import create_insights_app
+from .settings import AppSettings, PROJECT_ROOT
 from .validation_errors import request_validation_exception_handler
 
 
@@ -39,7 +43,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         yield
 
     application = FastAPI(
-        title="Orbit Digital Contractor Matching",
+        title="Tandau Contractor Matching",
         version="0.1.0",
         description="Explainable event-contractor recommendations.",
         lifespan=lifespan,
@@ -55,6 +59,13 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         max_age=600,
     )
     application.include_router(router)
+    application.mount("/api/insights", create_insights_app(application))
+    # Optional accounts/listings/chat have their own schema and SQLite state; the
+    # authoritative supplied-catalog API remains anonymous and byte-for-byte data stable.
+    community_path = Path(getenv("COMMUNITY_DB_PATH", str(PROJECT_ROOT / ".orbit" / "community.sqlite3")))
+    if not community_path.is_absolute():
+        community_path = PROJECT_ROOT / community_path
+    application.mount("/api/community", create_community_app(community_path, resolved_settings.cors_origins))
     return application
 
 

@@ -13,7 +13,7 @@ def create_web_app(dist_path: Path | None = None, settings: AppSettings | None =
     """Only expose built public files; API routes retain their validation and startup checks."""
     directory = dist_path if dist_path is not None else PROJECT_ROOT / "frontend" / "dist"
     if not (directory / "index.html").is_file():
-        raise RuntimeError("The website is not built yet. Run python start.py or double-click Start Orbit.cmd.")
+        raise RuntimeError("The website is not built yet. Run python start.py or double-click Start Tandau.cmd.")
     application = create_app(settings)
     # Mount last: /api and /docs remain real backend routes, never an HTML fallback.
     # Hash-based navigation needs only index.html; unknown files/API paths remain 404.

@@ -449,3 +449,16 @@ Release checklist:
 - [ ] Submission links and demo materials prepared; upload according to the tournament's actual deadline and rules.
 
 Only after this checklist: add explicit date-comparison explanations, user-confirmed suggestions for changing a failed constraint, optional short event brief with semantic evidence matching, or richer visual polish. Future production work can add real calendar freshness, confirmed price quotes, feedback-based evaluation and larger-catalog retrieval. Present these as future work unless implemented and checked.
+
+## 13. Captain-approved integrated extension (23 September 2026)
+
+The captain authorized direct integration/push to `main`, selected **Tandau** as the product name, and requested an optional provider/event workspace. This supplements, not replaces, the original public matching Definition of Done. Team identity remains Orbit Digital | Icarus.
+
+- Anonymous visitors retain full source matching and public provider browsing.
+- Only authenticated provider accounts publish/edit their own community listings. The organizer CSV remains untouched; source profiles cannot be claimed or silently invited.
+- Signed-in event owners choose an event template, edit suggested service roles/checklists and invite suitable registered providers. Explicit current-version acceptance is required for each role before declaring a team ready. Private chat is limited to owners/current accepted members.
+- Semantic plan changes require renewed agreement; checking off completed tasks does not. Stale edits and decisions cannot silently overwrite newer versions.
+- SQLite storage is separate and automatically initialized. This is a local collaboration prototype, not a booking/payment or verified contact platform.
+- Light/dark and RU/EN behavior, narrow layouts, keyboard targets, numeric input and the unchanged matching scenarios must be tested together before release.
+
+See [community architecture and judge walkthrough](docs/community.md) and [integration verification](docs/community-verification.md). New functionality must not be described as proof of production scale, verified provider identity, guaranteed service delivery or a guaranteed jury score.

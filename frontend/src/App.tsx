@@ -1,12 +1,16 @@
-import { type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode, useEffect, useRef, useState } from "react";
+import { type ClipboardEvent, type FormEvent, type KeyboardEvent, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ApiError, ApiResponseError, getMetadata, matchContractors } from "./api/client";
 import { metadata as previewMetadata, previewMatch } from "./api/demo";
 import type { MatchAlternative, MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
 import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft, MAX_DURATION_HOURS } from "./formNumbers";
 import { HomePage } from "./components/HomePage";
 import { ContactPanel } from "./components/ContactPanel";
+import { CommunityPage } from "./community/CommunityPage";
 import { journeyCopy } from "./journeyCopy";
 import { usePage } from "./usePage";
+import { applyTheme, storedTheme, type Theme } from "./theme";
+import { DateComparison } from "./DateComparison";
+import { onlyDateChanged, type DateComparisonPair } from "./dateInsights";
 import {
   availabilityLabel, calendarLabel, cardExplanation, copy, displayDate, evidenceValue,
   exclusionSummary, fieldValidationMessage, formatMoney, initialLocale, invalidFields,
@@ -78,7 +82,7 @@ function OutcomeDetails({ result, locale }: { result: MatchResponse; locale: Loc
 function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; locale: Locale; onAlternative: (alternative: MatchAlternative) => void }) {
   // Suggestions are already verified by the API and only execute through an explicit click.
   return <section className="empty-state" data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date}>
-    <span className="empty-icon" aria-hidden="true">⌕</span>
+    <span className="empty-icon" aria-hidden="true"><svg viewBox="0 0 48 48" focusable="false"><circle cx="21" cy="21" r="13" /><path d="m31 31 10 10M16 21h10" /></svg></span>
     <h2>{resultTitle(result, locale)}</h2>
     <OutcomeDetails result={result} locale={locale} />
     <p className="empty-advice">{copy[locale].emptyAdvice}</p>
@@ -101,6 +105,7 @@ function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; 
 export default function App() {
   const page = usePage(); // Navigation does not discard the customer's form or previous result.
   const [locale, setLocale] = useState<Locale>(storedLocale);
+  const [theme, setTheme] = useState<Theme>(storedTheme);
   const [form, setForm] = useState<MatchRequest>(initialRequest);
   const [numericDrafts, setNumericDrafts] = useState({ budget_kzt: String(initialRequest.budget_kzt), duration_hours: "" });
   const rejectedEdits = useRef(new Set<NumericField>());
@@ -108,6 +113,8 @@ export default function App() {
   const [metadataLoading, setMetadataLoading] = useState(!previewMode);
   const [metadataFailed, setMetadataFailed] = useState(false);
   const [result, setResult] = useState<MatchResponse | null>(null);
+  const previousMatch = useRef<MatchResponse | null>(null);
+  const [dateComparison, setDateComparison] = useState<DateComparisonPair | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorKind | null>(null);
   const [invalid, setInvalid] = useState<string[]>([]);
@@ -120,8 +127,11 @@ export default function App() {
   const journey = journeyCopy[locale];
 
   useEffect(() => {
-    document.title = `Orbit · ${journey[page === "home" ? "home" : "match"]}`;
+    document.title = `Tandau · ${journey[page]}`;
   }, [locale, page]); // Direct links and locale switches keep the browser title useful.
+
+  // Apply before paint so native controls and every route agree on the saved theme.
+  useLayoutEffect(() => { applyTheme(theme); }, [theme]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -165,6 +175,7 @@ export default function App() {
     controller.current?.abort();
     setLoading(false);
     setResult(null);
+    setDateComparison(null); // Unmounting also aborts its auxiliary request; retain the successful baseline.
     setError(null);
     setInvalid([]);
   }
@@ -254,9 +265,19 @@ export default function App() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setDateComparison(null);
     try {
       const response = previewMode ? await previewMatch(request) : await matchContractors(request, { signal: active.signal });
-      if (generation === searchGeneration.current) setResult(response);
+      if (generation === searchGeneration.current) {
+        const previous = previousMatch.current;
+        // Demo shortlists do not come from the real comparison pipeline. Never mix those sources.
+        if (!previewMode && previous && onlyDateChanged(previous.request, response.request)
+          && previous.dataset_version === response.dataset_version && previous.algorithm_version === response.algorithm_version) {
+          setDateComparison({ previous, current: response });
+        }
+        previousMatch.current = response;
+        setResult(response);
+      }
     } catch (cause) {
       if (generation !== searchGeneration.current || (cause instanceof Error && cause.name === "AbortError")) return;
       if (cause instanceof ApiError && cause.status === 422) {
@@ -287,48 +308,68 @@ export default function App() {
     ? <span className="field-error" id={`error-${key}`}>{fieldValidationMessage(key, metadata, locale)}</span> : null;
   const fieldAttributes = (key: keyof MatchRequest) => ({
     "aria-invalid": invalid.includes(key),
-    "aria-describedby": [invalid.includes(key) ? `error-${key}` : "", key === "budget_kzt" || key === "duration_hours" ? `hint-${key}` : ""].filter(Boolean).join(" ") || undefined,
+    "aria-describedby": [invalid.includes(key) ? `error-${key}` : "", key === "budget_kzt" || key === "duration_hours" || key === "language" ? `hint-${key}` : ""].filter(Boolean).join(" ") || undefined,
   });
-  const fields: Array<{ key: "city" | "event_format" | "category"; options: string[] }> = [
-    { key: "city", options: metadata?.cities ?? [] },
-    { key: "event_format", options: metadata?.event_formats ?? [] },
-    { key: "category", options: metadata?.categories ?? [] },
-  ];
   const unavailable = !metadata || metadataLoading;
+  const selectField = (key: "city" | "event_format" | "category", options: string[]) => <label>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>
+    {options.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
+  </select>{fieldError(key)}</label>;
 
   return <div className="page-shell">
     {/* The skip link moves focus without changing the hash route. */}
     <a className="skip-link" href="#content" onClick={event => { event.preventDefault(); document.getElementById("content")?.focus(); }}>{journey.skip}</a>
     <header className="site-header">
-      <a className="brand" href="#/" aria-label="Orbit"><span aria-hidden="true">◎</span> orbit</a>
+      <a className="brand" href="#/" aria-label="Tandau">
+        <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><path d="M8 9h16M16 9v16M9 19l5 5L25 13" /></svg></span>
+        Tandau
+      </a>
       <nav className="site-nav" aria-label={locale === "ru" ? "Основная навигация" : "Main navigation"}>
-        <a href="#/" aria-current={page === "home" ? "page" : undefined}>{journey.home}</a>
-        <a href="#/match" aria-current={page === "match" ? "page" : undefined}>{journey.match}</a>
+        {(["home", "match", "providers", "events", "account"] as const).map(route =>
+          <a key={route} href={route === "home" ? "#/" : `#/${route}`} aria-current={page === route ? "page" : undefined}>{journey[route]}</a>,
+        )}
       </nav>
-    <div className="locale-switcher" data-testid="locale-switcher" role="group" aria-label={t.interfaceLanguage}>
-      <span>{t.interfaceLanguage}</span>
-      <button type="button" lang="ru" aria-pressed={locale === "ru"} onClick={() => setLocale("ru")}>Русский</button>
-      <button type="button" lang="en" aria-pressed={locale === "en"} onClick={() => setLocale("en")}>English</button>
-    </div>
+      <div className="top-controls">
+        <div className="locale-switcher" data-testid="locale-switcher" role="group" aria-label={t.interfaceLanguage}>
+          <span className="visually-hidden">{t.interfaceLanguage}</span>
+          <button type="button" lang="ru" aria-label="Русский" aria-pressed={locale === "ru"} onClick={() => setLocale("ru")}>RU</button>
+          <button type="button" lang="en" aria-label="English" aria-pressed={locale === "en"} onClick={() => setLocale("en")}>EN</button>
+        </div>
+        <button className="theme-toggle" type="button" role="switch" aria-checked={theme === "dark"}
+          aria-label={journey.darkTheme} title={theme === "dark" ? journey.lightThemeAction : journey.darkThemeAction}
+          onClick={() => setTheme(current => current === "dark" ? "light" : "dark")}>
+          {/* SVG paths are centered geometrically; the stable switch label describes its checked state. */}
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            {theme === "dark" ? <path d="M20.5 13.1A8.5 8.5 0 0 1 10.9 3.5a8.5 8.5 0 1 0 9.6 9.6Z" />
+              : <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5" /></>}
+          </svg>
+        </button>
+      </div>
     </header>
     <main id="content" tabIndex={-1}>
-    {previewMode && <p className="preview-note" role="note">{t.preview}</p>}
-    {metadataLoading && <p className="catalog-status" role="status">{t.metadataLoading}</p>}
-    {metadataFailed && <div className="request-error" role="alert" data-testid="metadata-error">{t.metadataError} <button type="button" onClick={() => void loadCatalog()}>{t.retry}</button></div>}
-    {page === "home" ? <HomePage locale={locale} metadata={metadata} onCategory={chooseCategory} /> : <>
+    {/* Catalog notices describe supplied matching data, not public community postings. */}
+    {(page === "home" || page === "match") && <>
+      {previewMode && <p className="preview-note" role="note">{t.preview}</p>}
+      {metadataLoading && <p className="catalog-status" role="status">{t.metadataLoading}</p>}
+      {metadataFailed && <div className="request-error" role="alert" data-testid="metadata-error">{t.metadataError} <button type="button" onClick={() => void loadCatalog()}>{t.retry}</button></div>}
+    </>}
+    {page === "providers" || page === "events" || page === "account" ? <CommunityPage page={page} locale={locale} />
+      : page === "home" ? <HomePage locale={locale} metadata={metadata} onCategory={chooseCategory} /> : <>
     <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}{" "}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
     <form ref={formElement} className="match-form" data-testid="match-form" aria-busy={loading} onSubmit={submit} noValidate>
       <div className="field-grid">
-        {fields.map(({ key, options }) => <label key={key}>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>
-          {options.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
-        </select>{fieldError(key)}</label>)}
+        {selectField("city", metadata?.cities ?? [])}
         <label>{t.event_date}<input name="event_date" type="date" min={metadata?.calendar_start} max={metadata?.calendar_end} value={form.event_date} disabled={unavailable} {...fieldAttributes("event_date")} onChange={event => update("event_date", event.target.value)} required />{fieldError("event_date")}</label>
-        <label>{t.budget_kzt}<input name="budget_kzt" aria-label={t.budget_kzt} type="text" inputMode="numeric" autoComplete="off" value={numericDrafts.budget_kzt} disabled={unavailable} {...fieldAttributes("budget_kzt")} onKeyDown={event => numericKeyDown("budget_kzt", event)} onPaste={event => numericPaste("budget_kzt", event)} onChange={event => editNumeric("budget_kzt", event.target.value)} required /><small className="field-hint" id="hint-budget_kzt">{journey.budgetHint}</small>{fieldError("budget_kzt")}</label>
-        <label>{t.duration_hours} <em>{t.optional}</em><input name="duration_hours" aria-label={t.duration_hours} type="text" inputMode="decimal" autoComplete="off" placeholder={t.durationPlaceholder} value={numericDrafts.duration_hours} disabled={unavailable} {...fieldAttributes("duration_hours")} onKeyDown={event => numericKeyDown("duration_hours", event)} onPaste={event => numericPaste("duration_hours", event)} onChange={event => editNumeric("duration_hours", event.target.value)} /><small className="field-hint" id="hint-duration_hours">{journey.durationHint}</small>{fieldError("duration_hours")}</label>
-        <label>{t.language} <em>{t.optional}</em><select name="language" value={form.language ?? ""} disabled={unavailable} {...fieldAttributes("language")} onChange={event => update("language", event.target.value || null)}>
-          <option value="">{t.noLanguage}</option>{metadata?.languages.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
-        </select><small className="field-hint">{t.languageHint}</small>{fieldError("language")}</label>
+        {selectField("event_format", metadata?.event_formats ?? [])}
+        {selectField("category", metadata?.categories ?? [])}
       </div>
+      {/* Spectra's two-part layout groups event basics before limits without hiding any conditions. */}
+      <div className="form-details"><div className="field-grid">
+        <label>{t.budget_kzt}<input name="budget_kzt" aria-label={t.budget_kzt} type="text" inputMode="numeric" autoComplete="off" value={numericDrafts.budget_kzt} disabled={unavailable} {...fieldAttributes("budget_kzt")} onKeyDown={event => numericKeyDown("budget_kzt", event)} onPaste={event => numericPaste("budget_kzt", event)} onChange={event => editNumeric("budget_kzt", event.target.value)} required /><small className="field-hint" id="hint-budget_kzt">{journey.budgetHint}</small>{fieldError("budget_kzt")}</label>
+        <label><span>{t.duration_hours} <em>{t.optional}</em></span><input name="duration_hours" aria-label={t.duration_hours} type="text" inputMode="decimal" autoComplete="off" placeholder={t.durationPlaceholder} value={numericDrafts.duration_hours} disabled={unavailable} {...fieldAttributes("duration_hours")} onKeyDown={event => numericKeyDown("duration_hours", event)} onPaste={event => numericPaste("duration_hours", event)} onChange={event => editNumeric("duration_hours", event.target.value)} /><small className="field-hint" id="hint-duration_hours">{journey.durationHint}</small>{fieldError("duration_hours")}</label>
+        <label className="match-language"><span>{t.language} <em>{t.optional}</em></span><select name="language" value={form.language ?? ""} disabled={unavailable} {...fieldAttributes("language")} onChange={event => update("language", event.target.value || null)}>
+          <option value="">{t.noLanguage}</option>{metadata?.languages.map(option => <option key={option} value={option}>{optionLabel(option, locale)}</option>)}
+        </select><small className="field-hint" id="hint-language">{t.languageHint}</small>{fieldError("language")}</label>
+      </div></div>
       {metadata && <p className="calendar-note">{calendarLabel(metadata, locale)}</p>}
       <div className="form-footer"><p>{t.footer}</p><button type="submit" disabled={loading || unavailable}>{loading ? t.loading : t.submit}</button></div>
     </form>
@@ -336,6 +377,7 @@ export default function App() {
     {result && <section className="results" aria-live="polite">
       <div className="result-tabs"><button type="button" onClick={clearSearch}>{t.newRequest}</button><span className={result.status === "matches_found" ? "active" : ""}>{t.foundTab}</span><span className={result.status === "no_eligible_contractors" ? "active" : ""}>{t.emptyTab}</span><span className={result.status === "category_absent" ? "active" : ""}>{t.absentTab}</span></div>
       <div className="query-tags"><Tag>{optionLabel(result.request.category, locale)}</Tag><Tag>{optionLabel(result.request.city, locale)}</Tag><Tag>{optionLabel(result.request.event_format, locale)}</Tag><Tag>{displayDate(result.request.event_date)}</Tag><Tag>{locale === "ru" ? "до" : "up to"} {formatMoney(result.request.budget_kzt, locale)} ₸</Tag>{result.request.duration_hours != null && <Tag>{result.request.duration_hours} {locale === "ru" ? "ч" : "hours"}</Tag>}{result.request.language && <Tag>{optionLabel(result.request.language, locale)}</Tag>}</div>
+      {dateComparison && <DateComparison comparison={dateComparison} locale={locale} />}
       {result.status === "matches_found" ? <div data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date}>
         <h2>{resultTitle(result, locale)}</h2><OutcomeDetails result={result} locale={locale} />
         {result.cards.length < 3 && <p className="shortfall">{shortfallLabel(result, locale)}</p>}
@@ -344,6 +386,12 @@ export default function App() {
     </section>}
     </>}
     </main>
-    <footer className="site-footer">{journey.footer}</footer>
+    <footer className="site-footer">
+      <div className="footer-main">
+        <span className="footer-brand">Tandau</span><p>{journey.footer}</p>
+        <div className="footer-links" role="group" aria-label={journey.footerNav}><a href="#/">{journey.home}</a><a href="#/match">{journey.match}</a><a href="#/how">{journey.footerHelp}</a></div>
+      </div>
+      <p className="footer-note">{journey.footerNote}</p>
+    </footer>
   </div>;
 }

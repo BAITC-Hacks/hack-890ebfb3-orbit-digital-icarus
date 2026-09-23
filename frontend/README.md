@@ -1,10 +1,12 @@
-# Smart Contractor Matching frontend
+# Tandau frontend
 
 The integrated React interface searches the bundled contractor catalog through the real FastAPI service. It shows up to three ordered cards, inspectable supporting evidence, distinct empty outcomes and retryable failures. Russian is the default; the separate English control changes interface text without changing the matching request.
 
 ## Start locally
 
-**Only want to run the complete app?** Double-click `Start Orbit.cmd` in the repository root or run `python start.py`. It installs, builds and opens the real website/API together; see the [one-command guide](../README.md#run-from-a-fresh-checkout). The commands below are optional frontend development setup with hot reload.
+**Only want to run the complete app?** Double-click `Start Tandau.cmd` in the repository root or run `python start.py`. It installs, builds and opens the real website/API together; see the [one-command guide](../README.md#run-from-a-fresh-checkout). The commands below are optional frontend development setup with hot reload.
+
+The interface now includes a public community directory, local accounts/provider publishing and private event-team planning/chat. These live in `src/community/`, separate from the source matcher. See [permissions and the demo](../docs/community.md). All routes share the RU/EN preference and persistent light/dark theme.
 
 Run commands from the **repository root**, using Node `^22.12.0 || ^24.0.0 || >=26.0.0` and npm:
 

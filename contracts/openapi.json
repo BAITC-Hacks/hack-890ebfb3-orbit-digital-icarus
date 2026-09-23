@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Orbit Digital Contractor Matching",
+    "title": "Tandau Contractor Matching",
     "description": "Explainable event-contractor recommendations.",
     "version": "0.1.0"
   },

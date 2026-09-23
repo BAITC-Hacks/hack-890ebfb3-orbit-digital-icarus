@@ -105,7 +105,7 @@ def setup() -> Path:
     python = ENVIRONMENT / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     new_environment = not python.is_file()
     if new_environment:
-        run_step([sys.executable, "-m", "venv", str(ENVIRONMENT)], "[1/3] Preparing Orbit's private Python environment...")
+        run_step([sys.executable, "-m", "venv", str(ENVIRONMENT)], "[1/3] Preparing Tandau's private Python environment...")
     python_key = fingerprint([ROOT / "requirements-dev.lock"], f"{sys.version}|{platform.platform()}|{sys.executable}")
     if new_environment or not current_stamp("python.ready", python_key):
         run_step([str(python), "-m", "pip", "install", "--disable-pip-version-check", "-r", str(ROOT / "requirements-dev.lock")], "[1/3] Installing app dependencies. First launch can take a few minutes...")
@@ -145,7 +145,7 @@ def reserve_port(requested: int | None) -> socket.socket:
             return listener
         except OSError:
             listener.close()
-    raise LaunchError("That local port is busy. Close your other Orbit window or run python start.py --port 8790. No existing service was stopped.")
+    raise LaunchError("That local port is busy. Close your other Tandau window or run python start.py --port 8790. No existing service was stopped.")
 
 
 def announce_when_ready(server, url: str, open_browser: bool) -> None:
@@ -155,7 +155,7 @@ def announce_when_ready(server, url: str, open_browser: bool) -> None:
         if server.should_exit or time.monotonic() > deadline:
             return
         time.sleep(0.1)
-    say(f"\nOrbit is ready! Open {url}\nKeep this window open. Press Ctrl+C to stop.\n")
+    say(f"\nTandau is ready! Open {url}\nKeep this window open. Press Ctrl+C to stop.\n")
     if open_browser:
         try:
             if not webbrowser.open(url):
@@ -176,7 +176,7 @@ def serve(port: int | None, open_browser: bool) -> None:
         threading.Thread(target=announce_when_ready, args=(server, f"http://127.0.0.1:{actual_port}", open_browser), daemon=True).start()
         server.run(sockets=[listener])
         if not server.started:
-            raise LaunchError("Orbit could not start. See the message above; the supplied catalog and evidence must be intact.")
+            raise LaunchError("Tandau could not start. See the message above; the supplied catalog and evidence must be intact.")
 
 
 def wait_for_server(command: list[str]) -> int:
@@ -184,7 +184,7 @@ def wait_for_server(command: list[str]) -> int:
     try:
         return child.wait()
     except KeyboardInterrupt:
-        say("\nStopping Orbit...")
+        say("\nStopping Tandau...")
         # Ctrl+C reaches the child in the same console; allow its graceful shutdown first.
         try:
             child.wait(timeout=5)
@@ -195,7 +195,7 @@ def wait_for_server(command: list[str]) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Start Orbit. Installs dependencies, builds the website and opens your browser.")
+    parser = argparse.ArgumentParser(description="Start Tandau. Installs dependencies, builds the website and opens your browser.")
     parser.add_argument("--no-browser", action="store_true", help="Do not open a browser (useful for automated checks).")
     parser.add_argument("--port", type=int, help="Use a specific local port instead of choosing an available one.")
     parser.add_argument("--prepare-only", action="store_true", help="Install and build without starting the app.")
@@ -207,10 +207,10 @@ def main(argv: list[str] | None = None) -> int:
         if args.serve:
             serve(args.port, not args.no_browser)
             return 0
-        say("\nORBIT - Event contractor matching\nFirst launch needs internet. Later launches reuse the installation.\n")
+        say("\nTANDAU - Event contractor matching and collaboration\nFirst launch needs internet. Later launches reuse the installation.\n")
         python = setup()
         if args.prepare_only:
-            say("\nSetup complete. Launch Orbit again whenever you are ready.")
+            say("\nSetup complete. Launch Tandau again whenever you are ready.")
             return 0
         command = [str(python), str(ROOT / "start.py"), "--serve"]
         if args.no_browser:
@@ -222,7 +222,7 @@ def main(argv: list[str] | None = None) -> int:
         say("\nStopped. Run the launcher again when you are ready.")
         return 0
     except (LaunchError, OSError, RuntimeError, subprocess.SubprocessError) as error:
-        say(f"\nOrbit could not launch:\n{error}\n\nNeed help? Open README.md, section 'Troubleshooting'.")
+        say(f"\nTandau could not launch:\n{error}\n\nNeed help? Open README.md, section 'Troubleshooting'.")
         return 1
 
 

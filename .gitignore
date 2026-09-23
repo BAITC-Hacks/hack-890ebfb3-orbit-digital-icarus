@@ -23,6 +23,12 @@ secrets/
 tmp/
 # One-command launcher environment, fingerprints and diagnostic setup log.
 .orbit/
+# Community accounts/messages must never be committed, including custom local DB paths.
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
 *.pem
 *.key
 *-key.txt

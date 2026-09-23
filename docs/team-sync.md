@@ -1,5 +1,11 @@
 # Integration observations
 
+## Tandau/community integration checkpoint
+
+On 23 September the captain authorized integrating the optional provider/event workspace into `main`, using **Tandau** branding and parallel implementation/review. The current review started from `1b19dd8` (Enjoy fixes PR #6), then observed `80c2e7a` (Spectra PR #7) and `feature/sp3ctra` at `1a10197`. Tandau/theme/layout changes are reconciled with the new community routes, honest inquiry draft, grouped budgets, 12-hour duration cap and date-comparison reasons; these must not be lost by blindly replacing entire files.
+
+`Enjoy` at `60b1b0d` is an archived original-history branch. Its new progress log explicitly warns not to merge its pre-rewrite history back into main; the functional fixes are already on main via PR #6. `bbl` at `f3c8529` likewise preserves earlier development history whose functionality is already integrated. This task does not rewrite, force-push or delete those branches. Current extension behavior and verification are recorded in [community.md](community.md) and [community-verification.md](community-verification.md); older checkpoints below remain historical.
+
 ## Current release handoff
 
 The current integration combines `bbl` f3c8529, `Enjoy` 9e7d5d0, `feature/sp3ctra` fc3a958 and `main` e691a58 without rewriting their history. The home/inquiry journey was added at 032561f and the concurrent main update merged at a1930af. Follow [release-review.md](release-review.md) for current checks, merge decisions, product behavior and the demo script. The earlier checkpoints below are retained as historical records; their pending-integration notes no longer describe the current source.

@@ -1,14 +1,14 @@
-# Smart Contractor Matching
+# Tandau — explained contractor matching and event teams
 
 Orbit Digital | Icarus · hackathon task **#79-lite**
 
 Find an event contractor in Kazakhstan without searching a long catalog. Enter the city, date, event format, category and budget to receive **up to three eligible profiles**, each with a short explanation and inspectable evidence. A date change can change the shortlist; a rare category can return one card; an empty result explains what prevented a match.
 
-**The integrated application combines `bbl`, `Enjoy` and `feature/sp3ctra` for `main`:** a bilingual home page, matching form, FastAPI filtering/ranking, grounded explanations and copyable contractor inquiries. This is a local hackathon prototype, not a deployed booking or messaging service. See the [release review and Demo Day scorecard](docs/release-review.md) for current verification and remaining human actions.
+**Browse and match without an account.** Providers can also create a local account and publish their own listings. Signed-in users can assemble an event team from those listings, edit service-specific checklists, request each provider's agreement and discuss the event in a private group chat. The community directory is separate from the unchanged organizer CSV: nobody can impersonate an anonymized source profile. This is a local prototype, not a deployed booking/payment service. See the [community walkthrough](docs/community.md) and [Demo Day scorecard](docs/release-review.md).
 
 ## Run from a fresh checkout
 
-**Windows: open the downloaded/cloned project folder and double-click [Start Orbit.cmd](<Start Orbit.cmd>).** The launcher installs dependencies, builds the website, starts the application and opens your browser. Keep its window open while using Orbit; press **Ctrl+C** there to stop (answer **Y** if Windows asks to terminate the batch job).
+**Windows: open the downloaded/cloned project folder and double-click [Start Tandau.cmd](<Start Tandau.cmd>).** The launcher installs dependencies, builds the website, starts the application and opens your browser. Keep its window open while using Tandau; press **Ctrl+C** there to stop (answer **Y** if Windows asks to terminate the batch job). `Start Orbit.cmd` remains a compatibility shortcut.
 
 **Install once if missing:** [Python 3.11 or newer](https://www.python.org/downloads/) and [Node.js 24 LTS](https://nodejs.org/en/download) (includes npm). On Windows, enable **Add Python to PATH** if offered, then reopen the project folder after installing. These runtimes are prerequisites, not bundled installers; the launcher explains if either is missing. The first launch needs internet and may take a few minutes. Subsequent unchanged launches reuse the installation and build.
 
@@ -26,9 +26,11 @@ cd hack-890ebfb3-orbit-digital-icarus
 python start.py
 ```
 
-Orbit normally opens at **http://127.0.0.1:8765**. If that port is occupied, the launcher chooses another available port and prints/opens the correct address. One local server serves both the website and real API. **No API key, account, Docker, database, environment file, virtual-environment activation or second terminal is needed.** No contact messages or paid model requests are sent.
+Tandau normally opens at **http://127.0.0.1:8765**. If that port is occupied, the launcher chooses another available port and prints/opens the correct address. One local server serves both the website and real API. **No API key, external account, Docker, database server, environment file, virtual-environment activation or second terminal is needed.** Browsing/matching needs no login. Publishing and event collaboration use optional local accounts; SQLite storage is created automatically. Group messages stay in this app; no emails, external notifications or paid model requests are sent.
 
 Local setup lives in ignored `.orbit/` and `frontend/node_modules`; the built website is in ignored `frontend/dist`. Changed lockfiles trigger installation again; changed frontend source triggers a rebuild. Setup does not overwrite a developer's `.venv`. The launcher forces real API mode, even if a design-preview environment setting is present.
+
+Local accounts, listings and chats persist in **`.orbit/community.sqlite3`**, separate from the source catalog. Treat this file and its backups as private; they are gitignored. Do not delete `.orbit/` to clear a build cache if you want to keep your community data.
 
 ### Verify it in two minutes — no coding required
 
@@ -41,7 +43,7 @@ For both empty outcomes, venues, optional constraints and exact expected IDs, fo
 
 ### Technologies at a glance
 
-**React + TypeScript + Vite** provide the bilingual interface; **Python + FastAPI + Pydantic + Uvicorn** validate requests and serve the application. Matching uses the bundled **CSV** and reviewed **JSON evidence**, with deterministic filtering/ranking and no runtime model call. **pytest, Vitest and Playwright** cover domain logic, UI behavior and browser journeys. Detailed versions and module ownership are in [Architecture](#architecture-and-repository-map).
+**React + TypeScript + Vite** provide the bilingual light/dark interface; **Python + FastAPI + Pydantic + Uvicorn** validate requests and serve the application. Matching uses the bundled **CSV** and reviewed **JSON evidence**, with deterministic filtering/ranking and no runtime model call. **SQLite** stores the separate community workspace. **pytest, Vitest and Playwright** cover domain logic, permissions, UI behavior and browser journeys. Detailed versions and module ownership are in [Architecture](#architecture-and-repository-map).
 
 ### Troubleshooting
 
@@ -50,13 +52,13 @@ For both empty outcomes, venues, optional constraints and exact expected IDs, fo
 | Python or Node is missing/unsupported | Install the versions linked above, reopen the launch window, then try again. Supported Node range: `^22.12.0 || ^24.0.0 || >=26.0.0`. |
 | First installation fails | Check internet access to Python/npm package registries; relaunch to retry. The window shows the last error lines; full setup output is in `.orbit/setup.log`. Do not publish that log without checking it for machine-specific details. |
 | Python cannot create its environment on Linux | Install your distribution's Python venv support (commonly `python3-venv` on Debian/Ubuntu), then relaunch. No administrator access is needed once Python/Node/venv support are installed. |
-| Browser does not open | Copy the `Orbit is ready!` address from the launch window into your browser. |
-| A specific port is busy | Normally Orbit picks another automatically. To choose one yourself: `python start.py --port 8790`. The launcher never stops another program. |
+| Browser does not open | Copy the `Tandau is ready!` address from the launch window into your browser. |
+| A specific port is busy | Normally Tandau picks another automatically. To choose one yourself: `python start.py --port 8790`. The launcher never stops another program. |
 | You changed frontend code | Stop with Ctrl+C and launch again; the production website is rebuilt when needed. For automatic hot reload use the developer setup below. |
 
 Optional switches: `--no-browser` skips opening a browser; `--prepare-only` installs/builds without starting. Local use is bound to `127.0.0.1`, not exposed to your network. Windows is the locally verified platform; macOS/Linux paths are supported by the launcher but are not claimed as separately verified machines.
 
-![Orbit home page](docs/images/home-ru.png)
+![Tandau home page](docs/images/home-ru.png)
 
 ![Russian interface showing a real API shortlist](docs/images/interface-ru.png)
 
@@ -64,7 +66,7 @@ Optional switches: `--no-browser` skips opening a browser; `--prepare-only` inst
 
 ## Developer setup (optional)
 
-**Skip this entire section if you only want to run or judge Orbit.** The launcher above does the application setup automatically. This alternative enables hot reload and installs the additional test tools.
+**Skip this entire section if you only want to run or judge Tandau.** The launcher above does the application setup automatically. This alternative enables hot reload and installs the additional test tools.
 
 <details>
 <summary>Expand manual setup, separate dev servers and build preview</summary>
@@ -131,6 +133,7 @@ Every variable is optional; the commands above work with none of them set. Examp
 | --- | --- | --- | --- |
 | `DATA_PATH` | Backend | `data/contractors.csv` | Catalog CSV; relative paths resolve from the repository root |
 | `CORS_ORIGINS` | Backend | `http://127.0.0.1:5173,http://localhost:5173` | Comma-separated browser origins allowed to call the API |
+| `COMMUNITY_DB_PATH` | Backend | `.orbit/community.sqlite3` | Private local SQLite file, created automatically; relative paths resolve from the repository root |
 | `VITE_API_MODE` | Frontend | `api` | `demo` shows a labeled design preview; leave unset for real matching |
 | `RUN_APP_SERVERS` | `npm run test:e2e` | unset | `1` lets Playwright start the backend and frontend itself |
 | `E2E_BASE_URL`, `E2E_API_URL` | `npm run test:e2e` | local ports 5173 / 8000 | Point browser acceptance at already-running services |
@@ -180,14 +183,17 @@ flowchart LR
 
 | Path | Responsibility |
 | --- | --- |
-| `start.py`, `Start Orbit.cmd`, `backend/app/web.py` | One-command setup, cached production build and one local website/API server |
+| `start.py`, `Start Tandau.cmd`, `backend/app/web.py` | One-command setup, cached production build and one local website/API server |
 | `backend/app/catalog.py`, `models.py`, `normalization.py` | Catalog loading, typed boundaries and canonical request validation |
 | `backend/app/filtering.py` | Hard constraints and first-failure exclusion counts |
 | `backend/app/matching/` | Ranking, evidence validation and card construction |
 | `backend/app/api/routes.py`, `main.py` | HTTP responses, startup validation and dataset/algorithm versions |
+| `backend/app/insights.py` | Recomputed date-only comparison: booked versus displaced from the top three |
+| `backend/app/community/` | Isolated local accounts, provider-owned listings, templates, consent and private event chat |
 | `data/contractors.csv` | Unchanged organizer-supplied 66-profile catalog |
 | `frontend/src/App.tsx`, `frontend/src/styles/app.css` | Form, cards, evidence, loading/error states and responsive presentation |
 | `frontend/src/api/` | Typed transport, runtime response checks and opt-in design preview |
+| `frontend/src/community/` | Public provider directory, account dashboard and signed-in event workspace |
 | `frontend/src/i18n/` | Russian/English labels, evidence translations and locale checks |
 | `contracts/` | Published OpenAPI contract and three response examples |
 | `backend/tests/`, `frontend/src/**/*.test.ts` | Backend, transport and localization checks |
@@ -199,7 +205,7 @@ flowchart LR
 
 ### Technology stack
 
-Backend: Python 3.11+, FastAPI, Pydantic and Uvicorn, with the catalog held in memory and no database. Frontend: React 19, TypeScript and Vite with plain CSS. Tests: pytest, HTTPX, Vitest, Testing Library with jsdom, and Playwright with Chromium.
+Backend: Python 3.11+, FastAPI, Pydantic and Uvicorn. The source catalog is held in memory; the optional community module uses Python's built-in SQLite, with no database server to install. Frontend: React 19, TypeScript and Vite with plain CSS. Tests: pytest, HTTPX, Vitest, Testing Library with jsdom, and Playwright with Chromium.
 
 Backend dependencies are pinned to FastAPI **0.136.1**, Pydantic **2.13.3**, Uvicorn **0.46.0**, pytest **9.1.1** and HTTPX **0.28.1**, with resolved dependencies and platform markers in `requirements-dev.lock`. The UI uses React **19.1.1**, Vite **7.3.6** and TypeScript **5.9.2**. Root integration tools separately pin Playwright **1.63.0**, Vitest **5.0.1** and TypeScript **5.8.3**. Both npm packages have lockfiles. The app launcher installs only frontend npm dependencies; root `npm ci` is additionally required for developer verification tools.
 
@@ -258,6 +264,8 @@ Source materials: [CSV](https://drive.google.com/file/d/1uUCu-szctwaTaV0-Yfg3FKH
 | `GET /api/health` | `status: ready`, profile count, dataset hash and algorithm version after successful startup |
 | `GET /api/metadata` | Canonical cities, categories, formats and languages, plus `calendar_start` / `calendar_end` |
 | `POST /api/match` | Normalized request, versions, counts, exclusions, status and zero to three cards |
+| `POST /api/insights/dates` | Compare two otherwise identical requests; explain removed/added shortlist IDs without guessing from aggregate counts |
+| `/api/community/*` | Separate authentication, listings, templates, invitations and chat; interactive schema at `/api/community/docs` |
 
 Example request:
 
@@ -283,7 +291,7 @@ The verified result has one card, `HK-39372`, from a pool of two florists; the o
 
 Invalid fields, unsupported catalog values and dates outside the calendar return **HTTP 422**. Network errors, server failures and malformed successful responses are distinct error states with retry. The frontend preserves input and server order, cancels superseded requests and prevents an old response from replacing a newer form state.
 
-The TypeScript declarations are manually aligned with [the published contract](contracts/openapi.json). Transport tests exercise all three response examples and runtime guards. See [integration details](docs/integration.md) and [browser contract](docs/browser-contract.md).
+The core TypeScript declarations are manually aligned with [the published matching contract](contracts/openapi.json). Transport tests exercise all three response examples and runtime guards. Extension schemas are available at `/api/insights/openapi.json` and `/api/community/openapi.json`. See [integration details](docs/integration.md), [browser contract](docs/browser-contract.md) and [community permissions](docs/community.md).
 
 ## Reproduce the checks
 
@@ -327,6 +335,8 @@ npm.cmd run test:e2e
 
 ### Recorded local verification
 
+**Current Tandau/community checks:** see [the new integration verification](docs/community-verification.md) for provider accounts, multi-person consent/chat, themes and date comparison. The table below is the historical pre-extension baseline, not a claim that its old commit hashes contain the new features.
+
 | Check | Result |
 | --- | --- |
 | Python suite | **152 passing tests and 265 subtests**, including 35 launcher/static-serving checks, duration boundaries, strict types, JSON-safe errors, verified alternatives and published OpenAPI parity |
@@ -366,9 +376,11 @@ The practical value is a short, repeatable shortlist with reasons the user can i
 | Value and applicability | 15 | Inspectable reasons, price/calendar caveats, responsive Russian/English interface and actionable exclusions |
 | Development potential and originality | 10 | Versioned extractive evidence, guarded offline proposals, reviewable translations and reproducible matching |
 
+The separate Demo Day rubric supplied by the captain weights value/result/innovation/scaling/presentation as **25/20/15/20/20**. The optional provider/event workflow adds authenticated publishing, editable service templates, explicit agreement and private team discussion; its [demo and permission boundaries](docs/community.md) support that presentation without changing the original matching brief. Those weights are opportunities to demonstrate evidence, not points already earned.
+
 See the [technical judging checklist](docs/judging-checklist.md), [Demo Day scorecard and pitch](docs/release-review.md), and [earlier clean-clone verification](docs/reproducibility.md). Remaining human work is rehearsal, portal submission and cloud CI follow-up if the account still blocks jobs. User-approved one-condition alternatives are implemented. Live calendars, verified contact onboarding, confirmed quotations, feedback evaluation and larger-catalog retrieval remain future work. Rubric weights are not earned scores or a guarantee of winning.
 
-Team ownership: **Enjoy** (`Enjoy` branch) — matching, evidence, integration and verification; **bbl** (`bbl` branch) — backend models, catalog and filtering; **spectra** (`feature/sp3ctra` branch) — interface design and frontend. All work is merged into `main` through pull requests. Small increments are pushed to the owner's branch, and remote updates/contracts are checked before merging. See [Instructions.md](Instructions.md) and [team synchronization notes](docs/team-sync.md).
+Team ownership: **Enjoy** (`Enjoy` branch) — matching, evidence, integration and verification; **bbl** (`bbl` branch) — backend models, catalog and filtering; **spectra** (`feature/sp3ctra` branch) — interface design and frontend. Integration uses team pull requests and captain-authorized tested updates to `main`. Remote updates/contracts are checked before merging; archived pre-rewrite branches are preserved rather than merged a second time. See [Instructions.md](Instructions.md) and [team synchronization notes](docs/team-sync.md).
 
 ### Organizer reminder and submission
 
@@ -388,13 +400,14 @@ Disclosed under the hackathon rules on third-party materials. The matching, filt
 | Vite, @vitejs/plugin-react | 7.3.6, 5.0.2 | MIT | Frontend build and dev server |
 | TypeScript | 5.9.2 (frontend), 5.8.3 (root) | Apache-2.0 | Type checking |
 | Vitest, Testing Library, jsdom | 5.0.1, 16.3.0, 26.1.0 | MIT | Unit and component tests |
-| Playwright and its downloaded Chromium | 1.63.0 | Apache-2.0 | Browser tests |
+| Playwright | 1.63.0 | Apache-2.0 | Browser automation |
+| Downloaded Chromium | 153.0.8010.12 in recorded checks | BSD-style and component-specific licenses; [upstream notice](https://chromium.googlesource.com/chromium/src/+/HEAD/LICENSE) | Browser tests |
 | GitHub Actions `checkout`, `setup-python`, `setup-node` | v4, v5, v4 | MIT | Manual CI workflow |
 
 Full resolved dependency sets are in `requirements-dev.lock`, `package-lock.json` and `frontend/package-lock.json`. Transitive licenses are MIT, ISC, BSD and Apache-2.0, plus the dev-only MPL-2.0 `lightningcss` and CC-BY-4.0 `caniuse-lite` data.
 
-- **Dataset:** `data/contractors.csv` is the unchanged organizer-supplied catalog, including its 13 synthetic profiles, imputed values and calendar. The team added no profiles.
+- **Dataset:** `data/contractors.csv` is the unchanged organizer-supplied catalog, including its 13 synthetic profiles, imputed values and calendar. The team added no source profiles. User-published community listings live separately in the private local database and are labeled unverified; they never enter the source matching score.
 - **Design:** [`design.pdf`](design.pdf), five screens, and the interface design were made by the team for this project. Screenshots in `docs/images/` are captures of this application. No icon library or stock images are used.
 - **Fonts:** no font files are bundled or downloaded. The CSS names Inter, used only if it is installed locally; otherwise Georgia and system fonts apply.
 - **AI coding assistants:** OpenAI Codex and Anthropic Claude Code were used as development tools for code, tests, reviews and documentation, as the rules allow. The 99 quote records in `backend/app/matching/profile_evidence.json` and the 93 English quote translations in `frontend/src/i18n/evidence.en.json` were prepared with an AI coding assistant, then checked automatically for exact source substrings, known IDs and valid tags. The team directed, reviewed and tested the work.
-- **AI in the product:** none at runtime. The optional offline evidence tool in `scripts/propose_evidence.py` can call NVIDIA's hosted API (default `nvidia/mistral-nemo-minitron-8b-8k-instruct`) or OpenAI Chat Completions (default `gpt-4.1-mini-2025-04-14`) with the operator's own key. Both OpenAI proposals were rejected in review, and the NVIDIA call returned HTTP 401, so no output from that tool is shipped. The app, tests and checks never need a key or a personal account.
+- **AI in the product:** none at runtime. The optional offline evidence tool in `scripts/propose_evidence.py` can call NVIDIA's hosted API (default `nvidia/mistral-nemo-minitron-8b-8k-instruct`) or OpenAI Chat Completions (default `gpt-4.1-mini-2025-04-14`) with the operator's own key. Both OpenAI proposals were rejected in review, and the NVIDIA call returned HTTP 401, so no output from that tool is shipped. Matching/tests never need a key or an external personal account. Optional community actions require only a local account created in the app; automated community tests use disposable local accounts. Chat is between participants, not an LLM.

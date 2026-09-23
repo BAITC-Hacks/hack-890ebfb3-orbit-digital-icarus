@@ -1,5 +1,7 @@
 # One-command launch verification
 
+This is the historical launch verification. The current product is **Tandau**, started with `Start Tandau.cmd` or the unchanged `python start.py`; the Orbit shortcut remains compatible. See [current community integration verification](community-verification.md) for the newer source and tests. The `.orbit` directory name is retained to preserve local installations/data.
+
 Verified on **23 September 2026**, source **`6ee3714`**, including the team's dark-theme commit `b9a9719`. This is a fresh local Git clone of the committed source, not a reuse of the developer's installed checkout. Windows 11, Python 3.14.4, Node 24.15.0, npm 11.12.1 and Chromium 153.0.8010.12 were used. No provider keys or paid inference requests were needed.
 
 ## What a judge does

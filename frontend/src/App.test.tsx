@@ -2,6 +2,12 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
+import { THEME_STORAGE_KEY } from "./theme";
+
+// The shell owns navigation; community tests exercise session and posting behavior separately.
+vi.mock("./community/CommunityPage", () => ({
+  CommunityPage: ({ page, locale }: { page: string; locale: string }) => <section data-testid="community-route">{page} {locale}</section>,
+}));
 
 const fixtureIds = ["HK-42352", "HK-77838", "HK-72938"];
 const fetch = vi.fn(() => Promise.reject(new Error("Component fixtures must not call the network")));
@@ -24,6 +30,77 @@ describe("App: explicit demo fixtures, not production matching", () => {
   });
 
   afterEach(() => expect(fetch).not.toHaveBeenCalled());
+
+  it("toggles the theme by keyboard, localizes its accessible label and persists both choices", async () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
+    const user = userEvent.setup();
+    const view = render(<App />);
+    const toggle = screen.getByRole("switch", { name: "Тёмная тема" });
+    expect(toggle).toBeChecked();
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    toggle.focus();
+    await user.keyboard(" ");
+    expect(toggle).not.toBeChecked();
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("light");
+    await user.click(screen.getByRole("button", { name: "English", exact: true }));
+    expect(screen.getByRole("switch", { name: "Dark theme" })).toHaveAttribute("title", "Switch to dark theme");
+    expect(document.title).toBe("Tandau · Find a match");
+    view.unmount();
+    render(<App />);
+    expect(screen.getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("switch", { name: "Dark theme" })).not.toBeChecked();
+    await user.click(screen.getByRole("switch", { name: "Dark theme" }));
+    expect(document.documentElement.dataset.theme).toBe("dark");
+  });
+
+  it.each([ ["providers", "Подрядчики", "Providers"], ["events", "События", "Events"], ["account", "Аккаунт", "Account"] ])(
+    "opens the public %s route directly and localizes its navigation and title", async (page, russian, english) => {
+      window.history.replaceState(null, "", `/#/${page}`);
+      const user = userEvent.setup();
+      render(<App />);
+      expect(screen.getByTestId("community-route")).toHaveTextContent(`${page} ru`);
+      expect(screen.queryByTestId("match-form")).not.toBeInTheDocument();
+      expect(screen.queryByRole("note")).not.toBeInTheDocument();
+      expect(document.title).toBe(`Tandau · ${russian}`);
+      expect(screen.getByRole("link", { name: russian, exact: true })).toHaveAttribute("aria-current", "page");
+      await user.click(screen.getByRole("button", { name: "English", exact: true }));
+      expect(screen.getByTestId("community-route")).toHaveTextContent(`${page} en`);
+      expect(document.title).toBe(`Tandau · ${english}`);
+      await user.click(screen.getByRole("link", { name: "Skip to content" }));
+      expect(screen.getByRole("main")).toHaveFocus();
+      expect(window.location.hash).toBe(`#/${page}`);
+    },
+  );
+
+  it("preserves a grouped budget and returned cards through community navigation without authentication", async () => {
+    const user = userEvent.setup();
+    await renderPreview();
+    await user.clear(screen.getByLabelText("Бюджет, ₸"));
+    await user.type(screen.getByLabelText("Бюджет, ₸"), "4 000 000");
+    await submit(user);
+    await screen.findByTestId("result-summary");
+    const nav = within(screen.getByRole("navigation"));
+    await user.click(nav.getByRole("link", { name: "Подрядчики" }));
+    expect(await screen.findByTestId("community-route")).toHaveTextContent("providers ru");
+    await user.click(nav.getByRole("link", { name: "Подбор" }));
+    await screen.findByTestId("match-form");
+    expect(screen.getByLabelText("Бюджет, ₸")).toHaveValue("4 000 000");
+    expect(screen.getAllByTestId("contractor-card").map(card => card.dataset.contractorId)).toEqual(fixtureIds);
+  });
+
+  it("offers distinct public matching and unverified community entry points on the Tandau home page", () => {
+    window.history.replaceState(null, "", "/");
+    render(<App />);
+    expect(document.title).toBe("Tandau · Главная");
+    expect(screen.getByRole("link", { name: "Tandau" })).toHaveAttribute("href", "#/");
+    const home = within(screen.getByTestId("home-page"));
+    expect(home.getByRole("link", { name: /Смотреть подрядчиков/ })).toHaveAttribute("href", "#/providers");
+    expect(home.getByRole("link", { name: /Спланировать событие/ })).toHaveAttribute("href", "#/events");
+    expect(home.getByText(/Эти публикации пользователей не проверены/)).toBeVisible();
+    expect(home.getByText(/только владельцу и приглашённым участникам/)).toBeVisible();
+    expect(home.getByText(/Это проверка данных/)).toBeVisible();
+  });
 
   it("renders every required field and all global categories after metadata is ready", async () => {
     const user = userEvent.setup();

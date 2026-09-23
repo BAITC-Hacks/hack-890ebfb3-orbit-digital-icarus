@@ -2,6 +2,14 @@
 
 This is the current product handoff, replacing the branch-only status in older notes. It records implemented behavior and observed checks, not a promised judging score. The official task's technical rubric and the separate Demo Day rubric supplied by the captain are different assessments.
 
+## Tandau extension update
+
+The captain selected **Tandau** (spectra's new branding) and authorized the optional provider/event workspace. See [community behavior and permissions](community.md) and [current integration verification](community-verification.md). Earlier hash/count references below are historical records, including revisions from before the organizer repository's history rewrite; they are not new verification of this extension.
+
+Current scope adds authenticated provider publishing, public browsing, editable service templates, explicit invitation decisions, consent-sensitive team readiness and private event chat. The core anonymous matching dataset/rules remain unchanged. The theme toggle persists light/dark preference and the interface remains RU/EN. Date-change explanations identify actual removed/added profiles and distinguish booked from displaced-in-ranking.
+
+This improves the demo evidence for value and completeness (a source-grounded decision followed by a separate consent-based planning workflow), originality (traceable selection and reconfirmation when scope changes), and development potential (isolated matching/community modules). It does not prove product-market fit, production-scale load, verified identities, bookings or any awarded jury points. Prioritize the original matching brief in the live pitch; demonstrate collaboration as an optional extension.
+
 ## Numeric recovery follow-up
 
 After release `3fc7421`, a user reproduced an empty duration field remaining locked after a rejected letter. The retained-edit guard incorrectly treated the next valid digit as continuation of an existing numeric prefix, even when no prefix existed. Both keyboard and change handlers now allow a fresh numeric draft from an empty field; malformed pastes and nonempty `4e2` continuations remain rejected. Regression tests failed before the fix and passed after it, for budget/duration, comma decimals and mobile-style insertion without keydown. Follow-up checks: 14 React tests, 7 numeric unit tests, all 15 isolated browser UI tests and the production build passed. The initial release measurements below remain the record for that run.
@@ -24,7 +32,7 @@ After restarting the frontend, all 13 real-application end-to-end tests passed a
 
 The attached DOCX was read directly during this review. Its six requirements remain intact: required/optional inputs; at most three factual explained cards; no booked profiles (including venues); honest shortlists; deterministic order; three distinct business outcomes. The supplied 66-profile CSV remains unchanged.
 
-The brief explicitly excludes booking, applications and contractor notifications from the core. Our approved contact extension prepares local text only; it does not implement those out-of-scope operations. Homepage polish is supplementary: explanations and honest outcomes still take priority. Availability is only a snapshot covering 23 September–31 December 2026. Starting price is not a confirmed quote; synthetic/imputed flags remain visible.
+The brief explicitly excludes booking, applications and contractor notifications from the core. Source-profile contact still prepares local text only; it does not send inquiries. The later captain-approved community workspace adds in-app invitations/chat between registered local accounts in a separate module, not source-profile bookings or external notifications. It is supplementary: explanations and honest outcomes still take priority. Matching availability is only a snapshot covering 23 September–31 December 2026. Starting price is not a confirmed quote; synthetic/imputed flags remain visible.
 
 The provided general rules allow AI-assisted evaluation, but human experts/jury still assess the project. Tests, commits and measurements are evidence of real work, not manufactured activity. This review cannot certify compliance with unpublished instructions, eligibility, attendance or submission rules; the captain must check the official portal and deadline.
 
@@ -63,7 +71,7 @@ Keep the venue example from `demo.md` ready for questions. Screenshots are a fal
 
 ## Development roadmap — proposed, not implemented
 
-1. **Trusted pilot:** onboard consenting contractors; verify contact ownership, quote currency and calendar timestamps; add explicit consent, authentication and abuse controls before transmitting inquiries. Measure whether users understand shortlist reasons, not just clicks.
+1. **Trusted pilot:** build on the local-account/explicit-consent prototype with verified contact ownership, current quotations and calendar timestamps, recovery/moderation/privacy processes and deployment-grade abuse controls. Measure whether users understand shortlist reasons, not just clicks. Current local accounts do not verify real identities.
 2. **Larger catalog:** move structured catalog/calendar data to indexed storage; retain exact hard filters before top-k ranking; batch and version evidence ingestion; evaluate cache invalidation when dates/prices change. Benchmark larger realistic datasets and concurrent searches before claiming scale.
 3. **Quality loop:** collect opt-in relevance feedback, create a held-out query set and measure eligibility violations (target zero), evidence support, useful shortlists and latency. Use embeddings or reranking only if measured quality improves without weakening constraints or repeatability.
 
@@ -98,7 +106,7 @@ Code comments describe module boundaries, invariants, non-obvious edits, request
 
 ## Final handoff
 
-- Pull `main`; double-click `Start Orbit.cmd` or run `python start.py` after installing Python and Node once. The launcher builds real API mode; no separate backend/frontend commands are required for judging.
+- Pull `main`; double-click `Start Tandau.cmd` or run `python start.py` after installing Python and Node once. The launcher builds real API mode; no separate backend/frontend commands are required for judging. The old Orbit shortcut remains an alias.
 - Rehearse on the presentation machine and verify dense/rare/empty/date examples. Keep the launch window open; use the current local screenshots as backup.
 - Per the additional organizer notice supplied on 23 September, the README must explain purpose, launch, technologies and verification independently. Team members must remain at the venue until 18:00 even if coding finishes early; this is a human participation requirement, not something automated tests can certify.
 - Verify portal requirements, submit the project and confirm the submission receipt before the actual deadline. This code work does not submit the entry.
