@@ -6,6 +6,8 @@ Find an event contractor in Kazakhstan without searching a long catalog. Enter t
 
 **Browse and match without an account.** Providers can also create a local account and publish their own listings. Signed-in users can assemble an event team from those listings, edit service-specific checklists, request each provider's agreement and discuss the event in a private group chat. The community directory is separate from the unchanged organizer CSV: nobody can impersonate an anonymized source profile. This is a local prototype, not a deployed booking/payment service. See the [community walkthrough](docs/community.md) and [Demo Day scorecard](docs/release-review.md).
 
+**Live demo:** [http://80.78.18.242](http://80.78.18.242/) runs `main` on the team's server as the same single-server app that `python start.py` starts locally. No account or API key is needed. The local setup below remains the reference way to run and verify the project.
+
 ## Run from a fresh checkout
 
 **Windows: open the downloaded/cloned project folder and double-click [Start Tandau.cmd](<Start Tandau.cmd>).** The launcher installs dependencies, builds the website, starts the application and opens your browser. Keep its window open while using Tandau; press **Ctrl+C** there to stop (answer **Y** if Windows asks to terminate the batch job). `Start Orbit.cmd` remains a compatibility shortcut.
