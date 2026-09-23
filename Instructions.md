@@ -2,7 +2,7 @@
 
 Shared plan for Orbit Digital | Icarus, task **#79-lite**. Prepared on 23 September 2026 from the official task, judging rubric, screenshot, CSV, HTML preview, and current remote branches.
 
-This is the agreed implementation plan to start from; the application and checks described below still need to be built. Requirements from the organizer are distinguished from our implementation decisions and optional extensions.
+This records the original shared implementation plan. The integrated application and checks are now implemented on `Enjoy`; see the [README](README.md), [judging evidence and remaining release gates](docs/judging-checklist.md), and [branch handoff](docs/team-sync.md) for current status. Requirements from the organizer are distinguished below from our implementation decisions and optional extensions. Planning checklists are preserved as the original acceptance scope, not a current completion report.
 
 ## 1. Product idea and priorities
 

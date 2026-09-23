@@ -10,8 +10,8 @@ export const metadata: MetadataResponse = {
   ],
   event_formats: ["свадьба", "корпоратив", "юбилей", "той", "конференция", "день рождения"],
   languages: ["русский", "казахский", "английский"],
-  date_min: "2026-09-23",
-  date_max: "2026-12-31",
+  calendar_start: "2026-09-23",
+  calendar_end: "2026-12-31",
 };
 
 const card = (id: string, anon_name: string, price: number, explanation: string, request: MatchRequest, flags: Partial<MatchCard> = {}): MatchCard => ({
@@ -34,7 +34,9 @@ const card = (id: string, anon_name: string, price: number, explanation: string,
 
 function response(request: MatchRequest, status: MatchResponse["status"], cards: MatchCard[], message: string, pool: number, exclusions: MatchResponse["exclusions"]): MatchResponse {
   return {
-    schema_version: "1", status, request, dataset_version: "preview-fixtures", algorithm_version: "preview-v1", message,
+    schema_version: "1", status,
+    request: { ...request, duration_hours: request.duration_hours ?? null, language: request.language ?? null },
+    dataset_version: "preview-fixtures", algorithm_version: "preview-v1", message,
     counts: { city_category_total: pool, eligible_total: cards.length, returned_total: cards.length }, exclusions, cards,
   };
 }
