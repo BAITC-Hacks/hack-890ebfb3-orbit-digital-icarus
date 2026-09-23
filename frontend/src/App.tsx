@@ -5,6 +5,7 @@ import type { MatchAlternative, MatchCard, MatchRequest, MatchResponse, Metadata
 import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft, MAX_DURATION_HOURS } from "./formNumbers";
 import { HomePage } from "./components/HomePage";
 import { ContactPanel } from "./components/ContactPanel";
+import { TandauLogo } from "./components/TandauLogo";
 import { journeyCopy } from "./journeyCopy";
 import { usePage } from "./usePage";
 import {
@@ -316,7 +317,7 @@ export default function App() {
     {/* The skip link moves focus without changing the hash route. */}
     <a className="skip-link" href="#content" onClick={event => { event.preventDefault(); document.getElementById("content")?.focus(); }}>{journey.skip}</a>
     <header className="site-header">
-      <a className="brand" href="#/" aria-label="Tandau"><span aria-hidden="true">T</span> Tandau</a>
+      <a className="brand" href="#/" aria-label="Tandau"><TandauLogo /></a>
       <nav className="site-nav" aria-label={locale === "ru" ? "Основная навигация" : "Main navigation"}>
         <a href="#/" aria-current={page === "home" ? "page" : undefined}>{journey.home}</a>
         <a href="#/match" aria-current={page === "match" ? "page" : undefined}>{journey.match}</a>
@@ -370,7 +371,7 @@ export default function App() {
     </>}
     </main>
     <footer className="site-footer">
-      <div className="footer-main"><a className="brand" href="#/" aria-label="Tandau"><span aria-hidden="true">T</span> Tandau</a><p>{journey.footer}</p><nav aria-label={journey.footerNav}><a href="#/">{journey.home}</a><a href="#/match">{journey.match}</a><a href="#/how-it-works">{journey.learn}</a></nav></div>
+      <div className="footer-main"><a className="brand" href="#/" aria-label="Tandau"><TandauLogo /></a><p>{journey.footer}</p><nav aria-label={journey.footerNav}><a href="#/">{journey.home}</a><a href="#/match">{journey.match}</a><a href="#/how-it-works">{journey.learn}</a></nav></div>
       <p className="footer-note">{journey.footerNote}</p>
     </footer>
   </div>;

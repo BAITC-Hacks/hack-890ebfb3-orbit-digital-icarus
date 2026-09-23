@@ -1,0 +1,12 @@
+.brand { display: inline-flex; align-items: center; }
+
+.tandau-logo { display: inline-flex; align-items: center; width: auto; height: auto; gap: 8px; margin: 0; border: 0; border-radius: 0; }
+.tandau-logo svg { width: 36px; height: 36px; overflow: visible; }
+.tandau-logo circle, .tandau-logo path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.tandau-logo path { stroke-width: 2.1; }
+.tandau-logo > span { display: inline; width: auto; height: auto; margin: 0; border: 0; border-radius: 0; font: inherit; line-height: 1; }
+
+.site-footer .tandau-logo { gap: 6px; }
+.site-footer .tandau-logo svg { width: 29px; height: 29px; }
+
+:root[data-theme="dark"] .tandau-logo circle, :root[data-theme="dark"] .tandau-logo path { stroke: currentColor; }
