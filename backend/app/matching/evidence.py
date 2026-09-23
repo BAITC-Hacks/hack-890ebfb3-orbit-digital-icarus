@@ -63,7 +63,12 @@ def load_evidence(
                 not isinstance(item, str) or item not in contractor.event_formats for item in formats
             ) or len(formats) != len(set(formats)):
                 raise ValueError(f"Unsupported evidence format for {contractor_id}")
-            approved.append(ProfileEvidence(evidence_id, quote, tuple(formats)))
+            use_in_explanation = record.get("use_in_explanation", True)
+            if not isinstance(use_in_explanation, bool):
+                raise ValueError(f"Invalid explanation flag for {contractor_id}")
+            if not use_in_explanation and formats:
+                raise ValueError(f"Non-explanatory evidence must not earn ranking credit: {evidence_id}")
+            approved.append(ProfileEvidence(evidence_id, quote, tuple(formats), use_in_explanation))
             seen_ids.add(evidence_id)
             seen_quotes.add(quote)
         result[contractor_id] = tuple(sorted(approved, key=lambda item: item.id))
@@ -76,4 +81,3 @@ def algorithm_version(path: str | Path = DEFAULT_EVIDENCE_PATH) -> str:
     canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
     return f"{RANKING_VERSION}:{digest}"
-

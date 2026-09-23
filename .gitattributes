@@ -1,2 +1,1 @@
-data/contractors.csv -text
-
+data/contractors.csv -text whitespace=cr-at-eol

@@ -22,7 +22,7 @@ card_payloads = build_cards(request, ranked, evidence)
 
 The exact API field names remain those in `Instructions.md`. Matching `types.py` is an internal structural interface, not a second request validator. bbl remains owner of canonical enums, aliases and input validation.
 
-The evidence loader validates source quotes, contractor IDs, supported format tags, schema version and (when supplied) dataset SHA-256. A missing record for a known contractor uses a factual fallback. A malformed or stale record is an explicit startup error. The evidence artifact is added in the next Enjoy increment; do not silently substitute empty evidence on errors.
+The evidence loader validates source quotes, contractor IDs, supported format tags, schema version and (when supplied) dataset SHA-256. A missing record for a known contractor uses a factual fallback. A malformed or stale record is an explicit startup error. The bundled index covers all 66 profiles; do not silently substitute empty evidence on errors. Attribution-only quotes marked `use_in_explanation: false` remain available for provenance but earn no rank credit and do not enter prose.
 
 Calendar values may be Python `date` objects or canonical ISO strings. `max_hours = None` bypasses duration exclusion without claiming unlimited attendance. Numeric matching happens only after the backend validates a positive budget. Ranking repeats eligibility assertions to catch integration mistakes; it never relaxes a constraint.
 
@@ -39,3 +39,11 @@ python -m unittest discover -s backend/tests -p 'test_matching*.py' -v
 ```
 
 The unittest checks are also pytest-compatible. No application server or API key is required for these unit checks.
+
+To run the eight dataset acceptance scenarios, check repeatability with reversed source order and measure domain-only response time:
+
+```bash
+python scripts/matching_acceptance.py --repeat 20
+```
+
+The script is an independent acceptance oracle, not the production API. Browser/HTTP coverage is a separate integration gate once teammates publish their services.
