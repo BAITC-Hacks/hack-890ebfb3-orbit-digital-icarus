@@ -15,21 +15,23 @@ CATALOG = load_catalog(REPOSITORY_ROOT / "data" / "contractors.csv")
 
 class NormalizationTests(unittest.TestCase):
     def test_normalizes_safe_aliases_to_catalog_labels(self) -> None:
-        request = MatchRequest(
-            city="  Alma-Ata ",
-            event_date=date(2026, 10, 10),
-            event_format="Wedding",
-            category="MC",
-            budget_kzt=500000,
-            language="RU",
-        )
+        for city_alias in ("Alma-Ata", "Almaty", "Almata", "alma aty"):
+            with self.subTest(city_alias=city_alias):
+                request = MatchRequest(
+                    city=city_alias,
+                    event_date=date(2026, 10, 10),
+                    event_format="Wedding",
+                    category="MC",
+                    budget_kzt=500000,
+                    language="RU",
+                )
 
-        normalized = normalize_match_request(request, CATALOG)
+                normalized = normalize_match_request(request, CATALOG)
 
-        self.assertEqual(normalized.city, "Алматы")
-        self.assertEqual(normalized.event_format, "свадьба")
-        self.assertEqual(normalized.category, "Ведущий")
-        self.assertEqual(normalized.language, "русский")
+                self.assertEqual(normalized.city, "Алматы")
+                self.assertEqual(normalized.event_format, "свадьба")
+                self.assertEqual(normalized.category, "Ведущий")
+                self.assertEqual(normalized.language, "русский")
 
     def test_keeps_host_and_ceremony_host_distinct(self) -> None:
         categories = sorted(
