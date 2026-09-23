@@ -3,9 +3,12 @@
 ## Latest inspected teammate updates, 23 September 2026
 
 - `main` at `8cae379`: bbl's shared backend scaffold and models, incorporated into Enjoy at `0d07a0b`. Matching placeholders were resolved in favor of Enjoy's tested implementation after inspecting each conflict. Backend model objects match the structural matching interfaces. Production catalog loading, filtering and API routes are still placeholders at this source revision.
+- `main` then advanced to `a895444` through spectra's PR #2, adding only `design.pdf`. Enjoy incorporated it at `7ab1818`; no API or frontend implementation arrived in that merge.
 - `bbl` at `f7f02af`: no subsequent code on that remote branch yet. The scaffold reached `main` instead.
 - `feature/sp3ctra` at `e3eb854`: five-screen `design.pdf`. All five pages were visually reviewed. No React package or implementation was present at this revision.
 - Enjoy has pushed the matching core, source evidence, typed client, test harness and documentation in separate commits. Consult the current Git history for subsequent updates; these observations are a timestamped handoff, not a live status feed.
+
+The documented setup was reproduced in a separate clean clone of Enjoy `fff79d9`: 34 Python tests / 192 subtests, 32 client tests, strict TypeScript, eight browser test discoveries, 160 domain acceptance runs and the exact CSV hash all passed. No complete browser execution is claimed while production API/UI work is pending.
 
 ## Design-to-data adjustments for spectra
 

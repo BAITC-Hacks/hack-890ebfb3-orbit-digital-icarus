@@ -175,9 +175,12 @@ The HTTP checker verifies actual outcomes, counts, exclusions, ordered IDs and e
 | Transport TypeScript check | Passing strict type check |
 | Domain acceptance | 8 scenarios × 20 repeats = 160 timed runs; source order reversed and outputs unchanged |
 | Browser test discovery | 8 Chromium tests discovered successfully; this is not a browser execution result |
+| Fresh-clone reproduction | Independent clone of `fff79d9` passed the locked installs, 34 backend tests / 192 subtests, 32 client tests, strict types, eight browser test discoveries, 160 domain runs and source-hash check |
 | Real HTTP / browser / production build | Pending bbl and spectra integration; no success or latency claim yet |
 
 These passing results were obtained locally. GitHub Actions did not start its job because GitHub reports the account is locked due to a billing issue. CI is therefore blocked by the account state; that run provides no evidence of a workflow-code or application-test failure. Re-run CI after the repository owner resolves the account issue.
+
+The fresh-clone check used its own Git directory, Python environment and npm installation; it did not copy dependencies from the working checkout or read the developer's Downloads folder. `pip check` passed and the clone remained clean. The later `7ab1818` merge adds spectra's design PDF without changing executable code. Complete application reproduction still awaits the production endpoints and UI.
 
 A domain-only measurement on **23 September 2026**, Windows 11 `10.0.26200`, Python 3.12.10, dataset hash above, algorithm `explainable-v1:2553919e464d7030`: **p95 0.083 ms; maximum 0.095 ms** across the 160 repeated evaluations. Scenario first-evaluation times were 0.008–0.175 ms. Parsing/loading happened before these timings. This is in-process reference filtering/ranking/explanation time; it excludes server startup, HTTP, browser rendering and dependency installation. Timing varies by machine and load. Run the command yourself to obtain current figures; the full user-flow target remains under ten seconds and requires the pending integrated measurements.
 
