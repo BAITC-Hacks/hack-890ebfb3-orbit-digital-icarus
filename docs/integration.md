@@ -1,6 +1,6 @@
 # Enjoy matching integration
 
-The production API, bbl's catalog/filtering code, Enjoy's matching core and the React interface are integrated on `Enjoy`. The [README](../README.md) contains complete startup/build commands and recorded results. Full integrated fresh-clone verification remains pending.
+The production API, bbl's catalog/filtering code, Enjoy's matching core and the React interface are integrated on `Enjoy`. The [README](../README.md) contains complete startup/build commands and recorded results. [Full integrated fresh-clone verification passed at `1292b65`](reproducibility.md).
 
 The core lives in `backend/app/matching`. It has no HTTP, Pydantic, model-provider or third-party runtime dependency. Callers supply validated objects with the attributes documented in `types.py`; bbl's actual Pydantic models work through structural typing. The application owns validation and serialization at the boundary.
 
@@ -73,4 +73,4 @@ The eight application E2E tests use real matching responses; only explicit failu
 
 Recorded on 23 September 2026 with Windows 11, Python 3.12.10, Node 26.7.0, npm 11.19.0 and Chromium 153.0.8010.12: 160 real HTTP runs had p95 **21.521 ms**, maximum **53.115 ms**; 20 real browser submit-to-visible runs had p95 **65.88 ms**, maximum **90.76 ms**. Browser time includes automation overhead; setup/startup are excluded. These local figures are scoped measurements, not production throughput promises. See [demo measurements](demo.md#measured-scope) for commands, versions and scenarios.
 
-GitHub Actions includes these checks, but an earlier cloud job was blocked before execution by an account billing lock. Local passes do not establish a green cloud run. The [README verification record](../README.md#recorded-local-verification) tracks the remaining fresh-clone and CI status.
+GitHub Actions includes these checks, but the inspected cloud job was blocked before execution by an account billing lock. Local passes do not establish a green cloud run. The [README verification record](../README.md#recorded-local-verification) includes the successful fresh-clone check and remaining CI limitation.

@@ -2,7 +2,7 @@
 
 Enjoy owns `tests/e2e/matching.spec.ts` and root `playwright.config.ts`, plus isolated `tests/ui/locale.spec.ts` and `playwright.ui.config.ts`. Both suites passed locally: **eight real-application tests and six isolated interface tests**. They have different scopes and do not replace backend or transport/localization unit tests.
 
-The production API, catalog filters, ranking/evidence modules and React interface are integrated on `Enjoy`. Actual browser execution, the frontend build and the local built-bundle preview are verified. Complete integrated fresh-clone reproduction remains pending; a deployment or green cloud CI run is not implied.
+The production API, catalog filters, ranking/evidence modules and React interface are integrated on `Enjoy`. Actual browser execution, the frontend build and the local built-bundle preview are verified. [Complete integrated fresh-clone reproduction passed at `1292b65`](reproducibility.md); a deployment or green cloud CI run is not implied.
 
 `npm run test:e2e:list` discovers eight Chromium tests without executing them. Use `npm run test:e2e` for the actual application suite and `npm run test:ui` for isolated UI behavior.
 
@@ -118,4 +118,4 @@ npm run measure:browser
 | Real HTTP across eight dataset scenarios | 160 | **21.521 ms** | **53.115 ms** |
 | Real browser submit-to-visible result across five scenarios | 20 | **65.88 ms** | **90.76 ms** |
 
-The separate browser measurement script uses real responses without interception, includes automation click/wait overhead and writes `artifacts/browser-latency.json`. Installation/startup time is excluded. These local figures meet the ten-second target for the measured flows; they do not establish hosted network latency or production throughput. Full fresh-clone reproduction remains pending. An earlier cloud CI job was blocked before execution by an account billing lock, so the passing local suites are not a green GitHub Actions claim.
+The separate browser measurement script uses real responses without interception, includes automation click/wait overhead and writes `artifacts/browser-latency.json`. Installation/startup time is excluded. These local figures meet the ten-second target for the measured flows; they do not establish hosted network latency or production throughput. Full fresh-clone reproduction also passed, including both browser suites. The inspected cloud CI job was blocked before execution by an account billing lock, so the passing local suites are not a green GitHub Actions claim.

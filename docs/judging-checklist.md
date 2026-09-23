@@ -8,11 +8,11 @@ This maps the organizer's requirements and 100-point rubric to the implemented l
 | --- | ---: | --- | --- |
 | Compliance with the task and functionality | 25 | Required five inputs and optional language/duration; hard constraints; up to three grounded cards; venues use the same calendar; short results and both empty outcomes | Run the six requirement checks below, eight real-browser acceptance tests and the independent HTTP checker |
 | Technical implementation | 25 | Validated bundled catalog; separate filtering/ranking/explanation layers; typed API and client; deterministic order and content-derived evidence version; startup rejects stale evidence; bounded, optional offline AI proposals | Explain `validation → city/category pool → hard filters → ranking → grounded cards`; inspect evidence; run Python/client/localization/browser suites and production build |
-| README and reproducibility | 25 | Exact install/start commands; locked Python and both npm dependency trees; dataset and provenance in Git; real screenshots; request/response and demo examples; documented limitations and measurements | Follow the README in an independent clone without provider credentials. Final integrated clean-clone verification is pending at this checkpoint; earlier core-only proof is not a full-app claim |
+| README and reproducibility | 25 | Exact install/start commands; locked Python and both npm dependency trees; dataset and provenance in Git; real screenshots; request/response and demo examples; documented limitations and measurements | [Independent GitHub clone at `1292b65`](reproducibility.md) passed fresh installs, all suites/build and real HTTP checks without provider credentials |
 | Value and applicability | 15 | Reduces a long city catalog to a small inspectable shortlist; explains exclusions; retains starting-price and calendar uncertainty; Russian and English interfaces preserve original source evidence | Compare repeat/date-change results, inspect a profile-specific reason, and show the one-florist case and actionable empty result |
 | Development potential and originality | 10 | Versioned extractive evidence with semantic review; exact-quote validation; reviewed bilingual evidence; cached and capped offline proposals; deterministic results can be audited | Show the evidence artifact and proposal review boundary. Future work: fresh availability, confirmed quotations, a reviewed ingestion workflow and ranking evaluation on larger catalogs |
 
-AI is used during development and in an optional offline proposal tool. Production matching makes no model calls. One paid OpenAI workflow check used 501 tokens; a source-exact but unsuitable statistic was rejected during review and not promoted. This demonstrates why structural checks and human review have different responsibilities. See [offline evidence workflow](offline-evidence.md).
+AI is used during development and in an optional offline proposal tool. Production matching makes no model calls. One paid OpenAI workflow check used 501 tokens; a source-exact but unsuitable statistic was rejected during agent review and not promoted. This demonstrates why structural checks and semantic review have different responsibilities. See [offline evidence workflow](offline-evidence.md).
 
 ## All six task requirements
 
@@ -48,7 +48,7 @@ Recorded runtime: Windows 11, Python 3.12.10, Node 26.7.0, npm 11.19.0, Chromium
 - [x] Real API/UI integration, Russian/English switching, source evidence, short and empty outcomes implemented.
 - [x] Local automated suites, production build, built-preview/API proxy and measured response target checked.
 - [x] Source data and locked dependencies bundled; provider keys remain outside Git.
-- [ ] Final integrated clean-clone installation and regression completed and recorded.
+- [x] Final integrated clean-clone installation and regression [completed and recorded](reproducibility.md) at `1292b65`.
 - [ ] Cloud workflow green after the repository owner's GitHub billing lock is resolved. The [inspected run](https://github.com/BAITC-Hacks/hack-890ebfb3-orbit-digital-icarus/actions/runs/35842404798) ran zero test steps.
 - [ ] The team merges the tested `Enjoy` revision into `main` and reruns the release checks there.
 - [ ] Rehearse the live demo and submit the repository/demo links through the tournament portal before its actual deadline.

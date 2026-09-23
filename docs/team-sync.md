@@ -8,8 +8,8 @@ Enjoy now contains the working React/FastAPI application, deterministic matching
 | --- | --- | --- |
 | `bbl` | `83cf4e3` | B1/B2 loader, normalization, filtering and routes integrated; B3 runtime factory/settings/CORS merged at `a4e7141` |
 | `feature/sp3ctra` | `8ded1f1` | Actual frontend from `5d1df99` already integrated at `a08eee0`; later commit only restores a boilerplate frontend README |
-| `main` | `57b7a32` | Contains spectra's frontend merge; synchronize its history into Enjoy while retaining the tested, current frontend setup documentation |
-| `Enjoy` | `a4e7141` | Complete source integration checkpoint; documentation and full clean-clone verification follow in small commits |
+| `main` | `57b7a32` | Contains spectra's frontend merge; history synchronized into Enjoy at `1292b65`, retaining the tested, current frontend setup documentation |
+| `Enjoy` | `1292b65` | Complete source integration plus judging/demo documentation; full clean-clone verification passed |
 
 B2's success placeholder is replaced with normalization, real hard filters, evidence-aware ranking and typed cards. Startup validates the 66-profile catalog against the evidence digest. B3 keeps configurable data paths and explicit CORS origins, while the algorithm version comes from the actual code/evidence and cannot be overridden by an environment label. Regenerated OpenAPI includes request length limits and nullable evidence values.
 
@@ -19,11 +19,13 @@ After B3: 88 Python tests and 218 subtests pass. The integration checkpoint also
 
 Git only exposes pushed work. Remote refs are checked during the active task and at integration milestones; this file is not a background monitor between sessions.
 
+A new GitHub clone of `1292b65` passed fresh locked installations, all 88 Python tests / 218 subtests, 49 client tests, 16 locale tests, both browser suites (6 isolated + 8 real), type checks, build, evidence validation and 160 independent domain runs. A further 160-request real HTTP run passed with p95 23.071 ms / maximum 33.424 ms. No provider key or external source path was used. See [reproduction record](reproducibility.md); final handoff edits are documentation only. The tested Enjoy application still needs team integration into `main`.
+
 ## Historical checkpoints before the complete application
 
 - `main` at `8cae379`: bbl's shared backend scaffold and models, incorporated into Enjoy at `0d07a0b`. Matching placeholders were resolved in favor of Enjoy's tested implementation after inspecting each conflict. Backend model objects match the structural matching interfaces. Production catalog loading, filtering and API routes are still placeholders at this source revision.
 - `main` then advanced to `a895444` through spectra's PR #2, adding only `design.pdf`. Enjoy incorporated it at `7ab1818`; no API or frontend implementation arrived in that merge.
-- `bbl` advanced to `ebdac88` (validated loader, health/metadata, request normalization, OpenAPI and three fixtures), then `ae934f0` (additional Almaty aliases). Both updates are now merged into Enjoy. Filtering is still a placeholder and valid match requests deliberately return `503 matching_not_ready`.
+- `bbl` advanced to `ebdac88` (validated loader, health/metadata, request normalization, OpenAPI and three fixtures), then `ae934f0` (additional Almaty aliases). Both updates were merged into Enjoy. At that checkpoint filtering was still a placeholder and valid match requests deliberately returned `503 matching_not_ready`; the later B2 integration replaced that path.
 - `feature/sp3ctra` at `e3eb854`: five-screen `design.pdf`. All five pages were visually reviewed. No React package or implementation was present at this revision.
 - Enjoy has pushed the matching core, source evidence, typed client, test harness and documentation in separate commits. Consult the current Git history for subsequent updates; these observations are a timestamped handoff, not a live status feed.
 
@@ -35,7 +37,7 @@ The earlier setup was reproduced in a separate clean clone of Enjoy `fff79d9`: 3
 - Allowed null `EvidenceItem.value` in the backend schema and regenerated OpenAPI. The real null-duration florist scenario reproduced the validation failure before this fix and passes afterward. Null means duration does not apply; it must not become an invented numeric limit.
 - Added client checks against all three published backend fixtures and restricted evidence values to strings, numbers, string arrays or null.
 - Verified 49 B1/core Python tests with 192 subtests and 49 current client tests. The test command excludes ignored local clone artifacts to avoid counting a stale copied suite.
-- Started Uvicorn and consumed real health/metadata with the typed client: 66 profiles, 17 categories and the correct date bounds. Full match HTTP checks await B2. The current health algorithm label is still B1's `hard-filter-v1`; B2 orchestration must report `backend.app.matching.algorithm_version()` from the evidence actually loaded.
+- At the B1 checkpoint, started Uvicorn and consumed real health/metadata with the typed client: 66 profiles, 17 categories and the correct date bounds. Full match HTTP checks then awaited B2, and health used B1's `hard-filter-v1` label. The subsequent B2/B3 integration now reports `backend.app.matching.algorithm_version()` from the reviewed evidence and passes the full HTTP checks.
 
 ## Design-to-data adjustments for spectra
 

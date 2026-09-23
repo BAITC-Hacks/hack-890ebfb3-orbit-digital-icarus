@@ -93,7 +93,7 @@ The HTTP checker compares the live service with these expected statuses, counts,
 
 `npm run test:ui` runs **six additional tests with explicit API mocks**. Those check locale persistence, canonical values, preserved order, English evidence/original Russian, retry versus business-empty outcomes and keyboard/mobile behavior. They are isolated interface checks; the eight-test application suite obtains actual backend results. Detailed hooks, test scope and setup are in the [browser contract](browser-contract.md).
 
-Real screenshots are available in [Russian](images/interface-ru.png) and [English](images/interface-en.png). Rehearse the request sequence before presenting. The frontend build and its local port 4173 preview were also checked against the real backend; see [build and preview](../README.md#build-and-preview). Complete integrated fresh-clone verification remains pending, and no internet deployment is claimed.
+Real screenshots are available in [Russian](images/interface-ru.png) and [English](images/interface-en.png). Rehearse the request sequence before presenting. The frontend build and its local port 4173 preview were also checked against the real backend; see [build and preview](../README.md#build-and-preview). [Complete integrated fresh-clone verification passed at `1292b65`](reproducibility.md), including all suites and 160 real HTTP requests. No internet deployment is claimed.
 
 ## Measured scope
 
@@ -105,5 +105,7 @@ Measurements on **23 September 2026** used Windows 11, Python **3.12.10**, Node 
 | Real browser submit-to-visible result, five representative scenarios | `npm run measure:browser` | 20 | **65.88 ms** | **90.76 ms** |
 
 The browser script uses dense, changed-date, rare, absent and booked requests, four times each, and writes `artifacts/browser-latency.json`. It makes no fixture substitutions. Browser time includes automation click/wait overhead; both measurements exclude installation and server startup. These are local results, not hosted throughput or network guarantees. Every measured flow was below the task's ten-second target.
+
+The first dense request in the HTTP run took **53.115 ms**. In the separate browser run, the first dense submission took **90.76 ms**, and its first repeated submission took **60.95 ms**. Both runs used already-started services; these observations do not measure process cold start. Reports preserve the per-scenario first requests and individual browser repeats so reviewers can inspect more than an aggregate percentile.
 
 The independent domain command remains useful for repeatability and pure matching checks. Its earlier 160-run measurement was p95 0.083 ms / maximum 0.095 ms, excluding CSV loading, HTTP and rendering; it is a different scope from the integrated measurements above. Rerun each tool to obtain current figures on the presentation machine.
