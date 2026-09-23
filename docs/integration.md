@@ -1,6 +1,6 @@
 # Enjoy matching integration
 
-The production API, bbl's catalog/filtering code, Enjoy's matching core and the React interface are integrated on `Enjoy`. The [README](../README.md) contains complete startup/build commands and recorded results. [Full integrated fresh-clone verification passed at `1292b65`](reproducibility.md).
+The production API, bbl's catalog/filtering code, Enjoy's matching core and the React interface are integrated on `main`. The [README](../README.md) contains complete startup/build commands and recorded results. [Full integrated fresh-clone verification passed at `1292b65`](reproducibility.md).
 
 The core lives in `backend/app/matching`. It has no HTTP, Pydantic, model-provider or third-party runtime dependency. Callers supply validated objects with the attributes documented in `types.py`; bbl's actual Pydantic models work through structural typing. The application owns validation and serialization at the boundary.
 

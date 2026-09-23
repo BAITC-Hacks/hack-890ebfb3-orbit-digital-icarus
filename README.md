@@ -12,7 +12,7 @@ Find an event contractor in Kazakhstan without searching a long catalog. Enter t
 
 ## Run from a fresh checkout
 
-Prerequisites: Git, **Python 3.11+**, and Node matching **`^22.12.0 || ^24.0.0 || >=26.0.0`**, with npm. Local verification used Windows 11, Python **3.12.10**, Node **26.7.0** and npm **11.19.0**. No API key, model account, database or environment file is required.
+Prerequisites: Git, **Python 3.11+**, and Node matching **`^22.12.0 || ^24.0.0 || >=26.0.0`**, with npm. Local verification used Windows 11, Python **3.12.10**, Node **26.7.0** and npm **11.19.0**. No API key, model account, database or environment file is required. Allow about 250 MB for Python and npm dependencies, plus about 700 MB for Playwright Chromium if you run the browser checks. Ports 8000 and 5173 (4173 for the build preview) must be free. The macOS/Linux commands are provided but were not run, because GitHub Actions is unavailable in the organizer's organization.
 
 Run all commands below from the repository root:
 
@@ -132,6 +132,10 @@ flowchart LR
 | `scripts/` | Independent dataset oracle, live HTTP checks, browser timing and offline evidence review tools |
 | `.github/workflows/enjoy-checks.yml` | Locked setup, tests, build and real-browser checks; manual trigger only, see [Automated checks](#automated-checks) |
 | `Instructions.md`, `docs/` | Shared architecture, responsibilities, demo, evidence and integration notes |
+
+### Technology stack
+
+Backend: Python 3.11+, FastAPI, Pydantic and Uvicorn, with the catalog held in memory and no database. Frontend: React 19, TypeScript and Vite with plain CSS. Tests: pytest, HTTPX, Vitest, Testing Library with jsdom, and Playwright with Chromium.
 
 Backend dependencies are pinned to FastAPI **0.136.1**, Pydantic **2.13.3**, Uvicorn **0.46.0**, pytest **9.1.1** and HTTPX **0.28.1**, with resolved dependencies and platform markers in `requirements-dev.lock`. The UI uses React **19.1.1**, Vite **7.3.6** and TypeScript **5.9.2**. Root integration tools separately pin Playwright **1.63.0**, Vitest **5.0.1** and TypeScript **5.8.3**. Both npm packages have lockfiles and require their own `npm ci`.
 
@@ -293,7 +297,7 @@ Team ownership: **Enjoy** (`Enjoy` branch) — matching, evidence, integration a
 
 ## Third-party components, data and AI tools
 
-Disclosed under the hackathon rules on third-party materials. All core matching, filtering, API, interface and test code was written by the team during the competition.
+Disclosed under the hackathon rules on third-party materials. The matching, filtering, API, interface and test code was developed by the team during the competition, with the AI assistance described below.
 
 | Component | Version | License | Use |
 | --- | --- | --- | --- |
@@ -305,12 +309,13 @@ Disclosed under the hackathon rules on third-party materials. All core matching,
 | Vite, @vitejs/plugin-react | 7.3.6, 5.0.2 | MIT | Frontend build and dev server |
 | TypeScript | 5.9.2 (frontend), 5.8.3 (root) | Apache-2.0 | Type checking |
 | Vitest, Testing Library, jsdom | 5.0.1, 16.3.0, 26.1.0 | MIT | Unit and component tests |
-| Playwright | 1.63.0 | Apache-2.0 | Browser tests |
+| Playwright and its downloaded Chromium | 1.63.0 | Apache-2.0 | Browser tests |
+| GitHub Actions `checkout`, `setup-python`, `setup-node` | v4, v5, v4 | MIT | Manual CI workflow |
 
-Full resolved dependency sets are in `requirements-dev.lock`, `package-lock.json` and `frontend/package-lock.json`.
+Full resolved dependency sets are in `requirements-dev.lock`, `package-lock.json` and `frontend/package-lock.json`. Transitive licenses are MIT, ISC, BSD and Apache-2.0, plus the dev-only MPL-2.0 `lightningcss` and CC-BY-4.0 `caniuse-lite` data.
 
 - **Dataset:** `data/contractors.csv` is the unchanged organizer-supplied catalog, including its 13 synthetic profiles, imputed values and calendar. The team added no profiles.
-- **Design:** `design.pdf` and the interface design were made by the team.
-- **Fonts:** the interface uses locally installed system fonts; no web fonts are downloaded.
-- **AI coding assistants:** OpenAI Codex and Anthropic Claude Code were used as development tools for code, tests, reviews and documentation, as the rules allow. The team directed and reviewed the work.
-- **AI in the product:** none at runtime. The optional offline evidence tool in `scripts/propose_evidence.py` can call the OpenAI or NVIDIA API with the operator's own key. No model output was adopted into the shipped evidence, and the app never needs a key or a personal account.
+- **Design:** [`design.pdf`](design.pdf), five screens, and the interface design were made by the team for this project. Screenshots in `docs/images/` are captures of this application. No icon library or stock images are used.
+- **Fonts:** no font files are bundled or downloaded. The CSS names Inter, used only if it is installed locally; otherwise Georgia and system fonts apply.
+- **AI coding assistants:** OpenAI Codex and Anthropic Claude Code were used as development tools for code, tests, reviews and documentation, as the rules allow. The 99 quote records in `backend/app/matching/profile_evidence.json` and the 93 English quote translations in `frontend/src/i18n/evidence.en.json` were prepared with an AI coding assistant, then checked automatically for exact source substrings, known IDs and valid tags. The team directed, reviewed and tested the work.
+- **AI in the product:** none at runtime. The optional offline evidence tool in `scripts/propose_evidence.py` can call NVIDIA's hosted API (default `nvidia/mistral-nemo-minitron-8b-8k-instruct`) or OpenAI Chat Completions (default `gpt-4.1-mini-2025-04-14`) with the operator's own key. Both OpenAI proposals were rejected in review, and the NVIDIA call returned HTTP 401, so no output from that tool is shipped. The app, tests and checks never need a key or a personal account.

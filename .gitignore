@@ -21,3 +21,8 @@ secrets/
 .vitest/
 *.tsbuildinfo
 tmp/
+*.pem
+*.key
+*-key.txt
+*_key.txt
+credentials*.json
