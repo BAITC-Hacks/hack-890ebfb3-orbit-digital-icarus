@@ -18,6 +18,7 @@ async function submit(user: ReturnType<typeof userEvent.setup>) {
 
 describe("App: explicit demo fixtures, not production matching", () => {
   beforeEach(() => {
+    window.history.replaceState(null, "", "/#/match"); // These legacy fixtures exercise the matching route.
     fetch.mockClear();
     vi.stubGlobal("fetch", fetch);
   });

@@ -5,6 +5,7 @@ from pathlib import Path
 import unittest
 
 from backend.app.models import MatchResponse
+from backend.app.main import create_app
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -12,6 +13,13 @@ EXAMPLES_PATH = REPOSITORY_ROOT / "contracts" / "examples"
 
 
 class ContractExampleTests(unittest.TestCase):
+    def test_published_openapi_matches_the_running_application(self) -> None:
+        """Keep the team handoff schema synchronized with actual API models."""
+        published = json.loads(
+            (REPOSITORY_ROOT / "contracts" / "openapi.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(published, create_app().openapi())
+
     def test_all_business_outcome_fixtures_validate(self) -> None:
         expected_files = {
             "matches_found.json",
