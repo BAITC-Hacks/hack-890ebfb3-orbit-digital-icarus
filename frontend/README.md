@@ -1,4 +1,4 @@
-# Smart Contractor Matching frontend
+# Tandau frontend
 
 The integrated React interface searches the bundled contractor catalog through the real FastAPI service. It shows up to three ordered cards, inspectable supporting evidence, distinct empty outcomes and retryable failures. Russian is the default; the separate English control changes interface text without changing the matching request.
 

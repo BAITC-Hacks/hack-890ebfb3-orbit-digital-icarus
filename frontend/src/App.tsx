@@ -3,6 +3,9 @@ import { ApiError, ApiResponseError, getMetadata, matchContractors } from "./api
 import { metadata as previewMetadata, previewMatch } from "./api/demo";
 import type { MatchAlternative, MatchCard, MatchRequest, MatchResponse, MetadataResponse } from "./api/types";
 import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDurationDraft } from "./formNumbers";
+import { HomePage } from "./components/HomePage";
+import { journeyCopy } from "./journeyCopy";
+import { usePage } from "./usePage";
 import {
   availabilityLabel, calendarLabel, cardExplanation, copy, displayDate, evidenceValue,
   exclusionSummary, fieldValidationMessage, formatMoney, initialLocale, invalidFields,
@@ -101,6 +104,7 @@ function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; 
 }
 
 export default function App() {
+  const page = usePage();
   const [locale, setLocale] = useState<Locale>(storedLocale);
   const [theme, setTheme] = useState<Theme>(storedTheme);
   const [form, setForm] = useState<MatchRequest>(initialRequest);
@@ -119,6 +123,11 @@ export default function App() {
   const metadataGeneration = useRef(0);
   const formElement = useRef<HTMLFormElement>(null);
   const t = copy[locale];
+  const journey = journeyCopy[locale];
+
+  useEffect(() => {
+    document.title = `Tandau · ${journey[page === "home" ? "home" : "match"]}`;
+  }, [locale, page]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -268,6 +277,11 @@ export default function App() {
     void search(request);
   }
 
+  function chooseCategory(category: string) {
+    update("category", category);
+    window.location.hash = "/match";
+  }
+
   const fieldError = (key: keyof MatchRequest) => invalid.includes(key)
     ? <span className="field-error" id={`error-${key}`}>{fieldValidationMessage(key, metadata, locale)}</span> : null;
   const fieldAttributes = (key: keyof MatchRequest) => ({
@@ -281,7 +295,14 @@ export default function App() {
   ];
   const unavailable = !metadata || metadataLoading;
 
-  return <main className="page-shell">
+  return <div className="page-shell">
+    <a className="skip-link" href="#content" onClick={event => { event.preventDefault(); document.getElementById("content")?.focus(); }}>{journey.skip}</a>
+    <header className="site-header">
+      <a className="brand" href="#/" aria-label="Tandau"><span aria-hidden="true">T</span> Tandau</a>
+      <nav className="site-nav" aria-label={locale === "ru" ? "Основная навигация" : "Main navigation"}>
+        <a href="#/" aria-current={page === "home" ? "page" : undefined}>{journey.home}</a>
+        <a href="#/match" aria-current={page === "match" ? "page" : undefined}>{journey.match}</a>
+      </nav>
     <div className="top-controls">
       <div className="locale-switcher" data-testid="locale-switcher" role="group" aria-label={t.interfaceLanguage}>
         <span>{t.interfaceLanguage}</span>
@@ -293,10 +314,13 @@ export default function App() {
         <span aria-hidden="true">☼</span><span aria-hidden="true">☾</span>
       </button>
     </div>
-    <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
+    </header>
+    <main id="content" tabIndex={-1}>
     {previewMode && <p className="preview-note" role="note">{t.preview}</p>}
     {metadataLoading && <p className="catalog-status" role="status">{t.metadataLoading}</p>}
     {metadataFailed && <div className="request-error" role="alert" data-testid="metadata-error">{t.metadataError} <button type="button" onClick={() => void loadCatalog()}>{t.retry}</button></div>}
+    {page === "home" ? <HomePage locale={locale} metadata={metadata} onCategory={chooseCategory} /> : <>
+    <header className="hero"><p className="eyebrow">{t.eyebrow}</p><h1>{t.title}<br />{t.titleSecond}</h1><p className="lede">{t.lede}</p></header>
     <form ref={formElement} className="match-form" data-testid="match-form" aria-busy={loading} onSubmit={submit} noValidate>
       <div className="field-grid">
         {fields.map(({ key, options }) => <label key={key}>{t[key]}<select name={key} value={form[key]} disabled={unavailable} {...fieldAttributes(key)} onChange={event => update(key, event.target.value)} required>
@@ -322,5 +346,8 @@ export default function App() {
         <div className="card-grid">{result.cards.map(item => <ContractorCard key={item.id} card={item} request={result.request} locale={locale} />)}</div>
       </div> : <EmptyState result={result} locale={locale} onAlternative={chooseAlternative} />}
     </section>}
-  </main>;
+    </>}
+    </main>
+    <footer className="site-footer">{journey.footer}</footer>
+  </div>;
 }

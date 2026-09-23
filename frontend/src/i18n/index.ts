@@ -7,7 +7,7 @@ export const LOCALE_STORAGE_KEY = "contractor-match-locale";
 export const copy = {
   ru: {
     interfaceLanguage: "Интерфейс", eyebrow: "КАТАЛОГ ПОДРЯДЧИКОВ · КАЗАХСТАН",
-    title: "Подбор подрядчика на", titleSecond: "мероприятие",
+    title: "Tandau", titleSecond: "подбор подрядчиков",
     lede: "Укажите параметры мероприятия — сервис покажет до трёх доступных подрядчиков и объяснит, почему подходит каждый.",
     city: "Город", event_format: "Формат мероприятия", category: "Категория подрядчика",
     event_date: "Дата мероприятия", budget_kzt: "Бюджет, ₸", duration_hours: "Длительность, ч",
@@ -36,7 +36,7 @@ export const copy = {
   },
   en: {
     interfaceLanguage: "Interface", eyebrow: "CONTRACTOR CATALOG · KAZAKHSTAN",
-    title: "Find a contractor for", titleSecond: "your event",
+    title: "Tandau", titleSecond: "contractor matching",
     lede: "Tell us about your event to see up to three available contractors, with clear reasons for each match.",
     city: "City", event_format: "Event format", category: "Contractor category",
     event_date: "Event date", budget_kzt: "Budget, ₸", duration_hours: "Duration, hours",
