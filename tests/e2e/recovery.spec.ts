@@ -84,7 +84,7 @@ test.beforeEach(async ({ page, request }) => {
   const health = await request.get(`${API_URL}/api/health`);
   expect(health.ok(), "Start the real backend or use RUN_APP_SERVERS=1").toBeTruthy();
   expect((await health.json()).dataset_version).toBe(DATASET_HASH);
-  await page.goto("/");
+  await page.goto("/#/match");
   await expect(page.getByTestId("match-form").locator('button[type="submit"]')).toBeEnabled();
 });
 

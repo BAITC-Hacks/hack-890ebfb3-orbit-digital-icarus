@@ -41,7 +41,7 @@ async function mockApi(page: Page, reply: ReplyFactory = () => ({ body: rare }))
     const response = reply(request, requests.length - 1);
     await route.fulfill({ status: response.status ?? 200, contentType: "application/json", body: JSON.stringify(response.body) });
   });
-  await page.goto("/");
+  await page.goto("/#/match");
   await expect(page.getByRole("button", { name: "Подобрать подрядчика", exact: true })).toBeEnabled();
   return { requests, metadataRequests: () => metadataRequests };
 }

@@ -19,7 +19,7 @@ async function setup(page: Page) {
     requests.push(request);
     await route.fulfill({ json: { ...rare, request } });
   });
-  await page.goto("/");
+  await page.goto("/#/match");
   const submit = page.getByTestId("match-form").locator('button[type="submit"]');
   await expect(submit).toBeEnabled();
   await page.locator('select[name="category"]').selectOption("Флорист");
