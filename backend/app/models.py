@@ -101,6 +101,8 @@ class MatchRequest(BaseModel):
 
         if value is None:
             return None
+        if isinstance(value, str) and not value.strip():
+            return None
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             raise ValueError("must be a positive numeric value or null")
         return value
