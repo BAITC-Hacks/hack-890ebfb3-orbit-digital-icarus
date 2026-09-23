@@ -1,5 +1,7 @@
 # BBL backend handoff
 
+> Historical branch-only handoff at d07eed5/f3c8529. The current integrated product replaces the eligible-candidate stub with real ranking/cards and includes strict BBL validation. Follow [the current release review](release-review.md) and root README; the original status below is preserved to explain the handoff history.
+
 Status: merge-ready backend foundation, not a complete product.
 
 Backend implementation reviewed and pushed: d07eed5,

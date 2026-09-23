@@ -2,7 +2,15 @@
 
 Shared plan for Orbit Digital | Icarus, task **#79-lite**. Prepared on 23 September 2026 from the official task, judging rubric, screenshot, CSV, HTML preview, and current remote branches.
 
-This records the original shared implementation plan. The integrated application and checks are now implemented on `Enjoy`; see the [README](README.md), [judging evidence and remaining release gates](docs/judging-checklist.md), and [branch handoff](docs/team-sync.md) for current status. Requirements from the organizer are distinguished below from our implementation decisions and optional extensions. Planning checklists are preserved as the original acceptance scope, not a current completion report.
+This records the original shared implementation plan. BBL, Enjoy and spectra are now integrated for `main`; see the [README](README.md) and [current release review](docs/release-review.md). Requirements from the organizer are distinguished below from our implementation decisions and optional extensions. Original planning checklists and branch locations are historical, not a current completion report.
+
+## Approved integration extensions, 23 September
+
+The captain authorized merging all three branches and requested a complete user journey. The stack and authoritative server pipeline below are unchanged. The application now opens a bilingual home page (`/#/`), with a separate form (`/#/match`) and workflow link (`/#/how`). Home categories come from API metadata and only prefill the form. UI components live under `frontend/src/components`; a small hash hook supports navigation without a router dependency.
+
+Every result offers an honest local inquiry draft, explicitly approved because the anonymized data has no verified phone/email directory. No message is transmitted and no booking is created. The organizer's exclusion of booking/notifications remains respected. Numeric drafts reject invalid edits instead of removing characters; the API separately rejects invalid JSON types, datetimes and non-finite values. Empty-result alternatives are verified against all other conditions and applied only after a user click.
+
+The captain also supplied a separate Demo Day rubric (25/20/15/20/20). It does not replace the task's technical rubric (25/25/25/15/10) below. Both are mapped to actual evidence in the [release review](docs/release-review.md) and [technical checklist](docs/judging-checklist.md). Neither is a guaranteed score.
 
 ## 1. Product idea and priorities
 

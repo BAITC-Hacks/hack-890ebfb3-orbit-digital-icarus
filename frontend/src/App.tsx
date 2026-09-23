@@ -25,6 +25,7 @@ type NumericField = "budget_kzt" | "duration_hours";
 const initials = (name: string) => name.split(" ").slice(0, 2).map(part => part[0]).join("").toUpperCase();
 
 function storedLocale(): Locale {
+  // Private browsing or disabled storage must not prevent the app from opening.
   try { return initialLocale(window.localStorage); } catch { return "ru"; }
 }
 
@@ -33,6 +34,7 @@ function Tag({ children }: { children: ReactNode }) {
 }
 
 function ContractorCard({ card, request, locale }: { card: MatchCard; request: MatchRequest; locale: Locale }) {
+  // Presentation never changes server eligibility or order; quotes retain their original language.
   const t = copy[locale];
   return <article className="contractor-card" data-testid="contractor-card" data-contractor-id={card.id}>
     <div className="card-person">
@@ -74,6 +76,7 @@ function OutcomeDetails({ result, locale }: { result: MatchResponse; locale: Loc
 }
 
 function EmptyState({ result, locale, onAlternative }: { result: MatchResponse; locale: Locale; onAlternative: (alternative: MatchAlternative) => void }) {
+  // Suggestions are already verified by the API and only execute through an explicit click.
   return <section className="empty-state" data-testid="result-summary" data-status={result.status} data-request-date={result.request.event_date}>
     <span className="empty-icon" aria-hidden="true">⌕</span>
     <h2>{resultTitle(result, locale)}</h2>
@@ -126,6 +129,7 @@ export default function App() {
   }, [locale]);
 
   async function loadCatalog() {
+    // A generation guard also covers fetch implementations that ignore cancellation.
     const generation = ++metadataGeneration.current;
     metadataController.current?.abort();
     const active = new AbortController();
@@ -156,6 +160,7 @@ export default function App() {
   }, []);
 
   function clearSearch() {
+    // Editing any condition invalidates cards and outstanding responses before the next search.
     ++searchGeneration.current;
     controller.current?.abort();
     setLoading(false);
@@ -170,6 +175,7 @@ export default function App() {
   }
 
   function rejectNumericEdit(key: NumericField) {
+    // Remember the rejection separately from the retained visible draft; never submit a misleading prefix.
     clearSearch();
     rejectedEdits.current.add(key);
     setInvalid([...rejectedEdits.current]);
@@ -194,6 +200,7 @@ export default function App() {
   }
 
   function numericKeyDown(key: NumericField, event: KeyboardEvent<HTMLInputElement>) {
+    // Leave navigation/selection shortcuts intact while blocking signs and exponent letters.
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.key === "Backspace" || event.key === "Delete") rejectedEdits.current.delete(key);
     if (event.key.length !== 1) return;
@@ -205,6 +212,7 @@ export default function App() {
   }
 
   function numericPaste(key: NumericField, event: ClipboardEvent<HTMLInputElement>) {
+    // Validate the proposed full value, including any text outside the selected range.
     const input = event.currentTarget;
     const pasted = event.clipboardData.getData("text");
     const proposed = input.value.slice(0, input.selectionStart ?? 0) + pasted + input.value.slice(input.selectionEnd ?? input.value.length);
@@ -215,6 +223,7 @@ export default function App() {
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
+    // Parse only at submission: unfinished decimals are invalid, intentionally blank duration is null.
     event.preventDefault();
     if (!metadata || metadataLoading || loading) return;
     const budget = parseBudgetDraft(numericDrafts.budget_kzt);
@@ -231,6 +240,7 @@ export default function App() {
   }
 
   async function search(request: MatchRequest) {
+    // Errors never fall back to demo data or masquerade as an honest empty business outcome.
     const generation = ++searchGeneration.current;
     controller.current?.abort();
     const active = new AbortController();
