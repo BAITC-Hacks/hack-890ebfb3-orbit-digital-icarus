@@ -84,7 +84,7 @@ test("Russian is the default; English labels, document language and preference s
 
   await english(page);
   await expect(page.getByRole("combobox", { name: "City", exact: true })).toBeVisible();
-  await expect(page.getByRole("combobox", { name: "Event format", exact: true })).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Event type", exact: true })).toBeVisible();
   await expect(page.getByRole("combobox", { name: "Contractor category", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Find contractors", exact: true })).toBeEnabled();
   await expect(page.getByRole("button", { name: "English", exact: true })).toHaveAttribute("aria-pressed", "true");
@@ -100,8 +100,8 @@ test("English form labels still submit Russian canonical request values", async 
   await english(page);
   await page.getByRole("combobox", { name: "City", exact: true }).selectOption({ label: "Almaty" });
   await page.getByRole("combobox", { name: "Contractor category", exact: true }).selectOption({ label: "Florist" });
-  await page.getByRole("combobox", { name: "Event format", exact: true }).selectOption({ label: "Wedding" });
-  await page.getByRole("combobox", { name: /Contractor's working language/ }).selectOption({ label: "Russian" });
+  await page.getByRole("combobox", { name: "Event type", exact: true }).selectOption({ label: "Wedding" });
+  await page.getByRole("checkbox", { name: "Russian", exact: true }).check();
   await page.getByLabel("Event date", { exact: true }).fill("2026-10-10");
   await page.getByLabel("Budget, ₸", { exact: true }).fill("300000");
   await page.getByLabel(/Duration, hours/).fill("4");
@@ -111,7 +111,7 @@ test("English form labels still submit Russian canonical request values", async 
     city: "Алматы", event_date: "2026-10-10", event_format: "свадьба", category: "Флорист",
     budget_kzt: 300000, duration_hours: 4, language: "русский",
   }]);
-  await expect(page.locator('select[name="language"]')).toHaveValue("русский");
+  await expect(page.getByRole("checkbox", { name: "Russian", exact: true })).toBeChecked();
 });
 
 test("changing locale after results preserves server order and working-language filter without refetch", async ({ page }) => {
@@ -124,13 +124,14 @@ test("changing locale after results preserves server order and working-language 
       category: request.category, city: request.city, event_date: request.event_date,
       categories: [request.category], synthetic: true, source_kind: "team_added" })),
   } }));
-  await page.locator('select[name="language"]').selectOption("казахский");
+  await page.getByRole("button", { name: "Русский", exact: true }).click();
+  await page.getByRole("checkbox", { name: "казахский", exact: true }).check();
   await page.getByRole("button", { name: "Подобрать подрядчика", exact: true }).click();
   await expect(page.getByTestId("contractor-card")).toHaveCount(2);
   const metadataCount = api.metadataRequests();
   expect(await cardIds(page)).toEqual(["UI-B", "UI-A"]);
   await english(page);
-  await expect(page.locator('select[name="language"]')).toHaveValue("казахский");
+  await expect(page.getByRole("checkbox", { name: "Kazakh", exact: true })).toBeChecked();
   expect(await cardIds(page)).toEqual(["UI-B", "UI-A"]);
   await page.getByRole("button", { name: "Русский", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "ru");

@@ -6,6 +6,7 @@ import { acceptBudgetDraft, acceptDurationDraft, parseBudgetDraft, parseDuration
 import { HomePage } from "./components/HomePage";
 import { ContactPanel } from "./components/ContactPanel";
 import { CommunityPage } from "./community/CommunityPage";
+import { TandauLogo } from "./components/TandauLogo";
 import { journeyCopy } from "./journeyCopy";
 import { usePage } from "./usePage";
 import { applyTheme, storedTheme, type Theme } from "./theme";
@@ -319,10 +320,7 @@ export default function App() {
     {/* The skip link moves focus without changing the hash route. */}
     <a className="skip-link" href="#content" onClick={event => { event.preventDefault(); document.getElementById("content")?.focus(); }}>{journey.skip}</a>
     <header className="site-header">
-      <a className="brand" href="#/" aria-label="Tandau">
-        <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><path d="M8 9h16M16 9v16M9 19l5 5L25 13" /></svg></span>
-        Tandau
-      </a>
+      <a className="brand" href="#/" aria-label="Tandau"><TandauLogo /></a>
       <nav className="site-nav" aria-label={locale === "ru" ? "Основная навигация" : "Main navigation"}>
         {(["home", "match", "providers", "events", "account"] as const).map(route =>
           <a key={route} href={route === "home" ? "#/" : `#/${route}`} aria-current={page === route ? "page" : undefined}>{journey[route]}</a>,
