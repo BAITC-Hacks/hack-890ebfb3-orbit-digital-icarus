@@ -27,10 +27,10 @@
 .cm button { min-height: 44px; min-width: 44px; cursor: pointer; }
 .cm button:disabled { cursor: not-allowed; opacity: .5; }
 .cm :is(button, a, input, textarea, select, summary):focus-visible { outline: 3px solid var(--cm-accent); outline-offset: 4px; }
-.cm input, .cm textarea, .cm select { min-width: 0; width: 100%; min-height: 48px; border: 1px solid var(--cm-line); border-radius: 10px; padding: 12px 14px; color: var(--cm-ink); background: var(--cm-surface); box-shadow: none; font-size: .95rem; font-weight: 400; }
+.cm input, .cm textarea, .cm select { min-width: 0; width: 100%; min-height: 48px; border: 1px solid var(--control-line, #7a8375); border-radius: 10px; padding: 12px 14px; color: var(--cm-ink); background: var(--cm-surface); box-shadow: none; font-size: .95rem; font-weight: 400; }
 .cm textarea { display: block; resize: vertical; line-height: 1.55; }
 .cm input:focus, .cm textarea:focus, .cm select:focus { border-color: var(--cm-accent); }
-.cm input[aria-invalid="true"] { border-color: #a84234; }
+.cm input[aria-invalid="true"] { border-color: var(--error, #943218); }
 .cm input[type="checkbox"], .cm input[type="radio"] { width: 18px; height: 18px; min-height: 18px; padding: 0; margin: 0; flex: 0 0 18px; accent-color: var(--cm-green); }
 .cm input[type="checkbox"]:disabled { opacity: 1; }
 .cm label { display: grid; gap: 8px; color: var(--cm-ink); font-size: .85rem; font-weight: 600; letter-spacing: 0; }
@@ -44,7 +44,7 @@
 .cm .cm-full { width: 100%; }
 .cm .cm-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: transparent; color: var(--cm-accent); font-size: .86rem; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; line-height: 1.6; }
 .cm .cm-icon-button { display: grid; place-items: center; border: 1px solid var(--cm-line); border-radius: 8px; padding: 0; width: 44px; height: 44px; flex-shrink: 0; background: var(--cm-surface); color: var(--cm-muted); font-size: 1.35rem; }
-.cm .cm-danger { color: #a84234; }
+.cm .cm-danger { color: var(--error, #943218); }
 .cm .cm-muted { color: var(--cm-muted); font-size: .86rem; }
 .cm .cm-eyebrow { color: var(--cm-green); font-size: .68rem; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; margin: 0 0 18px; }
 .cm .cm-lede { max-width: 710px; color: var(--cm-muted); font-size: 1.12rem; line-height: 1.7; margin: 0 0 24px; }
@@ -131,7 +131,7 @@
 .cm .cm-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .cm .cm-check { display: flex; gap: 10px; align-items: center; min-height: 44px; font-weight: 400; cursor: pointer; }
 .cm .cm-check-hit { display: grid; place-items: center; width: 44px; min-height: 44px; flex: 0 0 44px; cursor: pointer; }
-.cm .cm-field-error { color: #a84234; font-size: .78rem; }
+.cm .cm-field-error { color: var(--error, #943218); font-size: .78rem; }
 .cm .cm-event-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .cm .cm-event-card { text-align: left; padding: 30px; border: 1px solid var(--cm-line); border-radius: 16px; color: var(--cm-ink); background: var(--cm-surface); transition: border-color .2s ease; }
 .cm .cm-event-card:hover { border-color: var(--cm-accent); }

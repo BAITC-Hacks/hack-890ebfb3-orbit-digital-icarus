@@ -4,6 +4,7 @@ import { applyTheme, storedTheme, THEME_STORAGE_KEY, themeColors } from "./theme
 
 // Read the real palette: Vitest disables stylesheet transformation in component tests.
 const css = readFileSync("src/styles/app.css", "utf8");
+const communityCss = readFileSync("src/community/community.css", "utf8");
 
 afterEach(() => { vi.restoreAllMocks(); document.documentElement.removeAttribute("data-theme"); });
 
@@ -68,7 +69,7 @@ describe.each(["light", "dark"] as const)("%s palette contrast", theme => {
 
   it("keeps card, evidence, category hints and snapshot text at 4.5:1 or higher", () => {
     for (const background of ["background", "surface", "surface-soft"]) {
-      for (const foreground of ["ink", "muted", "sage", "accent"]) {
+      for (const foreground of ["ink", "muted", "sage", "accent", "error"]) {
         expect(contrast(tokens[foreground], tokens[background]), `${foreground} on ${background}`).toBeGreaterThanOrEqual(4.5);
       }
     }
@@ -80,4 +81,12 @@ describe.each(["light", "dark"] as const)("%s palette contrast", theme => {
   it("keeps control boundaries distinguishable from their surface", () => {
     for (const surface of ["background", "surface"]) expect(contrast(tokens["control-line"], tokens[surface])).toBeGreaterThanOrEqual(3);
   });
+});
+
+it("community validation, removal icons and input boundaries use the verified theme tokens", () => {
+  for (const selector of ['.cm input[aria-invalid="true"]', '.cm .cm-danger', '.cm .cm-field-error']) {
+    expect(communityCss.slice(communityCss.indexOf(`${selector} {`)).split("}")[0]).toContain("var(--error,");
+  }
+  const controls = communityCss.slice(communityCss.indexOf("\n.cm input, .cm textarea, .cm select {")).split("}")[0];
+  expect(controls).toContain("var(--control-line,");
 });

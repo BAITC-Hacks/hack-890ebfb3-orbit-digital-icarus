@@ -144,7 +144,8 @@ input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--er
 /* Language names remain complete for assistive technology; compact labels fit narrow headers. */
 .top-controls, .locale-switcher { display: flex; align-items: center; gap: 6px; }
 .top-controls { gap: 10px; }
-.locale-switcher button { display: grid; place-items: center; min-width: 44px; height: 44px; border: 1px solid var(--control-line); border-radius: 999px; padding: 0 10px; background: var(--surface); color: var(--ink); font-size: .8rem; font-weight: 700; }
+.locale-switcher { gap: 0; padding: 2px; border-radius: 999px; background: var(--surface-soft); }
+.locale-switcher button { display: grid; place-items: center; min-width: 44px; height: 44px; border: 0; border-radius: 999px; padding: 0 10px; background: transparent; color: var(--ink); font-size: .8rem; font-weight: 700; }
 .locale-switcher button[aria-pressed="true"] { color: var(--on-sage); background: var(--sage); border-color: var(--sage); }
 .theme-toggle { display: grid; place-items: center; width: 44px; height: 44px; padding: 10px; border: 1px solid var(--control-line); border-radius: 50%; background: var(--surface); color: var(--sage); flex-shrink: 0; }
 .theme-toggle:hover { background: var(--surface-soft); }
