@@ -2,6 +2,10 @@
 
 This is the current product handoff, replacing the branch-only status in older notes. It records implemented behavior and observed checks, not a promised judging score. The official task's technical rubric and the separate Demo Day rubric supplied by the captain are different assessments.
 
+## Numeric recovery follow-up
+
+After release `3fc7421`, a user reproduced an empty duration field remaining locked after a rejected letter. The retained-edit guard incorrectly treated the next valid digit as continuation of an existing numeric prefix, even when no prefix existed. Both keyboard and change handlers now allow a fresh numeric draft from an empty field; malformed pastes and nonempty `4e2` continuations remain rejected. Regression tests failed before the fix and passed after it, for budget/duration, comma decimals and mobile-style insertion without keydown. Follow-up checks: 14 React tests, 7 numeric unit tests, all 15 isolated browser UI tests and the production build passed. The initial release measurements below remain the record for that run.
+
 ## What changed and why
 
 - Integrated BBL `f3c8529`, Enjoy `9e7d5d0`, spectra `fc3a958`, and main's PR #4 merge `e691a58`, preserving their history. Product work follows in `032561f`; synchronization with the concurrent main update is `a1930af`.

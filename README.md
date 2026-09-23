@@ -247,9 +247,9 @@ To let Playwright start both services itself, activate `.venv` and set `RUN_APP_
 | --- | --- |
 | Python suite | **115 passing tests and 255 subtests**, including strict types, JSON-safe errors, verified alternatives and published OpenAPI parity |
 | Transport / locale unit tests | **95 client + 16 localization + 7 numeric tests passing** |
-| React components | **13 tests passing**, including home and inquiry/clipboard behavior |
+| React components | **14 tests passing**, including empty-field numeric recovery, home and inquiry/clipboard behavior |
 | Strict transport types / full frontend build | **Passing** |
-| Isolated mocked browser UI | **13 Chromium tests passing** |
+| Isolated mocked browser UI | **15 Chromium tests passing**, including number entry after rejecting letters/pastes |
 | Application browser acceptance | **13 Chromium tests passing**: matching, alternatives, home/navigation and inquiry journeys |
 | Domain and real HTTP scenarios | **8 scenarios × 20 repeats = 160 runs** in each check |
 | Built-bundle preview | All **13 application E2E tests passed again** through the local port 4173 production preview |
