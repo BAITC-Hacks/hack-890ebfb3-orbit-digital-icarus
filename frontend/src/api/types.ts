@@ -1,7 +1,7 @@
 /**
- * Manually aligned with Instructions.md, API contract v1.
- * Replace with/reconcile against bbl's OpenAPI types once B1 is published.
- * These declarations are not generated from an API schema.
+ * Manually aligned with contracts/openapi.json, API contract v1 (bbl B1).
+ * Evidence value includes null for services without an attendance-hour limit.
+ * These declarations are reviewed against the schema, not generated from it.
  */
 
 export interface MatchRequest {
@@ -32,12 +32,12 @@ export type EvidenceCode =
   | "duration"
   | "description";
 
-export type EvidenceScalar = string | number | boolean | null;
+export type EvidenceScalar = string | number | null;
 
 export interface EvidenceItem {
   code: EvidenceCode;
   field: string;
-  value: EvidenceScalar | EvidenceScalar[];
+  value: EvidenceScalar | string[];
   source_quote: string | null;
 }
 
@@ -85,26 +85,17 @@ export interface MatchResponse {
   cards: MatchCard[];
 }
 
-export interface DemoPreset {
-  id: string;
-  label: string;
-  request: MatchRequest;
-}
-
-/** Metadata field names are provisional until the B1 OpenAPI schema lands. */
 export interface MetadataResponse {
   cities: string[];
   categories: string[];
   event_formats: string[];
   languages: string[];
-  date_min: string;
-  date_max: string;
-  demo_presets?: DemoPreset[];
+  calendar_start: string;
+  calendar_end: string;
 }
 
-/** Health field names are provisional until the B1 OpenAPI schema lands. */
 export interface HealthResponse {
-  status: "ok";
+  status: "ready";
   profile_count: number;
   dataset_version: string;
   algorithm_version: string;

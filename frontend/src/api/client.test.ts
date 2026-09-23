@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   ApiError,
@@ -6,6 +7,7 @@ import {
   getMetadata,
   matchContractors,
   type MatchCard,
+  type EvidenceItem,
   type MatchRequest,
   type MatchResponse,
 } from "./client";
@@ -179,6 +181,7 @@ describe("matchContractors", () => {
     ["missing explanation", result([{ ...card("HK-1"), explanation: undefined } as unknown as MatchCard])],
     ["invalid provenance", result([{ ...card("HK-1"), source_kind: "verified" } as unknown as MatchCard])],
     ["invalid evidence", result([{ ...card("HK-1"), evidence: [{}] } as unknown as MatchCard])],
+    ["zero starting price", result([{ ...card("HK-1"), price_from_kzt: 0 }])],
   ])("rejects malformed HTTP 200 match response: %s", async (_label, response) => {
     respond(response);
     await expect(matchContractors(request)).rejects.toBeInstanceOf(ApiResponseError);
@@ -192,6 +195,27 @@ describe("matchContractors", () => {
     respond(expected);
     await expect(matchContractors(request)).resolves.toEqual(expected);
   });
+
+  it.each(["русский", 200000, 2.5, ["русский", "казахский"], null].map(value => ({ value })))(
+    "accepts a contract-supported evidence value: %j",
+    async ({ value }) => {
+      const expected = result([{
+        ...card("HK-1"),
+        evidence: [{ code: "duration", field: "max_hours", value, source_quote: null }],
+      }]);
+      respond(expected);
+      await expect(matchContractors(request)).resolves.toEqual(expected);
+    },
+  );
+
+  it.each([true, false, [1, 2], ["русский", 2], [null], { fact: "unsupported" }].map(value => ({ value })))(
+    "rejects evidence outside string, number, string array or null: %j",
+    async ({ value }) => {
+      const unsupported = { code: "duration", field: "max_hours", value, source_quote: null };
+      respond(result([{ ...card("HK-1"), evidence: [unsupported as unknown as EvidenceItem] }]));
+      await expect(matchContractors(request)).rejects.toBeInstanceOf(ApiResponseError);
+    },
+  );
 
   it("propagates a network failure rather than returning an empty shortlist", async () => {
     const failure = new TypeError("Failed to fetch");
@@ -227,7 +251,7 @@ describe("GET endpoints", () => {
   it("loads metadata from the requested origin with cancellation support", async () => {
     const metadata = {
       cities: ["Алматы"], categories: ["Флорист"], event_formats: ["свадьба"], languages: ["Русский"],
-      date_min: "2026-09-23", date_max: "2026-12-31",
+      calendar_start: "2026-09-23", calendar_end: "2026-12-31",
     };
     const fetchMock = respond(metadata);
     const controller = new AbortController();
@@ -238,11 +262,38 @@ describe("GET endpoints", () => {
   });
 
   it("loads same-origin health and preserves catalog versions", async () => {
-    const health = { status: "ok", profile_count: 66, dataset_version: "hash", algorithm_version: "v1" };
+    const health = { status: "ready", profile_count: 66, dataset_version: "hash", algorithm_version: "v1" };
     const fetchMock = respond(health);
     await expect(getHealth()).resolves.toEqual(health);
     expect(fetchMock).toHaveBeenCalledWith("/api/health", {
       method: "GET", headers: { Accept: "application/json" }, signal: undefined,
     });
   });
+
+  it("rejects the superseded provisional metadata field names", async () => {
+    respond({
+      cities: ["Алматы"], categories: ["Флорист"], event_formats: ["свадьба"], languages: ["русский"],
+      date_min: "2026-09-23", date_max: "2026-12-31",
+    });
+    await expect(getMetadata()).rejects.toBeInstanceOf(ApiResponseError);
+  });
+
+  it("rejects the superseded provisional health status", async () => {
+    respond({ status: "ok", profile_count: 66, dataset_version: "hash", algorithm_version: "v1" });
+    await expect(getHealth()).rejects.toBeInstanceOf(ApiResponseError);
+  });
+});
+
+describe("published backend response fixtures", () => {
+  it.each(["matches_found", "category_absent", "no_eligible_contractors"])(
+    "accepts and preserves contracts/examples/%s.json",
+    async (outcome) => {
+      const fixture = JSON.parse(readFileSync(
+        new URL(`../../../contracts/examples/${outcome}.json`, import.meta.url), "utf8",
+      )) as MatchResponse;
+      expect(fixture.status).toBe(outcome);
+      respond(fixture);
+      await expect(matchContractors(fixture.request)).resolves.toEqual(fixture);
+    },
+  );
 });

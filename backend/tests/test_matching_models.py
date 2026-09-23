@@ -1,8 +1,8 @@
 """Exercise Enjoy's domain functions with bbl's real Pydantic contracts.
 
-The independent CSV oracle selects eligible IDs; these tests do not implement
-the production API or filters. MatchResponse currently uses dict cards, so card
-field assertions remain explicit until bbl publishes a typed card model.
+The production loader supplies Contractor objects and the independent CSV oracle
+selects eligible IDs. These checks exercise typed cards without substituting for
+the still-pending production API filters.
 """
 
 import hashlib
@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 from pydantic import ValidationError
 
+from backend.app.catalog import load_catalog
 from backend.app.matching import algorithm_version, build_cards, load_evidence, rank_candidates
 from backend.app.models import Contractor, MatchRequest, MatchResponse
 from scripts.matching_acceptance import DATASET, demo_requests, load_reference_catalog, reference_filter
@@ -22,7 +23,7 @@ class PydanticMatchingBoundaryTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.reference_catalog = load_reference_catalog()
-        cls.catalog = [Contractor.model_validate(vars(profile)) for profile in cls.reference_catalog]
+        cls.catalog = load_catalog()
         cls.by_id = {profile.id: profile for profile in cls.catalog}
         cls.dataset_version = hashlib.sha256(DATASET.read_bytes()).hexdigest()
         cls.evidence = load_evidence(cls.catalog, dataset_sha256=cls.dataset_version)
@@ -54,6 +55,7 @@ class PydanticMatchingBoundaryTests(unittest.TestCase):
         self.assertEqual(sum(profile.max_hours is None for profile in self.catalog), 9)
         for reference, profile in zip(self.reference_catalog, self.catalog):
             with self.subTest(profile=profile.id):
+                self.assertEqual(profile, Contractor.model_validate(vars(reference)))
                 self.assertIsInstance(profile.busy_dates, set)
                 self.assertTrue(all(type(day) is date for day in profile.busy_dates))
                 self.assertIs(type(profile.price_from_kzt), int)

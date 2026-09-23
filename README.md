@@ -4,7 +4,7 @@ Orbit Digital | Icarus · hackathon task **#79-lite**
 
 An explainable shortlist for event planning in Kazakhstan: enter city, date, event format, contractor category and budget, and receive zero to three eligible contractors with specific, traceable reasons. The shortlist prioritizes evidence about the requested event format, then starting-price headroom. It never fills empty places with booked or otherwise ineligible profiles.
 
-**Current delivery status:** Enjoy's deterministic matching core, curated evidence, typed frontend API client and acceptance tooling are implemented. The production API, production data loader and React interface owned by bbl and spectra are still awaiting integration. You can reproduce matching and run the checks below now; this commit does not yet provide a complete web application or a verified browser demo.
+**Current delivery status:** Enjoy's deterministic matching core, curated evidence, typed frontend API client and acceptance tooling are implemented. bbl's validated catalog loader, request normalization, health and metadata endpoints are integrated. Production filtering and the matching endpoint are still awaiting B2; the React interface is awaiting spectra. You can reproduce matching and run the checks below now; this commit does not yet provide a complete web application or a verified browser demo.
 
 ## Reproduce the implemented part
 
@@ -58,7 +58,7 @@ The backend installation pins FastAPI **0.136.1**, Pydantic **2.13.3**, Uvicorn 
 | `.github/workflows/enjoy-checks.yml` | Matching/client checks in CI; inspect the workflow run for its actual result |
 | `Instructions.md` | Shared task interpretation, architecture, ownership and milestone plan |
 
-The reference CSV/filter adapter in `scripts/` is test tooling. The production backend must supply request validation, loading, filtering, outcome messages and HTTP endpoints. See [integration handoff](docs/integration.md) for the Python boundary and [browser contract](docs/browser-contract.md) for the frontend hooks and pending integration checks.
+The reference CSV/filter adapter in `scripts/` is test tooling. The production catalog loader and request normalization are implemented; filtering, outcome messages and the match endpoint still need B2 integration. See [integration handoff](docs/integration.md) for the Python boundary and [browser contract](docs/browser-contract.md) for the frontend hooks and pending integration checks.
 
 ## Matching logic
 
@@ -121,7 +121,7 @@ Only one primary exclusion is counted per profile, in this order: `booked → ov
 
 ## API contract and pending application startup
 
-The typed client implements the agreed endpoints: `GET /api/health`, `GET /api/metadata`, and `POST /api/match`. Its default is same-origin `/api`; callers may supply `baseUrl` and `AbortSignal`. It preserves server ordering, rejects malformed successful responses, exposes HTTP 422 field errors, and keeps network/server failures separate from business-empty results. These TypeScript declarations are manually aligned with the shared contract; OpenAPI generation awaits bbl's schema.
+The typed client implements the agreed endpoints: `GET /api/health`, `GET /api/metadata`, and `POST /api/match`. Its default is same-origin `/api`; callers may supply `baseUrl` and `AbortSignal`. It preserves server ordering, rejects malformed successful responses, exposes HTTP 422 field errors, and keeps network/server failures separate from business-empty results. These TypeScript declarations are manually aligned with the published `contracts/openapi.json`, with all three backend response fixtures exercised in client tests. Health uses `status: "ready"`; metadata uses `calendar_start` and `calendar_end`.
 
 Example match request:
 
@@ -147,14 +147,14 @@ Its verified domain result contains one card, HK-39372, from a pool of two flori
 
 Valid business-empty requests use HTTP 200. Invalid fields or unsupported dates must use HTTP 422. A network or server failure must be displayed as an error, not as an empty recommendation.
 
-**Pending launch step:** a backend scaffold has been published on `main`, with a root `pyproject.toml` and a FastAPI entrypoint, but its production endpoints/catalog/filtering are still awaiting implementation and integration. The React/Vite application is also pending. Do not treat the following commands as a working full-app setup yet. The scaffold's backend command and the planned frontend command are:
+**Backend launch:** bbl's B1 update loads and validates the catalog, serves health/metadata, and validates match inputs. A valid `POST /api/match` currently returns the explicit development error `503 matching_not_ready` until B2 arrives. The React/Vite application is also pending. The backend command is runnable; the frontend command remains planned:
 
 ```bash
 python -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 npm --prefix frontend run dev -- --host 127.0.0.1
 ```
 
-They run in separate terminals. The root `pyproject.toml` and dependency lock now install successfully in an isolated environment, and matching has been tested with bbl's actual Pydantic models. bbl must still implement the endpoints, loader and filter, and spectra must supply frontend installation/build commands. The frontend will need a `/api` proxy or an explicit API base URL plus backend CORS. Production build/static serving, screenshots and full-app launch verification remain integration deliverables; there is no deployable production build claimed here. Playwright uses the same backend entrypoint and a strict frontend port of 5173.
+They run in separate terminals. The root `pyproject.toml` and dependency lock install successfully in an isolated environment, and matching has been tested with bbl's actual Pydantic models, including null duration evidence. bbl must still implement filtering and match orchestration, and spectra must supply frontend installation/build commands. The frontend will need a `/api` proxy or an explicit API base URL plus backend CORS. Production build/static serving, screenshots and full-app launch verification remain integration deliverables; there is no deployable production build claimed here. Playwright uses the same backend entrypoint and a strict frontend port of 5173.
 
 Once the real services are available:
 
@@ -170,9 +170,10 @@ The HTTP checker verifies actual outcomes, counts, exclusions, ordered IDs and e
 
 | Check | Current evidence |
 | --- | --- |
-| Python matching / dataset / proposal / actual-model tests | 34 passing, including 192 parameterized subtests; deterministic order, eligibility, boundaries, grounding, proposal validation and real Pydantic serialization |
-| Frontend transport tests | 32 passing; requests, abort signals, validation/server/network failures and malformed response handling |
+| Python core and B1 integration tests | 49 passing, including 192 parameterized subtests; matching, catalog, normalization, API readiness, boundaries and real Pydantic serialization |
+| Frontend transport tests | 49 passing; published response fixtures, B1 metadata/health, requests, abort signals, failures and malformed responses |
 | Transport TypeScript check | Passing strict type check |
+| Real HTTP readiness | Uvicorn health/metadata both return 200, 66 profiles and correct calendar bounds; the typed client consumes both successfully; match returns its expected development 503 |
 | Domain acceptance | 8 scenarios × 20 repeats = 160 timed runs; source order reversed and outputs unchanged |
 | Browser test discovery | 8 Chromium tests discovered successfully; this is not a browser execution result |
 | Fresh-clone reproduction | Independent clone of `fff79d9` passed the locked installs, 34 backend tests / 192 subtests, 32 client tests, strict types, eight browser test discoveries, 160 domain runs and source-hash check |
@@ -196,7 +197,7 @@ Use [the demo script](docs/demo.md) for exact requests and frozen card order, th
 | Value / applicability | 15 | Specific quotes, transparent short results and price/calendar caveats; customer-facing display pending |
 | Development potential / originality | 10 | Traceable offline evidence and visible date-sensitive changes; proposed next steps below |
 
-Remaining release work: integrate bbl's API and loader, connect spectra's UI to the shared client, run all backend/component/build/browser checks, measure HTTP and browser latency, rehearse the live demo and reproduce the complete setup from a clean clone. A screenshot will be added from the real integrated UI.
+Remaining release work: integrate bbl's B2 filtering/match API, connect spectra's UI to the shared client, run all backend/component/build/browser checks, measure match HTTP and browser latency, rehearse the live demo and reproduce the complete setup from a clean clone. A screenshot will be added from the real integrated UI.
 
 Future extensions could add real calendar freshness, confirmed quotations, customer-approved constraint changes, quality evaluation using feedback, and retrieval for a larger catalog. They are proposals, not implemented features. Sparse original descriptions still limit explanation richness; the application does not verify claims, negotiate, book, charge customers or guarantee contractor quality.
 

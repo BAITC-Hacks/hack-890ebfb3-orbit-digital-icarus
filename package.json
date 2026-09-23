@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Enjoy-owned transport and browser integration checks; UI package lives in frontend",
   "scripts": {
-    "test:client": "vitest run frontend/src/api/client.test.ts --environment node",
+    "test:client": "vitest run frontend/src/api/client.test.ts --environment node --exclude=artifacts/**",
     "typecheck:client": "tsc --noEmit --strict --target ES2022 --lib ES2022,DOM --module ESNext --moduleResolution Bundler frontend/src/api/client.ts frontend/src/api/types.ts",
     "test:e2e": "playwright test",
     "test:e2e:list": "playwright test --list"
